@@ -188,18 +188,18 @@ export default function TournamentDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Stages */}
           <Card hover={false} className="p-6">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-sblt-red" />
+            <h2 className="text-xl font-bold mb-5 flex items-center gap-3">
+              <Calendar className="h-6 w-6 text-sblt-red" />
               Các vòng đấu
             </h2>
             <div className="space-y-3">
               {tournament.stages.map((stage) => {
                 const stageCfg = STAGE_STATUS[stage.status] || STAGE_STATUS.UPCOMING;
                 return (
-                  <div key={stage.id} className="flex items-center justify-between p-4 bg-sblt-dark rounded-xl border border-sblt-border">
+                  <div key={stage.id} className="flex items-center justify-between p-5 bg-sblt-dark rounded-xl border border-sblt-border">
                     <div>
-                      <h3 className="font-semibold text-white">{stage.name}</h3>
-                      <p className="text-sm text-sblt-muted">{new Date(stage.date).toLocaleDateString("vi-VN")}</p>
+                      <h3 className="font-semibold text-white text-base">{stage.name}</h3>
+                      <p className="text-sblt-muted mt-1">{new Date(stage.date).toLocaleDateString("vi-VN")}</p>
                     </div>
                     <Badge variant={stageCfg.variant}>{stageCfg.label}</Badge>
                   </div>
@@ -210,19 +210,19 @@ export default function TournamentDetailPage() {
 
           {/* Players */}
           <Card hover={false} className="p-6">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Users className="h-5 w-5 text-sblt-red" />
+            <h2 className="text-xl font-bold mb-5 flex items-center gap-3">
+              <Users className="h-6 w-6 text-sblt-red" />
               Tuyển thủ đã đăng ký
             </h2>
 
             {guestPlayers.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-xs uppercase tracking-wider text-sblt-muted mb-3">Khách mời</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-3 font-semibold">Khách mời</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {guestPlayers.map((r) => (
-                    <div key={r.id} className="bg-sblt-dark rounded-lg px-3 py-2 text-sm flex items-center gap-2 border border-sblt-border">
-                      <span className="w-2 h-2 bg-sblt-red rounded-full shrink-0" />
-                      <span className="text-white truncate">{r.player.ign}</span>
+                    <div key={r.id} className="bg-sblt-dark rounded-lg px-4 py-3 flex items-center gap-3 border border-sblt-border">
+                      <span className="w-2.5 h-2.5 bg-sblt-red rounded-full shrink-0" />
+                      <span className="text-white truncate font-medium">{r.player.ign}</span>
                     </div>
                   ))}
                 </div>
@@ -231,11 +231,11 @@ export default function TournamentDetailPage() {
 
             {regularPlayers.length > 0 && (
               <div>
-                <h3 className="text-xs uppercase tracking-wider text-sblt-muted mb-3">Tuyển thủ</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-3 font-semibold">Tuyển thủ</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {regularPlayers.map((r) => (
-                    <div key={r.id} className="bg-sblt-dark rounded-lg px-3 py-2 text-sm border border-sblt-border">
-                      <span className="text-white truncate">{r.player.ign}</span>
+                    <div key={r.id} className="bg-sblt-dark rounded-lg px-4 py-3 border border-sblt-border">
+                      <span className="text-white truncate font-medium">{r.player.ign}</span>
                     </div>
                   ))}
                 </div>
@@ -243,63 +243,96 @@ export default function TournamentDetailPage() {
             )}
 
             {approvedPlayers.length === 0 && (
-              <p className="text-sblt-muted text-center py-6 text-sm">Chưa có tuyển thủ nào</p>
+              <p className="text-sblt-muted text-center py-6">Chưa có tuyển thủ nào</p>
             )}
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar - Prizes only */}
         <div className="space-y-6">
-          {/* Prizes */}
           <Card hover={false} className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Gift className="h-5 w-5 text-sblt-red" />
+            <h3 className="text-lg font-bold mb-5 flex items-center gap-3">
+              <Gift className="h-6 w-6 text-sblt-red" />
               Giải thưởng
             </h3>
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {tournament.prizes.map((prize) => (
-                <div key={prize.id} className="flex justify-between text-sm">
+                <div key={prize.id} className="flex justify-between">
                   <span className="text-sblt-muted">{prize.description}</span>
-                  <span className="font-semibold text-white">{formatCurrency(prize.amount)}</span>
+                  <span className="font-bold text-white">{formatCurrency(prize.amount)}</span>
                 </div>
               ))}
             </div>
           </Card>
+        </div>
+      </div>
 
-          {/* Quick Links */}
-          <Card hover={false} className="p-6">
-            <h3 className="font-semibold mb-4">Xem thêm</h3>
-            <div className="space-y-2">
-              {[
-                { href: `/tournaments/${tournament.id}/brackets`, label: "Bảng đấu", icon: Swords },
-                { href: `/tournaments/${tournament.id}/results`, label: "Kết quả chi tiết", icon: BarChart3 },
-                { href: `/tournaments/${tournament.id}/standings`, label: "Bảng xếp hạng", icon: Medal },
-              ].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center justify-between p-3 bg-sblt-dark rounded-xl border border-sblt-border hover:border-sblt-red/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-2">
-                    <link.icon className="h-4 w-4 text-sblt-muted group-hover:text-sblt-red transition-colors" />
-                    <span className="text-sm text-white">{link.label}</span>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-sblt-muted group-hover:text-sblt-red transition-colors" />
-                </Link>
-              ))}
-              <a
-                href={`/api/tournaments/${tournament.id}/calendar`}
-                download
-                className="flex items-center justify-between p-3 bg-sblt-dark rounded-xl border border-sblt-border hover:border-sblt-red/50 transition-colors group"
-              >
-                <div className="flex items-center gap-2">
-                  <Download className="h-4 w-4 text-sblt-muted group-hover:text-sblt-red transition-colors" />
-                  <span className="text-sm text-white">Thêm vào lịch (iCal)</span>
+      {/* Quick Links - Full width, prominent */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <Swords className="h-7 w-7 text-sblt-red" />
+          Tra cứu giải đấu
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              href: `/tournaments/${tournament.id}/brackets`,
+              label: "Bảng đấu",
+              desc: "Xem sơ đồ bảng đấu và kết quả bốc thăm",
+              icon: Swords,
+              color: "from-sblt-red/20 to-transparent",
+              iconColor: "text-sblt-red",
+            },
+            {
+              href: `/tournaments/${tournament.id}/results`,
+              label: "Kết quả chi tiết",
+              desc: "Xem kết quả từng trận đấu và điểm số",
+              icon: BarChart3,
+              color: "from-sky-500/20 to-transparent",
+              iconColor: "text-sky-400",
+            },
+            {
+              href: `/tournaments/${tournament.id}/standings`,
+              label: "Bảng xếp hạng",
+              desc: "Xem thứ hạng tổng của tất cả tuyển thủ",
+              icon: Medal,
+              color: "from-amber-500/20 to-transparent",
+              iconColor: "text-amber-400",
+            },
+            {
+              href: `/api/tournaments/${tournament.id}/calendar`,
+              label: "Thêm vào lịch",
+              desc: "Tải file iCal để theo dõi lịch thi đấu",
+              icon: Download,
+              color: "from-emerald-500/20 to-transparent",
+              iconColor: "text-emerald-400",
+              download: true,
+            },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              download={link.download}
+              className="group relative overflow-hidden bg-sblt-card border border-sblt-border rounded-2xl p-6 hover:border-sblt-red/50 transition-all duration-300 hover:shadow-lg hover:shadow-sblt-red/10"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${link.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+              <div className="relative">
+                <div className={`w-14 h-14 rounded-xl bg-sblt-dark border border-sblt-border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <link.icon className={`h-7 w-7 ${link.iconColor}`} />
                 </div>
-                <ArrowRight className="h-4 w-4 text-sblt-muted group-hover:text-sblt-red transition-colors" />
-              </a>
-            </div>
-          </Card>
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-sblt-red transition-colors">
+                  {link.label}
+                </h3>
+                <p className="text-sblt-muted text-sm leading-relaxed">
+                  {link.desc}
+                </p>
+                <div className="flex items-center gap-2 mt-4 text-sblt-muted group-hover:text-sblt-red transition-colors">
+                  <span className="text-sm font-medium">Xem ngay</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </div>
