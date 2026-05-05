@@ -20,6 +20,29 @@ export const PRIZES = [
   { rank: 8, amount: 300000, description: "Hạng 5-8" },
 ];
 
+export const CELEBRITY_GUESTS = [
+  { name: "5van", role: "Host", confirmed: true },
+  { name: "Koi", role: "Host", confirmed: true },
+  { name: "Stillness", role: "Khách mời", confirmed: true },
+  { name: "Em Dứa TFT", role: "Khách mời", confirmed: true },
+  { name: "Ngọc 6 Múi", role: "Khách mời", confirmed: true },
+  { name: "Mai Hương Day", role: "Khách mời", confirmed: true },
+  { name: "Dizzyland", role: "Khách mời", confirmed: true },
+  { name: "Luckyboiz", role: "Khách mời", confirmed: true },
+  { name: "Linhbodoi", role: "Khách mời", confirmed: true },
+  { name: "Mezino", role: "Khách mời", confirmed: true },
+  { name: "Phương GB", role: "Khách mời", confirmed: true },
+  { name: ".Furyy TFT", role: "Khách mời", confirmed: true },
+  { name: "Trâu TV", role: "Khách mời", confirmed: true },
+  { name: "Trần Duyên TFT", role: "Khách mời", confirmed: true },
+  { name: "Tiger1", role: "Khách mời", confirmed: false },
+  { name: "Bố Già TFT", role: "Khách mời", confirmed: false },
+];
+
+export const COMMENTATORS = [
+  { name: "RRQ MidFeed", role: "BLV", confirmed: true },
+];
+
 export const TOURNAMENT_FORMAT = {
   qualifier: {
     name: "Vòng Loại",

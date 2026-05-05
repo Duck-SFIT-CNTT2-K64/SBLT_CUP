@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
-const inter = Inter({ subsets: ["latin", "vietnamese"] });
+const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
+const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" });
 
 const BASE_URL = process.env.NEXTAUTH_URL || "https://sbltcup.com";
 
@@ -54,8 +55,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.className} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-black text-white" suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} ${bebasNeue.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-sblt-black text-sblt-white font-sans" suppressHydrationWarning>
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>

@@ -1,19 +1,50 @@
 @import "tailwindcss";
 
+/* ============================================
+   SBLT CUP Design System
+   Color palette: Black, White, Red
+   Inspired by: Brackelope, FACEIT, Start.gg, FIFAe
+   ============================================ */
+
+@theme {
+  --color-sblt-black: #0a0a0a;
+  --color-sblt-dark: #111111;
+  --color-sblt-card: #161616;
+  --color-sblt-border: #262626;
+  --color-sblt-muted: #737373;
+  --color-sblt-red: #dc2626;
+  --color-sblt-red-dark: #991b1b;
+  --color-sblt-red-glow: rgba(220, 38, 38, 0.3);
+  --color-sblt-white: #f5f5f5;
+}
+
 :root {
   --background: #0a0a0a;
-  --foreground: #f9fafb;
+  --foreground: #f5f5f5;
   --accent: #dc2626;
   --accent-hover: #b91c1c;
+  --card-bg: #161616;
+  --card-border: #262626;
+  --card-hover-border: #dc2626;
+  --muted: #737373;
+  --glow-red: 0 0 20px rgba(220, 38, 38, 0.3);
+  --glow-red-strong: 0 0 40px rgba(220, 38, 38, 0.4);
 }
+
+/* ============================================
+   Base
+   ============================================ */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), "Inter", Arial, Helvetica, sans-serif;
 }
 
-/* Scrollbar */
+/* ============================================
+   Scrollbar
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -29,4 +60,259 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #b91c1c;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(220, 38, 38, 0.4); }
+}
+
+@keyframes pulse-glow-strong {
+  0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.3), 0 0 60px rgba(220, 38, 38, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(220, 38, 38, 0.5), 0 0 80px rgba(220, 38, 38, 0.2); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow-strong {
+  animation: pulse-glow-strong 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-glow-breathe {
+  animation: glow-breathe 4s ease-in-out infinite;
+}
+
+/* ============================================
+   Reusable Component Styles
+   ============================================ */
+
+/* Card — dark glass-morphism with red hover border */
+.sblt-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sblt-card:hover {
+  border-color: var(--card-hover-border);
+  box-shadow: var(--glow-red);
+}
+
+/* Card without hover effect (static) */
+.sblt-card-static {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+}
+
+/* Gradient text */
+.text-gradient-red {
+  background: linear-gradient(135deg, #ef4444, #dc2626, #991b1b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Red glow line separator */
+.sblt-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #dc2626, transparent);
+}
+
+/* Section heading style */
+.sblt-heading {
+  font-family: var(--font-bebas), "Bebas Neue", "Inter", sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Rank badge colors */
+.rank-gold { color: #fbbf24; }
+.rank-silver { color: #9ca3af; }
+.rank-bronze { color: #d97706; }
+
+/* Status badges */
+.badge-confirmed { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+.badge-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+.badge-live { background: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.3); }
+.badge-completed { background: rgba(107, 114, 128, 0.15); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+
+/* Table styles */
+.sblt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sblt-table thead {
+  background: #1a1a1a;
+  border-bottom: 2px solid #dc2626;
+}
+
+.sblt-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a3a3a3;
+}
+
+.sblt-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #262626;
+}
+
+.sblt-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.sblt-table tbody tr:hover {
+  background: rgba(220, 38, 38, 0.05);
+}
+
+/* Bracket connector lines */
+.bracket-line {
+  background: #dc2626;
+}
+
+.bracket-line-ghost {
+  background: #262626;
+}
+
+/* Card with top accent bar */
+.sblt-card-accent {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sblt-card-accent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.sblt-card-accent:hover::before {
+  opacity: 1;
+}
+
+.sblt-card-accent:hover {
+  border-color: var(--card-hover-border);
+  box-shadow: var(--glow-red);
+}
+
+/* Status glow for LIVE/active items */
+.status-glow-live {
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.4), inset 0 0 12px rgba(220, 38, 38, 0.05);
+}
+
+/* Timeline connector */
+.timeline-connector {
+  position: relative;
+}
+
+.timeline-connector::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, #262626 10%, #262626 90%, transparent);
+  transform: translateX(-50%);
+}
+
+/* Timeline dot */
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: 2px solid #161616;
+  position: relative;
+  z-index: 1;
+}
+
+/* Input styles */
+.sblt-input {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: #111111;
+  border: 1px solid #262626;
+  border-radius: 0.75rem;
+  color: #f5f5f5;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sblt-input::placeholder {
+  color: #404040;
+}
+
+.sblt-input:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+/* Stat block */
+.sblt-stat {
+  text-align: center;
+  padding: 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+}
+
+.sblt-stat:hover {
+  border-color: #dc2626;
+}
+
+/* Hero background orbs */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
 }

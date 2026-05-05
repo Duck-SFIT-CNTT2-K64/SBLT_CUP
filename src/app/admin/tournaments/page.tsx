@@ -3,191 +3,111 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Trophy, Plus, Edit, Trash2, Settings } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 interface Tournament {
-  id: string;
-  name: string;
-  season: number;
-  status: string;
-  startDate: string;
-  endDate: string;
-  maxPlayers: number;
-  _count: {
-    registrations: number;
-    stages: number;
-  };
+  id: string; name: string; season: number; status: string; startDate: string; endDate: string; maxPlayers: number;
+  _count: { registrations: number; stages: number };
 }
+
+const STATUS_MAP: Record<string, { label: string; variant: "red" | "green" | "yellow" | "live" | "default" }> = {
+  UPCOMING: { label: "Sắp diễn ra", variant: "default" },
+  REGISTRATION_OPEN: { label: "Đang mở đăng ký", variant: "green" },
+  REGISTRATION_CLOSED: { label: "Đã đóng đăng ký", variant: "yellow" },
+  IN_PROGRESS: { label: "Đang diễn ra", variant: "live" },
+  COMPLETED: { label: "Đã kết thúc", variant: "default" },
+  CANCELLED: { label: "Đã hủy", variant: "red" },
+};
 
 export default function AdminTournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTournaments();
-  }, []);
+  useEffect(() => { fetchTournaments(); }, []);
 
   const fetchTournaments = async () => {
     try {
       const res = await fetch("/api/tournaments");
-      if (res.ok) {
-        const data = await res.json();
-        setTournaments(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch tournaments:", error);
-      setError("Không thể tải danh sách giải đấu.");
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) setTournaments(await res.json());
+    } catch { setError("Không thể tải danh sách giải đấu."); } finally { setLoading(false); }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc chắn muốn xóa giải đấu này?")) return;
-
-    try {
-      const res = await fetch(`/api/tournaments/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setTournaments((prev) => prev.filter((t) => t.id !== id));
-      }
-    } catch (error) {
-      console.error("Failed to delete tournament:", error);
-    }
+    const res = await fetch(`/api/tournaments/${id}`, { method: "DELETE" });
+    if (res.ok) setTournaments((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      UPCOMING: "bg-gray-500/20 text-gray-400",
-      REGISTRATION_OPEN: "bg-green-500/20 text-green-400",
-      REGISTRATION_CLOSED: "bg-yellow-500/20 text-yellow-400",
-      IN_PROGRESS: "bg-blue-500/20 text-blue-400",
-      COMPLETED: "bg-purple-500/20 text-purple-400",
-      CANCELLED: "bg-red-500/20 text-red-400",
-    };
-
-    const labels: Record<string, string> = {
-      UPCOMING: "Sắp diễn ra",
-      REGISTRATION_OPEN: "Đang mở đăng ký",
-      REGISTRATION_CLOSED: "Đã đóng đăng ký",
-      IN_PROGRESS: "Đang diễn ra",
-      COMPLETED: "Đã kết thúc",
-      CANCELLED: "Đã hủy",
-    };
-
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status] || styles.UPCOMING}`}>
-        {labels[status] || status}
-      </span>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center text-gray-400">Đang tải...</div>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-8 text-center"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6 lg:p-8 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Quản lý Giải đấu</h1>
-          <p className="text-gray-400 mt-2">Tạo và quản lý các mùa giải</p>
+          <h1 className="text-2xl font-bold text-white">Quản lý Giải đấu</h1>
+          <p className="text-sblt-muted mt-1">Tạo và quản lý các mùa giải</p>
         </div>
-        <Link
-          href="/admin/tournaments/new"
-          className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Tạo giải đấu
-        </Link>
+        <Link href="/admin/tournaments/new"><Button size="sm"><Plus className="h-4 w-4" /> Tạo giải đấu</Button></Link>
       </div>
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+      <Card hover={false} className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="text-left py-4 px-6 text-gray-400 font-medium">Tên giải đấu</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-medium">Mùa</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-medium">Trạng thái</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-medium">Ngày thi đấu</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-medium">Đăng ký</th>
-                <th className="text-left py-4 px-6 text-gray-400 font-medium">Vòng đấu</th>
-                <th className="text-right py-4 px-6 text-gray-400 font-medium">Thao tác</th>
+              <tr className="bg-sblt-dark border-b-2 border-sblt-red">
+                <th className="text-left py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Tên giải đấu</th>
+                <th className="text-left py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Mùa</th>
+                <th className="text-left py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Trạng thái</th>
+                <th className="text-left py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Ngày thi đấu</th>
+                <th className="text-left py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Đăng ký</th>
+                <th className="text-left py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Vòng đấu</th>
+                <th className="text-right py-3 px-6 text-sblt-muted font-semibold text-xs uppercase tracking-wider">Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {tournaments.map((tournament) => (
-                <tr key={tournament.id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <Trophy className="h-5 w-5 text-red-600" />
-                      <span className="font-medium">{tournament.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-gray-300">Mùa {tournament.season}</td>
-                  <td className="py-4 px-6">{getStatusBadge(tournament.status)}</td>
-                  <td className="py-4 px-6 text-gray-300 text-sm">
-                    {new Date(tournament.startDate).toLocaleDateString("vi-VN")} -{" "}
-                    {new Date(tournament.endDate).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="py-4 px-6 text-gray-300">
-                    {tournament._count.registrations}/{tournament.maxPlayers}
-                  </td>
-                  <td className="py-4 px-6 text-gray-300">{tournament._count.stages}</td>
-                  <td className="py-4 px-6">
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        href={`/admin/tournaments/${tournament.id}`}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
-                        title="Quản lý"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={`/admin/tournaments/${tournament.id}/edit`}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(tournament.id)}
-                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-zinc-700 rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {tournaments.map((t) => {
+                const cfg = STATUS_MAP[t.status] || STATUS_MAP.UPCOMING;
+                return (
+                  <tr key={t.id} className="border-b border-sblt-border hover:bg-sblt-red/3 transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <Trophy className="h-5 w-5 text-sblt-red" />
+                        <span className="font-medium text-white">{t.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-sblt-white text-sm">Mùa {t.season}</td>
+                    <td className="py-4 px-6"><Badge variant={cfg.variant}>{cfg.label}</Badge></td>
+                    <td className="py-4 px-6 text-sblt-muted text-sm">
+                      {new Date(t.startDate).toLocaleDateString("vi-VN")} — {new Date(t.endDate).toLocaleDateString("vi-VN")}
+                    </td>
+                    <td className="py-4 px-6 text-sblt-white">{t._count.registrations}/{t.maxPlayers}</td>
+                    <td className="py-4 px-6 text-sblt-white">{t._count.stages}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex justify-end gap-1">
+                        <Link href={`/admin/tournaments/${t.id}`} className="p-2 text-sblt-muted hover:text-white hover:bg-sblt-border rounded-lg transition-colors" title="Quản lý"><Settings className="h-4 w-4" /></Link>
+                        <Link href={`/admin/tournaments/${t.id}/edit`} className="p-2 text-sblt-muted hover:text-white hover:bg-sblt-border rounded-lg transition-colors" title="Chỉnh sửa"><Edit className="h-4 w-4" /></Link>
+                        <button onClick={() => handleDelete(t.id)} className="p-2 text-sblt-muted hover:text-red-400 hover:bg-sblt-border rounded-lg transition-colors" title="Xóa"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-
         {tournaments.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
-            <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Chưa có giải đấu nào</p>
-            <Link
-              href="/admin/tournaments/new"
-              className="text-red-500 hover:text-red-400 mt-2 inline-block"
-            >
-              Tạo giải đấu đầu tiên
-            </Link>
+          <div className="text-center py-12">
+            <Trophy className="h-12 w-12 text-sblt-border mx-auto mb-4" />
+            <p className="text-sblt-muted">Chưa có giải đấu nào</p>
+            <Link href="/admin/tournaments/new" className="text-sblt-red hover:text-red-400 mt-2 inline-block text-sm">Tạo giải đấu đầu tiên</Link>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

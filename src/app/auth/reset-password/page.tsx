@@ -3,7 +3,10 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Trophy, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -21,7 +24,7 @@ function ResetPasswordForm() {
     return (
       <div className="text-center">
         <p className="text-red-400 mb-4">Link không hợp lệ hoặc đã hết hạn.</p>
-        <Link href="/auth/forgot-password" className="text-red-500 hover:text-red-400 text-sm">Yêu cầu link mới</Link>
+        <Link href="/auth/forgot-password" className="text-sblt-red hover:text-red-400 text-sm">Yêu cầu link mới</Link>
       </div>
     );
   }
@@ -31,7 +34,6 @@ function ResetPasswordForm() {
     setError("");
     if (password !== confirmPassword) { setError("Mật khẩu xác nhận không khớp"); return; }
     if (password.length < 6) { setError("Mật khẩu phải có ít nhất 6 ký tự"); return; }
-
     setLoading(true);
     try {
       const res = await fetch("/api/auth/reset-password", {
@@ -53,11 +55,9 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="text-center">
-        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl">✓</span>
-        </div>
+        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
         <h2 className="text-lg font-semibold mb-2">Đặt lại thành công!</h2>
-        <p className="text-gray-400 text-sm">Đang chuyển về trang đăng nhập...</p>
+        <p className="text-sblt-muted text-sm">Đang chuyển về trang đăng nhập...</p>
       </div>
     );
   }
@@ -65,44 +65,28 @@ function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit}>
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 text-sm">{error}</div>
       )}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-300 mb-1">Mật khẩu mới</label>
+        <label className="block text-sm font-medium text-sblt-muted mb-1.5">Mật khẩu mới</label>
         <div className="relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-600 pr-10"
-            placeholder="••••••••"
-            minLength={6}
-            required
-          />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+          <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red pr-10"
+            placeholder="••••••••" minLength={6} required />
+          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sblt-muted hover:text-white">
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </div>
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-300 mb-1">Xác nhận mật khẩu</label>
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-          placeholder="••••••••"
-          required
-        />
+        <label className="block text-sm font-medium text-sblt-muted mb-1.5">Xác nhận mật khẩu</label>
+        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+          className="w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red"
+          placeholder="••••••••" required />
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white font-semibold py-2.5 rounded-lg transition-colors"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -112,14 +96,14 @@ export default function ResetPasswordPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Trophy className="h-12 w-12 text-red-600 mx-auto mb-4" />
+          <Image src="/logo.png" alt="SBLT CUP" width={64} height={64} className="rounded-xl mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white">Đặt lại mật khẩu</h1>
         </div>
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-          <Suspense fallback={<div className="text-gray-400 text-center">Đang tải...</div>}>
+        <Card hover={false} className="p-6">
+          <Suspense fallback={<div className="text-sblt-muted text-center">Đang tải...</div>}>
             <ResetPasswordForm />
           </Suspense>
-        </div>
+        </Card>
       </div>
     </div>
   );
