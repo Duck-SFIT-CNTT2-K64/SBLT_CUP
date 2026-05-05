@@ -183,6 +183,75 @@ export default function TournamentDetailPage() {
         </div>
       </div>
 
+      {/* Quick Links - Full width, prominent */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <Swords className="h-7 w-7 text-sblt-red" />
+          Tra cứu giải đấu
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              href: `/tournaments/${tournament.id}/brackets`,
+              label: "Bảng đấu",
+              desc: "Xem sơ đồ bảng đấu và kết quả bốc thăm",
+              icon: Swords,
+              color: "from-sblt-red/20 to-transparent",
+              iconColor: "text-sblt-red",
+            },
+            {
+              href: `/tournaments/${tournament.id}/results`,
+              label: "Kết quả chi tiết",
+              desc: "Xem kết quả từng trận đấu và điểm số",
+              icon: BarChart3,
+              color: "from-sky-500/20 to-transparent",
+              iconColor: "text-sky-400",
+            },
+            {
+              href: `/tournaments/${tournament.id}/standings`,
+              label: "Bảng xếp hạng",
+              desc: "Xem thứ hạng tổng của tất cả tuyển thủ",
+              icon: Medal,
+              color: "from-amber-500/20 to-transparent",
+              iconColor: "text-amber-400",
+            },
+            {
+              href: `/api/tournaments/${tournament.id}/calendar`,
+              label: "Thêm vào lịch",
+              desc: "Tải file iCal để theo dõi lịch thi đấu",
+              icon: Download,
+              color: "from-emerald-500/20 to-transparent",
+              iconColor: "text-emerald-400",
+              download: true,
+            },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              download={link.download}
+              className="group relative overflow-hidden bg-sblt-card border border-sblt-border rounded-2xl p-6 hover:border-sblt-red/50 transition-all duration-300 hover:shadow-lg hover:shadow-sblt-red/10"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${link.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+              <div className="relative">
+                <div className={`w-14 h-14 rounded-xl bg-sblt-dark border border-sblt-border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <link.icon className={`h-7 w-7 ${link.iconColor}`} />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-sblt-red transition-colors">
+                  {link.label}
+                </h3>
+                <p className="text-sblt-muted text-sm leading-relaxed">
+                  {link.desc}
+                </p>
+                <div className="flex items-center gap-2 mt-4 text-sblt-muted group-hover:text-sblt-red transition-colors">
+                  <span className="text-sm font-medium">Xem ngay</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -267,74 +336,6 @@ export default function TournamentDetailPage() {
         </div>
       </div>
 
-      {/* Quick Links - Full width, prominent */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <Swords className="h-7 w-7 text-sblt-red" />
-          Tra cứu giải đấu
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              href: `/tournaments/${tournament.id}/brackets`,
-              label: "Bảng đấu",
-              desc: "Xem sơ đồ bảng đấu và kết quả bốc thăm",
-              icon: Swords,
-              color: "from-sblt-red/20 to-transparent",
-              iconColor: "text-sblt-red",
-            },
-            {
-              href: `/tournaments/${tournament.id}/results`,
-              label: "Kết quả chi tiết",
-              desc: "Xem kết quả từng trận đấu và điểm số",
-              icon: BarChart3,
-              color: "from-sky-500/20 to-transparent",
-              iconColor: "text-sky-400",
-            },
-            {
-              href: `/tournaments/${tournament.id}/standings`,
-              label: "Bảng xếp hạng",
-              desc: "Xem thứ hạng tổng của tất cả tuyển thủ",
-              icon: Medal,
-              color: "from-amber-500/20 to-transparent",
-              iconColor: "text-amber-400",
-            },
-            {
-              href: `/api/tournaments/${tournament.id}/calendar`,
-              label: "Thêm vào lịch",
-              desc: "Tải file iCal để theo dõi lịch thi đấu",
-              icon: Download,
-              color: "from-emerald-500/20 to-transparent",
-              iconColor: "text-emerald-400",
-              download: true,
-            },
-          ].map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              download={link.download}
-              className="group relative overflow-hidden bg-sblt-card border border-sblt-border rounded-2xl p-6 hover:border-sblt-red/50 transition-all duration-300 hover:shadow-lg hover:shadow-sblt-red/10"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${link.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              <div className="relative">
-                <div className={`w-14 h-14 rounded-xl bg-sblt-dark border border-sblt-border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <link.icon className={`h-7 w-7 ${link.iconColor}`} />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-sblt-red transition-colors">
-                  {link.label}
-                </h3>
-                <p className="text-sblt-muted text-sm leading-relaxed">
-                  {link.desc}
-                </p>
-                <div className="flex items-center gap-2 mt-4 text-sblt-muted group-hover:text-sblt-red transition-colors">
-                  <span className="text-sm font-medium">Xem ngay</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
