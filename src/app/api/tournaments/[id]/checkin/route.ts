@@ -109,6 +109,17 @@ export async function PUT(
   }
 
   if (action === "checkin") {
+    // Verify registration is APPROVED
+    const existing = await prisma.registration.findFirst({
+      where: { id: registrationId, tournamentId },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Không tìm thấy đăng ký" }, { status: 404 });
+    }
+    if (existing.status !== "APPROVED") {
+      return NextResponse.json({ error: "Chỉ có thể check-in tuyển thủ đã được duyệt" }, { status: 400 });
+    }
+
     const updated = await prisma.registration.update({
       where: { id: registrationId },
       data: { checkedIn: true, checkInTime: new Date() },
@@ -127,6 +138,17 @@ export async function PUT(
   }
 
   if (action === "reject_no_checkin") {
+    // Verify registration is not already checked in
+    const existing = await prisma.registration.findFirst({
+      where: { id: registrationId, tournamentId },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Không tìm thấy đăng ký" }, { status: 404 });
+    }
+    if (existing.checkedIn) {
+      return NextResponse.json({ error: "Không thể từ chối tuyển thủ đã check-in" }, { status: 400 });
+    }
+
     const updated = await prisma.registration.update({
       where: { id: registrationId },
       data: { status: "REJECTED" },

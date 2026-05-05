@@ -5,6 +5,7 @@ import { Users, CheckCircle, XCircle, Clock, Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface Registration {
   id: string;
@@ -109,7 +110,7 @@ export default function AdminPlayersPage() {
         <p className="text-sblt-muted mt-1">Duyệt đăng ký và quản lý tuyển thủ</p>
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       {/* Tournament Selector */}
       {tournaments.length > 0 && (
@@ -163,7 +164,7 @@ export default function AdminPlayersPage() {
         </div>
       )}
 
-      {bulkMsg && <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-2 rounded-xl mb-4 text-sm">{bulkMsg}</div>}
+      {bulkMsg && <Alert variant="success" message={bulkMsg} onDismiss={() => setBulkMsg(null)} className="mb-4" />}
 
       {/* Table */}
       <Card hover={false} className="overflow-hidden">

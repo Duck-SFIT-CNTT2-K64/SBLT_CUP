@@ -47,9 +47,18 @@ export async function POST(
     return NextResponse.json({ error: "Không tìm thấy tuyển thủ" }, { status: 404 });
   }
 
+  // Check max 8 players per group
+  const currentCount = await prisma.groupPlayer.count({ where: { groupId } });
+  if (currentCount >= 8) {
+    return NextResponse.json(
+      { error: "Bảng đã đủ 8 tuyển thủ, không thể thêm nữa" },
+      { status: 400 }
+    );
+  }
+
   try {
-    // Check if player is already in group
-    const existing = await prisma.groupPlayer.findUnique({
+    // Check if player is already in this group
+    const existingInGroup = await prisma.groupPlayer.findUnique({
       where: {
         groupId_playerId: {
           groupId,
@@ -58,9 +67,28 @@ export async function POST(
       },
     });
 
-    if (existing) {
+    if (existingInGroup) {
       return NextResponse.json(
         { error: "Tuyển thủ đã ở trong bảng này" },
+        { status: 400 }
+      );
+    }
+
+    // Check if player is already in another group within the same stage
+    const existingInStage = await prisma.groupPlayer.findFirst({
+      where: {
+        playerId,
+        group: {
+          stageId,
+          id: { not: groupId },
+        },
+      },
+      include: { group: { select: { name: true } } },
+    });
+
+    if (existingInStage) {
+      return NextResponse.json(
+        { error: `Tuyển thủ đã ở trong ${existingInStage.group.name}, không thể ở 2 bảng cùng vòng` },
         { status: 400 }
       );
     }

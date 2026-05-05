@@ -76,10 +76,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(dispute, { status: 201 });
 }
 
-// Admin xem tất cả kháng nghị
+// Player xem kháng nghị của mình, Admin xem tất cả
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -92,8 +92,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Trạng thái không hợp lệ" }, { status: 400 });
   }
 
+  // Player chỉ xem được kháng nghị của mình
+  const isAdmin = session.user.role === "ADMIN";
+  let playerFilter = {};
+  if (!isAdmin) {
+    const player = await prisma.player.findUnique({ where: { userId: session.user.id } });
+    if (!player) {
+      return NextResponse.json([]);
+    }
+    playerFilter = { submittedBy: player.id };
+  }
+
   const disputes = await prisma.dispute.findMany({
     where: {
+      ...playerFilter,
       ...(status ? { status: status as "PENDING" | "REVIEWING" | "RESOLVED" | "REJECTED" } : {}),
       ...(tournamentId ? { tournamentId } : {}),
     },

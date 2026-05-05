@@ -6,6 +6,7 @@ import { Trophy, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 export default function NewTournamentPage() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function NewTournamentPage() {
 
       <Card hover={false} className="p-6">
         <form onSubmit={handleSubmit}>
-          {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+          {error && <Alert variant="error" message={error} onDismiss={() => setError("")} className="mb-6" />}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">

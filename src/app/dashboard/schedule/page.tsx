@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Clock } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Alert } from "@/components/ui/Alert";
 
 interface Game {
   id: string; gameNumber: number; status: string; startTime: string | null;
@@ -35,7 +36,7 @@ export default function SchedulePage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
       <div className="mb-8">
         <h1 className="text-2xl font-bold flex items-center gap-3 text-white"><Calendar className="h-7 w-7 text-sblt-red" /> Lịch thi đấu</h1>
         <p className="text-sblt-muted mt-2">Lịch thi đấu cá nhân của bạn</p>

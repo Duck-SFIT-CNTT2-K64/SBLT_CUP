@@ -48,6 +48,17 @@ export async function POST(
   }
 
   try {
+    // Check gameNumber uniqueness within group
+    const existingGame = await prisma.game.findUnique({
+      where: { groupId_gameNumber: { groupId, gameNumber: parsedGameNumber } },
+    });
+    if (existingGame) {
+      return NextResponse.json(
+        { error: `Trận đấu số ${parsedGameNumber} đã tồn tại trong bảng này` },
+        { status: 409 }
+      );
+    }
+
     const game = await prisma.game.create({
       data: {
         groupId,
@@ -65,7 +76,13 @@ export async function POST(
     });
 
     return NextResponse.json(game, { status: 201 });
-  } catch {
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "P2002") {
+      return NextResponse.json(
+        { error: `Trận đấu số ${parsedGameNumber} đã tồn tại` },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi tạo trận đấu" },
       { status: 500 }

@@ -46,6 +46,7 @@ export const COMMENTATORS = [
 export const TOURNAMENT_FORMAT = {
   qualifier: {
     name: "Vòng Loại",
+    stageType: "QUALIFIER",
     totalPlayers: 64,
     groups: 8,
     playersPerGroup: 8,
@@ -55,17 +56,20 @@ export const TOURNAMENT_FORMAT = {
   },
   semi1: {
     name: "Vòng 2",
-    totalPlayers: 24,
+    stageType: "SEMI_1",
+    totalPlayers: 32,
     groups: 4,
     playersPerGroup: 8,
     gamesPerGroup: 3,
     advancingPerGroup: 4,
     totalAdvancing: 16,
-    guestSlots: 4,
-    qualifierSlots: 4,
+    // 16 advancing from qualifier + 16 guest players = 32
+    qualifierSlots: 4,  // 4 qualifier players per group
+    guestSlots: 4,      // 4 guest players per group
   },
   semi2: {
     name: "Vòng 3",
+    stageType: "SEMI_2",
     totalPlayers: 16,
     groups: 2,
     playersPerGroup: 8,
@@ -75,6 +79,7 @@ export const TOURNAMENT_FORMAT = {
   },
   final: {
     name: "Chung Kết Tổng",
+    stageType: "FINAL",
     totalPlayers: 8,
     groups: 1,
     playersPerGroup: 8,

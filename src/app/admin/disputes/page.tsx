@@ -5,6 +5,7 @@ import { AlertTriangle, Check, X } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface Dispute {
   id: string;
@@ -72,7 +73,7 @@ export default function AdminDisputesPage() {
         </div>
       </div>
 
-      {msg && <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-2 rounded-xl mb-4 text-sm">{msg}</div>}
+      {msg && <Alert variant="success" message={msg} onDismiss={() => setMsg(null)} className="mb-4" />}
 
       <div className="space-y-4">
         {filtered.length === 0 ? (

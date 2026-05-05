@@ -11,6 +11,13 @@ const announcementUpdateSchema = z.object({
   tournamentId: z.string().cuid().optional().nullable(),
 });
 
+function sanitizeHtml(str: string): string {
+  return str.replace(/[<>&"]/g, (c) => {
+    const map: Record<string, string> = { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" };
+    return map[c] || c;
+  });
+}
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,9 +43,13 @@ export async function PUT(
   }
 
   try {
+    const sanitizedData = { ...parsed.data };
+    if (sanitizedData.title) sanitizedData.title = sanitizeHtml(sanitizedData.title);
+    if (sanitizedData.content) sanitizedData.content = sanitizeHtml(sanitizedData.content);
+
     const announcement = await prisma.announcement.update({
       where: { id },
-      data: parsed.data,
+      data: sanitizedData,
     });
 
     await auditLog({

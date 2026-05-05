@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Check, Gift } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface Player { id: string; ign: string; }
 interface Prize {
@@ -62,6 +63,11 @@ export default function AdminPrizesPage() {
   };
 
   const handleMarkPaid = async (prize: Prize) => {
+    if (!prize.paid && !prize.playerId) {
+      setMsg("Cần gán tuyển thủ trước khi đánh dấu đã trả");
+      setTimeout(() => setMsg(null), 3000);
+      return;
+    }
     await handleUpdate(prize.id, { paid: !prize.paid, paidAt: !prize.paid ? new Date().toISOString() : null });
   };
 
@@ -104,7 +110,7 @@ export default function AdminPrizesPage() {
         </Card>
       </div>
 
-      {msg && <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-2 rounded-xl mb-4 text-sm">{msg}</div>}
+      {msg && <Alert variant={msg.includes("Cần gán") ? "warning" : "success"} message={msg} onDismiss={() => setMsg(null)} className="mb-4" />}
 
       {/* Add form */}
       {showForm && (
@@ -166,9 +172,12 @@ export default function AdminPrizesPage() {
                   </td>
                   <td className="py-3 px-4 text-center">
                     <button onClick={() => handleMarkPaid(prize)}
+                      disabled={!prize.paid && !prize.playerId}
                       className={`w-7 h-7 rounded-full flex items-center justify-center mx-auto transition-colors ${
-                        prize.paid ? "bg-green-500/20 text-green-400 hover:bg-green-500/30" : "bg-sblt-border text-sblt-muted hover:bg-sblt-border/80"
-                      }`} title={prize.paid ? `Đã trả ${prize.paidAt ? new Date(prize.paidAt).toLocaleDateString("vi-VN") : ""}` : "Đánh dấu đã trả"}>
+                        !prize.paid && !prize.playerId
+                          ? "bg-sblt-border/30 text-sblt-border cursor-not-allowed"
+                          : prize.paid ? "bg-green-500/20 text-green-400 hover:bg-green-500/30" : "bg-sblt-border text-sblt-muted hover:bg-sblt-border/80"
+                      }`} title={!prize.paid && !prize.playerId ? "Cần gán tuyển thủ trước" : prize.paid ? `Đã trả ${prize.paidAt ? new Date(prize.paidAt).toLocaleDateString("vi-VN") : ""}` : "Đánh dấu đã trả"}>
                       <Check className="h-4 w-4" />
                     </button>
                   </td>

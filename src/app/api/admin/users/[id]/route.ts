@@ -27,8 +27,14 @@ export async function PUT(
     return NextResponse.json({ error: "Không thể thay đổi role của chính mình" }, { status: 400 });
   }
 
+  // Check target user exists
+  const existingUser = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+  if (!existingUser) {
+    return NextResponse.json({ error: "Không tìm thấy người dùng" }, { status: 404 });
+  }
+
   try {
-    const before = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+    const before = { role: existingUser.role };
 
     const user = await prisma.user.update({
       where: { id },
@@ -67,6 +73,12 @@ export async function DELETE(
   // S-15: Admin cannot delete themselves
   if (session.user.id === id) {
     return NextResponse.json({ error: "Không thể xóa tài khoản của chính mình" }, { status: 400 });
+  }
+
+  // Check target user exists
+  const existingUser = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+  if (!existingUser) {
+    return NextResponse.json({ error: "Không tìm thấy người dùng" }, { status: 404 });
   }
 
   try {

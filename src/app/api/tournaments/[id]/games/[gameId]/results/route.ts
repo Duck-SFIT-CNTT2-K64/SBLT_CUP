@@ -53,6 +53,28 @@ export async function POST(
       return NextResponse.json({ error: "Không được có placement trùng nhau" }, { status: 400 });
     }
 
+    // Verify playerIds belong to the group
+    const groupPlayers = await prisma.groupPlayer.findMany({
+      where: { groupId: game.groupId },
+      select: { playerId: true },
+    });
+    const validPlayerIds = new Set(groupPlayers.map((gp) => gp.playerId));
+    const invalidPlayers = results.filter((r: { playerId: string }) => !validPlayerIds.has(r.playerId));
+    if (invalidPlayers.length > 0) {
+      return NextResponse.json(
+        { error: `Có ${invalidPlayers.length} tuyển thủ không thuộc bảng đấu này` },
+        { status: 400 }
+      );
+    }
+
+    // Verify result count matches group player count
+    if (results.length !== groupPlayers.length) {
+      return NextResponse.json(
+        { error: `Cần nhập kết quả cho đúng ${groupPlayers.length} tuyển thủ (hiện tại: ${results.length})` },
+        { status: 400 }
+      );
+    }
+
     // Snapshot before state for audit
     const before = await prisma.gameResult.findMany({ where: { gameId }, include: { player: { select: { ign: true } } } });
 

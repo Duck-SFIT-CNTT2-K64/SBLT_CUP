@@ -6,6 +6,7 @@ import { Trophy, Plus, Edit, Trash2, Settings } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface Tournament {
   id: string; name: string; season: number; status: string; startDate: string; endDate: string; maxPlayers: number;
@@ -53,7 +54,7 @@ export default function AdminTournamentsPage() {
         <Link href="/admin/tournaments/new"><Button size="sm"><Plus className="h-4 w-4" /> Tạo giải đấu</Button></Link>
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       <Card hover={false} className="overflow-hidden">
         <div className="overflow-x-auto">

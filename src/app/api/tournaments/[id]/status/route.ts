@@ -68,18 +68,14 @@ export async function GET(
   }
 
   if (tournament.status === "REGISTRATION_OPEN") {
-    if (approvedCount >= tournament.maxPlayers) {
+    const reasons: string[] = [];
+    if (approvedCount >= tournament.maxPlayers) reasons.push(`Đã đủ ${tournament.maxPlayers} tuyển thủ`);
+    if (now >= new Date(tournament.regEnd)) reasons.push("Đã hết hạn đăng ký");
+    if (reasons.length > 0) {
       suggestions.push({
         status: "REGISTRATION_CLOSED",
         label: STATUS_LABELS.REGISTRATION_CLOSED,
-        reason: `Đã đủ ${tournament.maxPlayers} tuyển thủ`,
-      });
-    }
-    if (now >= new Date(tournament.regEnd)) {
-      suggestions.push({
-        status: "REGISTRATION_CLOSED",
-        label: STATUS_LABELS.REGISTRATION_CLOSED,
-        reason: "Đã hết hạn đăng ký",
+        reason: reasons.join(" · "),
       });
     }
   }

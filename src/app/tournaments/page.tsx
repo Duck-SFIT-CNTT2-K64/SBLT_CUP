@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trophy, Calendar, Users, ArrowRight, Gift } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Alert } from "@/components/ui/Alert";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { formatCurrency } from "@/lib/utils";
 
@@ -71,11 +72,7 @@ export default function TournamentsPage() {
         subtitle="Theo dõi và tham gia các mùa giải đấu Đấu Trường Chân Lý"
       />
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {tournaments.map((tournament) => {

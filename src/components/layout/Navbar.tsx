@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
-import { Menu, X, User, LogOut, Shield, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X, User, LogOut, Shield, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -16,11 +16,37 @@ const navLinks = [
   { href: "/announcements", label: "Thông báo" },
 ];
 
+const DISMISSED_KEY = "sblt_dismissed_announcements";
+
 export default function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [unseenCount, setUnseenCount] = useState(0);
+
+  useEffect(() => {
+    if (!session) return;
+    const checkUnseen = async () => {
+      try {
+        const res = await fetch("/api/announcements");
+        if (!res.ok) return;
+        const all: { id: string }[] = await res.json();
+        const raw = localStorage.getItem(DISMISSED_KEY);
+        const dismissed: string[] = raw ? JSON.parse(raw) : [];
+        const count = all.filter((a) => !dismissed.includes(a.id)).length;
+        setUnseenCount(count);
+      } catch { /* ignore */ }
+    };
+    checkUnseen();
+    const interval = setInterval(checkUnseen, 60000); // check every minute
+    return () => clearInterval(interval);
+  }, [session]);
+
+  const openPopup = () => {
+    const fn = (window as unknown as Record<string, unknown>).__openAnnouncementPopup;
+    if (typeof fn === "function") fn();
+  };
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -69,6 +95,20 @@ export default function Navbar() {
           {/* Auth Section */}
           <div className="hidden md:flex items-center gap-3">
             {session ? (
+              <>
+                {/* Notification Bell */}
+                <button
+                  onClick={openPopup}
+                  className="relative p-2 text-sblt-muted hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                  title="Thông báo"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unseenCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-sblt-red text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
+                      {unseenCount > 9 ? "9+" : unseenCount}
+                    </span>
+                  )}
+                </button>
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -114,6 +154,7 @@ export default function Navbar() {
                   </>
                 )}
               </div>
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
@@ -162,6 +203,22 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="border-t border-sblt-border pt-3 mt-3 space-y-1">
+              {session && (
+                <button
+                  onClick={() => { openPopup(); setMobileMenuOpen(false); }}
+                  className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-sblt-muted hover:text-white rounded-lg hover:bg-white/5"
+                >
+                  <span className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    Thông báo
+                  </span>
+                  {unseenCount > 0 && (
+                    <span className="bg-sblt-red text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                      {unseenCount}
+                    </span>
+                  )}
+                </button>
+              )}
               {session ? (
                 <>
                   <Link

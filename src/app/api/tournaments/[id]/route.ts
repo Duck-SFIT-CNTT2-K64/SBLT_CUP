@@ -7,7 +7,7 @@ import { z } from "zod";
 const tournamentUpdateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   description: z.string().max(500).optional().nullable(),
-  status: z.enum(["UPCOMING", "REGISTRATION_OPEN", "REGISTRATION_CLOSED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
+  // status removed — must use POST /api/tournaments/[id]/status for validated transitions
   regStart: z.string().datetime().optional(),
   regEnd: z.string().datetime().optional(),
   startDate: z.string().datetime().optional(),
@@ -107,6 +107,28 @@ export async function PUT(
     return NextResponse.json({ error: parsed.error.issues[0]?.message || "Dữ liệu không hợp lệ" }, { status: 400 });
   }
 
+  // Validate date ordering if dates are being updated
+  const data = parsed.data;
+  if (data.regStart || data.regEnd || data.startDate || data.endDate) {
+    const existing = await prisma.tournament.findUnique({ where: { id }, select: { regStart: true, regEnd: true, startDate: true, endDate: true } });
+    if (existing) {
+      const regStart = data.regStart ? new Date(data.regStart) : existing.regStart;
+      const regEnd = data.regEnd ? new Date(data.regEnd) : existing.regEnd;
+      const startDate = data.startDate ? new Date(data.startDate) : existing.startDate;
+      const endDate = data.endDate ? new Date(data.endDate) : existing.endDate;
+
+      if (regStart >= regEnd) {
+        return NextResponse.json({ error: "Ngày mở đăng ký phải trước ngày đóng đăng ký" }, { status: 400 });
+      }
+      if (regEnd > startDate) {
+        return NextResponse.json({ error: "Ngày đóng đăng ký phải trước hoặc bằng ngày bắt đầu" }, { status: 400 });
+      }
+      if (startDate > endDate) {
+        return NextResponse.json({ error: "Ngày bắt đầu phải trước ngày kết thúc" }, { status: 400 });
+      }
+    }
+  }
+
   try {
     const before = await prisma.tournament.findUnique({ where: { id }, select: { name: true, status: true } });
 
@@ -143,7 +165,16 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const tournament = await prisma.tournament.findUnique({ where: { id }, select: { name: true } });
+    const tournament = await prisma.tournament.findUnique({ where: { id }, select: { name: true, status: true } });
+    if (!tournament) {
+      return NextResponse.json({ error: "Không tìm thấy giải đấu" }, { status: 404 });
+    }
+    if (tournament.status !== "UPCOMING" && tournament.status !== "CANCELLED") {
+      return NextResponse.json(
+        { error: "Chỉ có thể xóa giải đấu sắp diễn ra hoặc đã hủy" },
+        { status: 400 }
+      );
+    }
     await prisma.tournament.delete({ where: { id } });
 
     await auditLog({

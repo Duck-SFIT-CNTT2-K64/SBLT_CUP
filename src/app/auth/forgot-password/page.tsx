@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -59,9 +60,7 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 text-sm">{error}</div>
-              )}
+              {error && <Alert variant="error" message={error} onDismiss={() => setError("")} className="mb-4" />}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-sblt-muted mb-1.5">Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}

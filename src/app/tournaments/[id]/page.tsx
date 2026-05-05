@@ -8,6 +8,7 @@ import { Trophy, Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChar
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 import { formatCurrency } from "@/lib/utils";
 
 interface Tournament {
@@ -54,6 +55,7 @@ export default function TournamentDetailPage() {
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTournament();
@@ -81,21 +83,23 @@ export default function TournamentDetailPage() {
   const handleRegister = async () => {
     if (!session) { window.location.href = "/auth/login"; return; }
     setRegistering(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/tournaments/${params.id}/register`, { method: "POST" });
       if (res.ok) { setIsRegistered(true); fetchTournament(); }
-      else { const data = await res.json(); alert(data.error || "Đã xảy ra lỗi khi đăng ký"); }
-    } catch { /* empty */ } finally { setRegistering(false); }
+      else { const data = await res.json(); setActionError(data.error || "Đã xảy ra lỗi khi đăng ký"); }
+    } catch { setActionError("Đã xảy ra lỗi kết nối"); } finally { setRegistering(false); }
   };
 
   const handleWithdraw = async () => {
     if (!confirm("Bạn có chắc muốn rút lui khỏi giải đấu này?")) return;
+    setActionError(null);
     try {
       const res = await fetch(`/api/tournaments/${params.id}/withdraw`, { method: "POST" });
       const data = await res.json();
       if (res.ok) { setIsRegistered(false); fetchTournament(); }
-      else alert(data.error || "Đã xảy ra lỗi");
-    } catch { alert("Đã xảy ra lỗi"); }
+      else setActionError(data.error || "Đã xảy ra lỗi");
+    } catch { setActionError("Đã xảy ra lỗi kết nối"); }
   };
 
   if (loading) {
@@ -121,11 +125,8 @@ export default function TournamentDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
+      {actionError && <Alert variant="error" message={actionError} onDismiss={() => setActionError(null)} className="mb-6" />}
 
       {/* Hero Header */}
       <div className="relative overflow-hidden rounded-2xl bg-sblt-card border border-sblt-border mb-8">

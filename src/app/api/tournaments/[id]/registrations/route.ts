@@ -93,6 +93,21 @@ export async function PUT(
       return NextResponse.json({ error: "Không tìm thấy đăng ký" }, { status: 404 });
     }
 
+    // Validate status transition
+    const VALID_REG_TRANSITIONS: Record<string, string[]> = {
+      PENDING: ["APPROVED", "REJECTED", "WITHDRAWN"],
+      APPROVED: ["REJECTED", "WITHDRAWN"],
+      REJECTED: ["PENDING"],
+      WITHDRAWN: ["PENDING"],
+    };
+    const allowedStatuses = VALID_REG_TRANSITIONS[existing.status] || [];
+    if (status && !allowedStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: `Không thể chuyển từ trạng thái ${existing.status} sang ${status}` },
+        { status: 400 }
+      );
+    }
+
     const registration = await prisma.registration.update({
       where: { id: registrationId },
       data: { status },

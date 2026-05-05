@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Users, Shield, User } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Alert } from "@/components/ui/Alert";
 
 interface UserRow {
   id: string; name: string; email: string; role: string; createdAt: string;
@@ -44,7 +45,7 @@ export default function AdminUsersPage() {
         <p className="text-sblt-muted mt-1">Quản lý tài khoản và phân quyền</p>
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       <Card hover={false} className="overflow-hidden">
         <div className="overflow-x-auto">

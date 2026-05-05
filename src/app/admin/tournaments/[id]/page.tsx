@@ -58,6 +58,9 @@ export default function AdminTournamentDetailPage() {
   const [panelLoading, setPanelLoading] = useState(false);
   const [panelMsg, setPanelMsg] = useState<string | null>(null);
   const [stageForm, setStageForm] = useState({ name: "", stageType: "QUALIFIER", stageOrder: 1, date: "", startTime: "", totalGames: 3 });
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
 
   useEffect(() => { fetchTournament(); }, [params.id]);
 
@@ -193,6 +196,18 @@ export default function AdminTournamentDetailPage() {
     [arr[idx], arr[next]] = [arr[next], arr[idx]];
     setEditingResults(arr.map((r, i) => ({ ...r, placement: i + 1 })));
   };
+
+  const handleDragStart = (idx: number) => setDragIdx(idx);
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const arr = [...editingResults];
+    const [moved] = arr.splice(dragIdx, 1);
+    arr.splice(idx, 0, moved);
+    setEditingResults(arr.map((r, i) => ({ ...r, placement: i + 1 })));
+    setDragIdx(idx);
+  };
+  const handleDragEnd = () => setDragIdx(null);
 
   const inputClass = "w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red";
 
@@ -465,7 +480,7 @@ export default function AdminTournamentDetailPage() {
                           <button className="flex-1 text-left" onClick={() => setSelectedGroup(group.id)}>
                             <div className="flex justify-between items-center">
                               <span className="font-medium text-white">{group.name}</span>
-                              <span className="text-xs text-sblt-muted">{group.players.length} người</span>
+                              <span className={`text-xs font-medium ${group.players.length >= 8 ? "text-red-400" : "text-sblt-muted"}`}>{group.players.length}/8</span>
                             </div>
                           </button>
                           <div className="flex items-center gap-1 ml-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
@@ -498,13 +513,42 @@ export default function AdminTournamentDetailPage() {
                       <h3 className="font-semibold text-white">{currentGroup.name} — Tuyển thủ</h3>
                       <div className="flex items-center gap-2">
                         <button onClick={() => handleQuickScore(currentGroup)} className="bg-sblt-red/20 hover:bg-sblt-red/30 text-sblt-red hover:text-red-300 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors" title="Nhập điểm nhanh">🎮 Nhập điểm nhanh</button>
-                        <select className="bg-sblt-dark border border-sblt-border rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sblt-red"
-                          onChange={(e) => { if (e.target.value) { handleAddPlayer(currentGroup.id, e.target.value); e.target.value = ""; } }}>
-                          <option value="">+ Thêm tuyển thủ</option>
-                          {approvedPlayers.filter((p) => !currentGroup.players.find((gp) => gp.playerId === p.id)).map((p) => (
-                            <option key={p.id} value={p.id}>{p.ign}{p.isGuest ? " (Khách mời)" : ""}</option>
-                          ))}
-                        </select>
+                        {currentGroup.players.length >= 8 ? (
+                          <span className="text-xs text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg">Đã đủ 8/8</span>
+                        ) : (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="+ Thêm tuyển thủ"
+                              value={playerSearch}
+                              onChange={(e) => { setPlayerSearch(e.target.value); setShowPlayerDropdown(true); }}
+                              onFocus={() => setShowPlayerDropdown(true)}
+                              onBlur={() => setTimeout(() => setShowPlayerDropdown(false), 200)}
+                              className="bg-sblt-dark border border-sblt-border rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sblt-red w-48"
+                            />
+                            {showPlayerDropdown && playerSearch.length > 0 && (
+                              <div className="absolute z-10 top-full mt-1 w-full bg-sblt-dark border border-sblt-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                {approvedPlayers
+                                  .filter((p) => !currentGroup.players.find((gp) => gp.playerId === p.id))
+                                  .filter((p) => p.ign.toLowerCase().includes(playerSearch.toLowerCase()))
+                                  .map((p) => (
+                                    <button
+                                      key={p.id}
+                                      onMouseDown={(e) => { e.preventDefault(); handleAddPlayer(currentGroup.id, p.id); setPlayerSearch(""); setShowPlayerDropdown(false); }}
+                                      className="w-full text-left px-3 py-2 text-sm text-white hover:bg-sblt-border transition-colors"
+                                    >
+                                      {p.ign}{p.isGuest ? " (Khách mời)" : ""}
+                                    </button>
+                                  ))}
+                                {approvedPlayers
+                                  .filter((p) => !currentGroup.players.find((gp) => gp.playerId === p.id))
+                                  .filter((p) => p.ign.toLowerCase().includes(playerSearch.toLowerCase())).length === 0 && (
+                                  <div className="px-3 py-2 text-sm text-sblt-muted">Không tìm thấy</div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     {currentGroup.players.length > 0 ? (
@@ -557,7 +601,12 @@ export default function AdminTournamentDetailPage() {
                                     const player = currentGroup.players.find((gp) => gp.playerId === r.playerId);
                                     const pts = SCORING[r.placement] ?? 0;
                                     return (
-                                      <div key={r.playerId} className="flex items-center gap-2 bg-sblt-dark rounded-xl px-3 py-2">
+                                      <div key={r.playerId}
+                                        draggable
+                                        onDragStart={() => handleDragStart(idx)}
+                                        onDragOver={(e) => handleDragOver(e, idx)}
+                                        onDragEnd={handleDragEnd}
+                                        className={`flex items-center gap-2 bg-sblt-dark rounded-xl px-3 py-2 cursor-grab active:cursor-grabbing ${dragIdx === idx ? "opacity-50" : ""}`}>
                                         <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                                           r.placement === 1 ? "bg-sblt-red text-white" : r.placement <= 4 ? "bg-zinc-500 text-white" : "bg-sblt-border text-sblt-white"
                                         }`}>{r.placement}</span>

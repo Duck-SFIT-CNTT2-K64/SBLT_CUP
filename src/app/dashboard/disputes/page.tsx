@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, Plus, X } from "lucide-react";
+import { AlertTriangle, Plus } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface Dispute {
   id: string; reason: string; description: string; status: string; adminNote: string | null; createdAt: string;
@@ -28,6 +29,7 @@ export default function DisputesPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [msgVariant, setMsgVariant] = useState<"success" | "error">("success");
 
   useEffect(() => { fetchData(); }, []);
 
@@ -43,8 +45,8 @@ export default function DisputesPage() {
     setSubmitting(true);
     const res = await fetch("/api/disputes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const data = await res.json();
-    if (res.ok) { setShowForm(false); setForm({ tournamentId: "", reason: "", description: "" }); setMsg("Kháng nghị đã được gửi. Admin sẽ xem xét sớm nhất có thể."); fetchData(); }
-    else { setMsg(data.error || "Đã xảy ra lỗi"); }
+    if (res.ok) { setShowForm(false); setForm({ tournamentId: "", reason: "", description: "" }); setMsg("Kháng nghị đã được gửi. Admin sẽ xem xét sớm nhất có thể."); setMsgVariant("success"); fetchData(); }
+    else { setMsg(data.error || "Đã xảy ra lỗi"); setMsgVariant("error"); }
     setSubmitting(false);
   };
 
@@ -62,12 +64,7 @@ export default function DisputesPage() {
         <Button size="sm" onClick={() => setShowForm(!showForm)}><Plus className="h-4 w-4" /> Gửi kháng nghị</Button>
       </div>
 
-      {msg && (
-        <div className="bg-sblt-dark border border-sblt-border text-white px-4 py-3 rounded-xl mb-4 text-sm flex items-center justify-between">
-          {msg}
-          <button onClick={() => setMsg(null)}><X className="h-4 w-4 text-sblt-muted" /></button>
-        </div>
-      )}
+      {msg && <Alert variant={msgVariant} message={msg} onDismiss={() => setMsg(null)} className="mb-4" />}
 
       {showForm && (
         <Card hover={false} className="p-5 mb-6">
@@ -85,10 +82,11 @@ export default function DisputesPage() {
                 <label className="block text-xs text-sblt-muted mb-1">Lý do *</label>
                 <select value={form.reason} onChange={(e) => setForm((p) => ({ ...p, reason: e.target.value }))} className={inputClass} required>
                   <option value="">Chọn lý do</option>
-                  <option value="wrong_placement">Kết quả sai (placement)</option>
-                  <option value="bug_disconnect">Bug / Disconnect</option>
-                  <option value="rule_violation">Vi phạm quy định</option>
-                  <option value="other">Khác</option>
+                  <option value="WRONG_RESULT">Kết quả sai (placement)</option>
+                  <option value="BUG">Bug</option>
+                  <option value="DISCONNECT">Disconnect</option>
+                  <option value="CHEATING">Vi phạm quy định</option>
+                  <option value="OTHER">Khác</option>
                 </select>
               </div>
               <div>

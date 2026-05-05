@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -64,9 +65,7 @@ function ResetPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-4 text-sm">{error}</div>
-      )}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError("")} className="mb-4" />}
       <div className="mb-4">
         <label className="block text-sm font-medium text-sblt-muted mb-1.5">Mật khẩu mới</label>
         <div className="relative">

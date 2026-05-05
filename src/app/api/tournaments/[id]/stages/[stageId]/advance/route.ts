@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { TOURNAMENT_FORMAT } from "@/lib/constants";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/advance
@@ -136,7 +137,45 @@ export async function POST(
       });
 
       if (nextGroups.length > 0) {
-        const assignments = snakeDraft(advancingPlayers, nextGroups.length);
+        let allPlayersToPlace: { playerId: string; ign: string }[] = advancingPlayers.map((p) => ({
+          playerId: p.playerId,
+          ign: p.ign,
+        }));
+
+        // SEMI_1: Auto-fill guest players into remaining slots
+        if (nextStage.stageType === "SEMI_1") {
+          const format = TOURNAMENT_FORMAT.semi1;
+          const totalNeeded = nextGroups.length * format.playersPerGroup;
+          const slotsRemaining = totalNeeded - allPlayersToPlace.length;
+
+          if (slotsRemaining > 0) {
+            // Get all guest players with approved registrations in this tournament
+            const guestRegistrations = await tx.registration.findMany({
+              where: {
+                tournamentId,
+                status: "APPROVED",
+                player: { isGuest: true },
+              },
+              include: { player: { select: { id: true, ign: true } } },
+            });
+
+            // Filter out guests who are already advancing (shouldn't happen, but safe)
+            const advancingIds = new Set(allPlayersToPlace.map((p) => p.playerId));
+            const availableGuests = guestRegistrations
+              .filter((r) => !advancingIds.has(r.playerId))
+              .map((r) => ({ playerId: r.playerId, ign: r.player.ign }));
+
+            // Take only what we need
+            const guestsToAdd = availableGuests.slice(0, slotsRemaining);
+            allPlayersToPlace = [...allPlayersToPlace, ...guestsToAdd];
+          }
+        }
+
+        // Distribute players into next stage groups
+        // For SEMI_2: balanced by source group (players from same Semi 1 group go to different Semi 2 groups)
+        const assignments = (nextStage.stageType === "SEMI_2")
+          ? balancedDraft(allPlayersToPlace, nextGroups.length, advancingPlayers)
+          : snakeDraft(allPlayersToPlace, nextGroups.length);
 
         for (let groupIdx = 0; groupIdx < nextGroups.length; groupIdx++) {
           const group = nextGroups[groupIdx];
@@ -262,12 +301,13 @@ function rankGroupPlayers(group: {
     };
   });
 
-  // Sort: totalPoints DESC → top1Count DESC → top4Count DESC → bestPlacement ASC
+  // Sort: totalPoints DESC → top1Count DESC → top4Count DESC → bestPlacement ASC → playerId (deterministic)
   return players.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
     if (b.top1Count !== a.top1Count) return b.top1Count - a.top1Count;
     if (b.top4Count !== a.top4Count) return b.top4Count - a.top4Count;
-    return a.bestPlacement - b.bestPlacement;
+    if (a.bestPlacement !== b.bestPlacement) return a.bestPlacement - b.bestPlacement;
+    return a.playerId.localeCompare(b.playerId);
   });
 }
 
@@ -282,6 +322,48 @@ function snakeDraft<T>(players: T[], numGroups: number): T[][] {
     groupIdx += direction;
     if (groupIdx >= numGroups) { groupIdx = numGroups - 1; direction = -1; }
     else if (groupIdx < 0) { groupIdx = 0; direction = 1; }
+  }
+
+  return groups;
+}
+
+// Balanced draft: ensures players from the same source group go to different destination groups
+function balancedDraft(
+  players: { playerId: string; ign: string }[],
+  numGroups: number,
+  sourceInfo: { playerId: string; fromGroup: string }[]
+): { playerId: string; ign: string }[][] {
+  const groups: { playerId: string; ign: string }[][] = Array.from(
+    { length: numGroups },
+    () => []
+  );
+
+  const sourceMap = new Map(sourceInfo.map((s) => [s.playerId, s.fromGroup]));
+
+  const withSource = players.filter((p) => sourceMap.has(p.playerId));
+  const withoutSource = players.filter((p) => !sourceMap.has(p.playerId));
+
+  // Group players by their source group
+  const bySource = new Map<string, typeof players>();
+  for (const p of withSource) {
+    const src = sourceMap.get(p.playerId)!;
+    if (!bySource.has(src)) bySource.set(src, []);
+    bySource.get(src)!.push(p);
+  }
+
+  // Round-robin each source group into different destination groups
+  let destIdx = 0;
+  for (const [, sourcePlayers] of bySource) {
+    for (const player of sourcePlayers) {
+      groups[destIdx].push(player);
+      destIdx = (destIdx + 1) % numGroups;
+    }
+  }
+
+  // Fill remaining players (guests, etc.) round-robin
+  for (const player of withoutSource) {
+    groups[destIdx].push(player);
+    destIdx = (destIdx + 1) % numGroups;
   }
 
   return groups;

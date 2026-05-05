@@ -41,11 +41,30 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+const MAX_PER_GROUP = 8;
+
 function seededDraw(
   players: { id: string; ign: string; rank: string | null; isGuest: boolean }[],
   numGroups: number
 ): { id: string; ign: string; rank: string | null; isGuest: boolean }[][] {
   const groups: typeof players[] = Array.from({ length: numGroups }, () => []);
+  const groupCounts = new Array(numGroups).fill(0);
+
+  // Helper: find next group with capacity using snake direction
+  function addToNextGroup(player: typeof players[0], startIdx: number, dir: number): boolean {
+    let idx = startIdx;
+    for (let attempt = 0; attempt < numGroups; attempt++) {
+      if (groupCounts[idx] < MAX_PER_GROUP) {
+        groups[idx].push(player);
+        groupCounts[idx]++;
+        return true;
+      }
+      idx += dir;
+      if (idx >= numGroups) { idx = numGroups - 1; dir = -1; }
+      else if (idx < 0) { idx = 0; dir = 1; }
+    }
+    return false; // all groups full
+  }
 
   // Separate guests and regular players
   const guests = shuffle(players.filter((p) => p.isGuest));
@@ -65,19 +84,21 @@ function seededDraw(
     tieredPlayers.push(...shuffle(byTier.get(tier)!));
   }
 
-  // Snake draft for regular players
+  // Snake draft for regular players — respects 8-player cap
   let dir = 1;
   let idx = 0;
   for (const player of tieredPlayers) {
-    groups[idx].push(player);
+    if (!addToNextGroup(player, idx, dir)) break;
     idx += dir;
     if (idx >= numGroups) { idx = numGroups - 1; dir = -1; }
     else if (idx < 0) { idx = 0; dir = 1; }
   }
 
-  // Distribute guests evenly
-  for (let i = 0; i < guests.length; i++) {
-    groups[i % numGroups].push(guests[i]);
+  // Distribute guests evenly — respects 8-player cap
+  let guestIdx = 0;
+  for (const guest of guests) {
+    if (!addToNextGroup(guest, guestIdx, 1)) break;
+    guestIdx = (guestIdx + 1) % numGroups;
   }
 
   return groups;
@@ -126,6 +147,17 @@ export async function GET(
   }));
 
   const numGroups = stage.groups.length;
+
+  // Check capacity before preview
+  if (players.length > numGroups * MAX_PER_GROUP) {
+    return NextResponse.json({
+      error: `${players.length} tuyển thủ không thể chia đều vào ${numGroups} bảng (tối đa ${numGroups * MAX_PER_GROUP}). Tạo thêm bảng.`,
+      totalPlayers: players.length,
+      numGroups,
+      maxCapacity: numGroups * MAX_PER_GROUP,
+    }, { status: 400 });
+  }
+
   const drawResult = seededDraw(players, numGroups);
 
   const preview = [...stage.groups]
@@ -173,6 +205,24 @@ export async function POST(
   let finalAssignments: { groupId: string; playerIds: string[] }[];
 
   if (assignments) {
+    // Validate each group doesn't exceed 8 players
+    for (const a of assignments) {
+      if (a.playerIds.length > 8) {
+        return NextResponse.json(
+          { error: `Bảng có ${a.playerIds.length} tuyển thủ, vượt quá giới hạn 8` },
+          { status: 400 }
+        );
+      }
+    }
+    // Validate no player appears in multiple groups
+    const allPlayerIds = assignments.flatMap((a: { playerIds: string[] }) => a.playerIds);
+    const uniquePlayerIds = new Set(allPlayerIds);
+    if (uniquePlayerIds.size !== allPlayerIds.length) {
+      return NextResponse.json(
+        { error: "Có tuyển thủ bị trùng giữa các bảng. Mỗi tuyển thủ chỉ được ở 1 bảng." },
+        { status: 400 }
+      );
+    }
     finalAssignments = assignments;
   } else if (confirm) {
     // Run fresh draw
@@ -188,6 +238,14 @@ export async function POST(
 
     if (!tournament) return NextResponse.json({ error: "Không tìm thấy giải đấu" }, { status: 404 });
 
+    const numGroupsForCheck = stage.groups.length;
+    if (tournament.registrations.length > numGroupsForCheck * 8) {
+      return NextResponse.json(
+        { error: `${tournament.registrations.length} tuyển thủ không thể chia đều vào ${numGroupsForCheck} bảng (tối đa ${numGroupsForCheck * 8}). Tạo thêm bảng hoặc bớt tuyển thủ.` },
+        { status: 400 }
+      );
+    }
+
     const players = tournament.registrations.map((r) => ({
       id: r.player.id,
       ign: r.player.ign,
@@ -197,6 +255,16 @@ export async function POST(
 
     const numGroups = stage.groups.length;
     const drawResult = seededDraw(players, numGroups);
+
+    // Verify all players were placed
+    const totalPlaced = drawResult.reduce((sum, g) => sum + g.length, 0);
+    if (totalPlaced < players.length) {
+      return NextResponse.json(
+        { error: `Chỉ xếp được ${totalPlaced}/${players.length} tuyển thủ. Tăng số bảng hoặc giảm tuyển thủ.` },
+        { status: 400 }
+      );
+    }
+
     const sortedGroups = [...stage.groups].sort((a, b) => a.groupOrder - b.groupOrder);
 
     finalAssignments = sortedGroups.map((group, i) => ({

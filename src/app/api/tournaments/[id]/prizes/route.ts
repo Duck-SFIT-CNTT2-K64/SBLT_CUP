@@ -70,7 +70,13 @@ export async function POST(
     });
 
     return NextResponse.json(prize, { status: 201 });
-  } catch {
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "P2002") {
+      return NextResponse.json(
+        { error: `Giải thưởng hạng ${parsedRank} đã tồn tại trong giải đấu này` },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi tạo giải thưởng" },
       { status: 500 }

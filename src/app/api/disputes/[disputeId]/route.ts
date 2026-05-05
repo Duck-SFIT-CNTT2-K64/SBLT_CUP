@@ -35,6 +35,21 @@ export async function PUT(
     return NextResponse.json({ error: "Không tìm thấy kháng nghị" }, { status: 404 });
   }
 
+  // Validate status transition
+  const VALID_DISPUTE_TRANSITIONS: Record<string, string[]> = {
+    PENDING: ["REVIEWING", "RESOLVED", "REJECTED"],
+    REVIEWING: ["RESOLVED", "REJECTED"],
+    RESOLVED: [],
+    REJECTED: [],
+  };
+  const allowedTransitions = VALID_DISPUTE_TRANSITIONS[existing.status] || [];
+  if (!allowedTransitions.includes(status)) {
+    return NextResponse.json(
+      { error: `Không thể chuyển trạng thái kháng nghị từ ${existing.status} sang ${status}` },
+      { status: 400 }
+    );
+  }
+
   // S-13: Sanitize adminNote
   const sanitizedNote = adminNote
     ? String(adminNote).replace(/[<>&"]/g, (c: string) => {

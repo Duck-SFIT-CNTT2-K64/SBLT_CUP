@@ -25,14 +25,43 @@ export async function PUT(
 
   // S-04: Whitelist allowed fields only
   const allowedFields: Record<string, unknown> = {};
-  if (body.rank !== undefined) allowedFields.rank = Number(body.rank);
-  if (body.amount !== undefined) allowedFields.amount = Number(body.amount);
-  if (body.description !== undefined) allowedFields.description = String(body.description).slice(0, 500);
+  if (body.rank !== undefined) {
+    const r = Number(body.rank);
+    if (!Number.isInteger(r) || r < 1 || r > 100) {
+      return NextResponse.json({ error: "Hạng không hợp lệ (1-100)" }, { status: 400 });
+    }
+    allowedFields.rank = r;
+  }
+  if (body.amount !== undefined) {
+    const a = Number(body.amount);
+    if (!Number.isInteger(a) || a < 0) {
+      return NextResponse.json({ error: "Số tiền không hợp lệ" }, { status: 400 });
+    }
+    allowedFields.amount = a;
+  }
+  if (body.description !== undefined) {
+    const d = String(body.description).trim();
+    if (d.length === 0) {
+      return NextResponse.json({ error: "Mô tả không được để trống" }, { status: 400 });
+    }
+    allowedFields.description = d.slice(0, 500);
+  }
   if (body.playerId !== undefined) allowedFields.playerId = body.playerId || null;
   if (body.paid !== undefined) {
-    allowedFields.paid = Boolean(body.paid);
-    if (body.paid === true) allowedFields.paidAt = new Date();
-    if (body.paid === false) allowedFields.paidAt = null;
+    if (body.paid === true) {
+      const playerIdBeingSet = allowedFields.playerId !== undefined ? allowedFields.playerId : existing.playerId;
+      if (!playerIdBeingSet) {
+        return NextResponse.json(
+          { error: "Cần gán tuyển thủ trước khi đánh dấu đã trả" },
+          { status: 400 }
+        );
+      }
+      allowedFields.paid = true;
+      allowedFields.paidAt = new Date();
+    } else {
+      allowedFields.paid = false;
+      allowedFields.paidAt = null;
+    }
   }
 
   try {

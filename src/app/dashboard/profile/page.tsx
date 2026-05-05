@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { User, Save, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface PlayerProfile { ign: string; rank: string; discord: string; phone: string; }
 
@@ -49,7 +50,7 @@ export default function ProfilePage() {
         <div className="sblt-divider w-16 mt-4" />
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       <Card hover={false} className="p-6">
         <form onSubmit={handleSubmit}>

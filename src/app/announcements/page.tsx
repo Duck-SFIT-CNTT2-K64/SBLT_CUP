@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Bell, Calendar, AlertTriangle, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Alert } from "@/components/ui/Alert";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 interface Announcement {
@@ -41,11 +42,7 @@ export default function AnnouncementsPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SectionHeading title="Thông báo" subtitle="Các thông báo mới nhất từ Ban Tổ Chức" />
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       <div className="space-y-4">
         {announcements.map((a) => {

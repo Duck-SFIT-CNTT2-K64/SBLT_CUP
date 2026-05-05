@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import AnnouncementPopup from "@/components/layout/AnnouncementPopup";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" });
@@ -61,6 +62,7 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+          <AnnouncementPopup />
         </Providers>
       </body>
     </html>

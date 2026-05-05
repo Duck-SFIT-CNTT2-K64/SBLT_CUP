@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FileText, Medal } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 
 interface GameResult {
   id: string; placement: number; points: number;
@@ -44,7 +45,7 @@ export default function ResultsPage() {
         <div className="sblt-divider w-16 mt-4" />
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>}
+      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       {results.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-8">

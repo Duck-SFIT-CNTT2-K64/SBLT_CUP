@@ -5,6 +5,13 @@ import { auditLog } from "@/lib/audit";
 
 const VALID_TYPES = ["GENERAL", "SCHEDULE_CHANGE", "RULE_UPDATE", "RESULT"];
 
+function sanitizeHtml(str: string): string {
+  return str.replace(/[<>&"]/g, (c) => {
+    const map: Record<string, string> = { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" };
+    return map[c] || c;
+  });
+}
+
 export async function GET() {
   const announcements = await prisma.announcement.findMany({
     include: {
@@ -50,8 +57,8 @@ export async function POST(req: NextRequest) {
   try {
     const announcement = await prisma.announcement.create({
       data: {
-        title: title.trim(),
-        content: content.trim(),
+        title: sanitizeHtml(title.trim()),
+        content: sanitizeHtml(content.trim()),
         type: announcementType,
         tournamentId: tournamentId || null,
       },
