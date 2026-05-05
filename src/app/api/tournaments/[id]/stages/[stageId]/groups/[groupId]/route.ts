@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string; stageId: string; groupId: string }> }
+) {
+  const { stageId, groupId } = await params;
+
+  const group = await prisma.group.findFirst({
+    where: { id: groupId, stageId },
+    include: {
+      players: {
+        include: { player: { select: { id: true, ign: true, rank: true, isGuest: true } } },
+      },
+      games: {
+        include: { results: { include: { player: { select: { id: true, ign: true, isGuest: true } } } } },
+        orderBy: { gameNumber: "asc" },
+      },
+    },
+  });
+
+  if (!group) {
+    return NextResponse.json({ error: "Không tìm thấy bảng đấu" }, { status: 404 });
+  }
+
+  // Also fetch sibling groups in the same stage for lobby switcher
+  const siblingGroups = await prisma.group.findMany({
+    where: { stageId },
+    select: { id: true, name: true, groupOrder: true },
+    orderBy: { groupOrder: "asc" },
+  });
+
+  return NextResponse.json({ ...group, siblingGroups });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; stageId: string; groupId: string }> }

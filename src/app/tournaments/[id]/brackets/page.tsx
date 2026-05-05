@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Trophy, ArrowLeft, Users } from "lucide-react";
+import { Trophy, ArrowLeft, Users, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -128,11 +128,19 @@ export default function BracketsPage() {
             const sortedPlayers = [...group.players].sort((a, b) => b.totalPoints - a.totalPoints);
 
             return (
-              <Card key={group.id} hover={false} className="overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 bg-sblt-dark border-b border-sblt-border">
-                  <span className="text-sm font-semibold text-white">Bảng {idx + 1}</span>
-                  <span className="text-xs text-sblt-muted">{group.name}</span>
-                </div>
+              <Link
+                key={group.id}
+                href={`/tournaments/${params.id}/brackets/${group.id}`}
+                className="block group"
+              >
+                <Card hover={false} className="overflow-hidden group-hover:border-sblt-red/50 group-hover:shadow-lg group-hover:shadow-sblt-red/10 transition-all duration-200">
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-sblt-dark border-b border-sblt-border">
+                    <span className="text-sm font-semibold text-white">Bảng {idx + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-sblt-muted">{group.name}</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-sblt-muted group-hover:text-sblt-red transition-colors" />
+                    </div>
+                  </div>
                 <div className="p-2 space-y-0.5">
                   {results ? results.map((r) => (
                     <div key={r.id} className={`flex items-center justify-between px-3 py-1.5 rounded text-sm ${getPlacementBg(r.placement)}`}>
@@ -154,7 +162,8 @@ export default function BracketsPage() {
                     <div className="text-center py-4 text-sblt-border text-xs">Chưa phân bổ</div>
                   )}
                 </div>
-              </Card>
+                </Card>
+              </Link>
             );
           })}
         </div>
