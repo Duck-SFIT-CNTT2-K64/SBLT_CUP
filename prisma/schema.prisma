@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  PLAYER
+}
+
+enum TournamentStatus {
+  UPCOMING
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum StageType {
+  QUALIFIER
+  SEMI_1
+  SEMI_2
+  FINAL
+}
+
+enum StageStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum GameStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum AnnouncementType {
+  GENERAL
+  SCHEDULE_CHANGE
+  RULE_UPDATE
+  RESULT
+}
+
+enum DisputeStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(PLAYER)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player?
+
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ign       String   @unique  // D-01: Enforce uniqueness at DB level
+  rank      String?
+  discord   String?
+  phone     String?
+  isGuest   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  registrations Registration[]
+  groupPlayers  GroupPlayer[]
+  gameResults   GameResult[]
+  prizes        Prize[]
+  disputes      Dispute[]     @relation("DisputeSubmitter")
+}
+
+model Tournament {
+  id          String           @id @default(cuid())
+  name        String
+  season      Int              @unique
+  description String?
+  status      TournamentStatus @default(UPCOMING)
+  regStart    DateTime
+  regEnd      DateTime
+  startDate   DateTime
+  endDate     DateTime
+  maxPlayers  Int              @default(64)
+  prizePool   Int              @default(10000000)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  registrations Registration[]
+  stages        Stage[]
+  prizes        Prize[]
+  announcements Announcement[]
+  disputes      Dispute[]
+}
+
+model Registration {
+  id           String             @id @default(cuid())
+  tournamentId String
+  tournament   Tournament         @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player             @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  status       RegistrationStatus @default(PENDING)
+  registeredAt DateTime           @default(now())
+  checkedIn    Boolean            @default(false)
+  checkInTime  DateTime?
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId, status])
+}
+
+model Stage {
+  id           String      @id @default(cuid())
+  tournamentId String
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  name         String
+  stageType    StageType
+  stageOrder   Int
+  date         DateTime
+  startTime    String
+  totalGames   Int         @default(3)
+  status       StageStatus @default(SCHEDULED)
+
+  groups Group[]
+
+  @@unique([tournamentId, stageType])
+  @@index([tournamentId])
+}
+
+model Group {
+  id        String @id @default(cuid())
+  stageId   String
+  stage     Stage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  name      String
+  groupOrder Int
+
+  players GroupPlayer[]
+  games   Game[]
+
+  @@index([stageId])
+}
+
+model GroupPlayer {
+  id         String  @id @default(cuid())
+  groupId    String
+  group      Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  playerId   String
+  player     Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  totalPoints Int    @default(0)
+  finalRank  Int?
+
+  @@unique([groupId, playerId])
+  @@index([playerId])
+}
+
+model Game {
+  id         String     @id @default(cuid())
+  groupId    String
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  gameNumber Int
+  status     GameStatus @default(SCHEDULED)
+  startTime  DateTime?
+  endTime    DateTime?
+
+  results GameResult[]
+  disputes Dispute[]
+
+  @@unique([groupId, gameNumber])
+  @@index([groupId])
+}
+
+model GameResult {
+  id        String @id @default(cuid())
+  gameId    String
+  game      Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  placement Int
+  points    Int
+
+  @@unique([gameId, playerId])
+  @@index([playerId])
+}
+
+model Prize {
+  id           String   @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  rank         Int
+  amount       Int
+  description  String
+  playerId     String?
+  player       Player?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  paid         Boolean  @default(false)
+  paidAt       DateTime?
+
+  @@unique([tournamentId, rank])
+  @@index([tournamentId])
+}
+
+model Announcement {
+  id           String           @id @default(cuid())
+  tournamentId String?
+  tournament   Tournament?      @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+  title        String
+  content      String
+  type         AnnouncementType @default(GENERAL)
+  createdAt    DateTime         @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, used])
+  @@index([expiresAt])
+}
+
+model Dispute {
+  id           String        @id @default(cuid())
+  tournamentId String
+  tournament   Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  gameId       String?
+  game         Game?         @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  submittedBy  String
+  player       Player        @relation("DisputeSubmitter", fields: [submittedBy], references: [id], onDelete: Cascade)
+  reason       String
+  description  String
+  status       DisputeStatus @default(PENDING)
+  adminNote    String?
+  resolvedBy   String?
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@index([tournamentId])
+  @@index([status])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
