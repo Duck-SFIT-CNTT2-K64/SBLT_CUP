@@ -107,7 +107,7 @@ model Tournament {
   maxPlayers  Int              @default(64)
   prizePool   Int              @default(10000000)
   createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  updatedAt   DateTime         @default(now()) @updatedAt
 
   registrations Registration[]
   stages        Stage[]
@@ -126,7 +126,7 @@ model Registration {
   registeredAt DateTime           @default(now())
   checkedIn    Boolean            @default(false)
   checkInTime  DateTime?
-  updatedAt    DateTime           @updatedAt
+  updatedAt    DateTime           @default(now()) @updatedAt
 
   @@unique([tournamentId, playerId])
   @@index([tournamentId, status])
