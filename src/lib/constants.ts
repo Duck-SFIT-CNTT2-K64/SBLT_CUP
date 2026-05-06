@@ -1,3 +1,6 @@
+// Số khách mời tham gia từ Vòng 2 (SEMI_1). Không tính vào slot 64 của giải.
+export const GUEST_COUNT = 16;
+
 export const SCORING: Record<number, number> = {
   1: 8,
   2: 7,
@@ -37,6 +40,7 @@ export const CELEBRITY_GUESTS = [
   { name: "Trần Duyên TFT", role: "Khách mời", confirmed: true },
   { name: "Tiger1", role: "Khách mời", confirmed: false },
   { name: "Bố Già TFT", role: "Khách mời", confirmed: false },
+  { name: "KhachMoi16", role: "Khách mời", confirmed: false },
 ];
 
 export const COMMENTATORS = [
