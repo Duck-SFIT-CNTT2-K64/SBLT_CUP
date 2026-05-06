@@ -20,9 +20,14 @@ export async function GET() {
       },
     },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 
-  return NextResponse.json(announcements);
+  return NextResponse.json(announcements, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
+    },
+  });
 }
 
 export async function POST(req: NextRequest) {

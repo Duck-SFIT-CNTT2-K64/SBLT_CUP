@@ -115,6 +115,7 @@ export async function GET(req: NextRequest) {
       game: { select: { gameNumber: true, group: { select: { name: true } } } },
     },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 
   return NextResponse.json(disputes);

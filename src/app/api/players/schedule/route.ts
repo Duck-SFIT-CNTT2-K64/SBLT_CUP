@@ -18,6 +18,7 @@ export async function GET() {
 
   const groupPlayers = await prisma.groupPlayer.findMany({
     where: { playerId: player.id },
+    take: 50,
     include: {
       group: {
         include: {

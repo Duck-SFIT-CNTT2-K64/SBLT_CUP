@@ -229,6 +229,9 @@ model Announcement {
   content      String
   type         AnnouncementType @default(GENERAL)
   createdAt    DateTime         @default(now())
+
+  @@index([createdAt])
+  @@index([tournamentId])
 }
 
 model PasswordResetToken {
@@ -262,6 +265,7 @@ model Dispute {
 
   @@index([tournamentId])
   @@index([status])
+  @@index([submittedBy])
 }
 
 model AuditLog {

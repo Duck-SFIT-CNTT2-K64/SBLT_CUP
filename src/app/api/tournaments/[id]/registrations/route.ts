@@ -22,6 +22,7 @@ export async function GET(
       },
     },
     orderBy: { registeredAt: "asc" },
+    take: 100,
   });
 
   return NextResponse.json(registrations);

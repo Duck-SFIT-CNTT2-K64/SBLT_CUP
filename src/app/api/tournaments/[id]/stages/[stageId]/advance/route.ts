@@ -102,13 +102,15 @@ export async function POST(
     for (const group of stage.groups) {
       const rankedPlayers = rankGroupPlayers(group);
 
-      // Update finalRank for all players in this group
-      for (let i = 0; i < rankedPlayers.length; i++) {
-        await tx.groupPlayer.update({
-          where: { id: rankedPlayers[i].groupPlayerId },
-          data: { finalRank: i + 1 },
-        });
-      }
+      // Batch update finalRank — 1 Promise.all thay vì N sequential await
+      await Promise.all(
+        rankedPlayers.map((rp, i) =>
+          tx.groupPlayer.update({
+            where: { id: rp.groupPlayerId },
+            data: { finalRank: i + 1 },
+          })
+        )
+      );
 
       // Collect top N advancing players
       const advancing = rankedPlayers.slice(0, advancingPerGroup);
@@ -148,19 +150,19 @@ export async function POST(
           ? balancedDraft(allPlayersToPlace, nextGroups.length, advancingPlayers)
           : snakeDraft(allPlayersToPlace, nextGroups.length);
 
+        // Batch create — createMany + skipDuplicates thay vì N findUnique + create
         for (let groupIdx = 0; groupIdx < nextGroups.length; groupIdx++) {
           const group = nextGroups[groupIdx];
           const playersForGroup = assignments[groupIdx] || [];
 
-          for (const player of playersForGroup) {
-            const existing = await tx.groupPlayer.findUnique({
-              where: { groupId_playerId: { groupId: group.id, playerId: player.playerId } },
+          if (playersForGroup.length > 0) {
+            await tx.groupPlayer.createMany({
+              data: playersForGroup.map((p) => ({
+                groupId: group.id,
+                playerId: p.playerId,
+              })),
+              skipDuplicates: true,
             });
-            if (!existing) {
-              await tx.groupPlayer.create({
-                data: { groupId: group.id, playerId: player.playerId },
-              });
-            }
           }
         }
       }

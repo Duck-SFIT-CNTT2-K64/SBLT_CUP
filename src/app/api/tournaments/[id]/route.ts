@@ -86,7 +86,11 @@ export async function GET(
     return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
   }
 
-  return NextResponse.json(tournament);
+  return NextResponse.json(tournament, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
+    },
+  });
 }
 
 export async function PUT(

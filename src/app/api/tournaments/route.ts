@@ -37,15 +37,22 @@ export async function GET(req: NextRequest) {
     prisma.tournament.count(),
   ]);
 
-  return NextResponse.json({
-    data: tournaments,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
+  return NextResponse.json(
+    {
+      data: tournaments,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
+      },
+    }
+  );
 }
 
 export async function POST(req: NextRequest) {

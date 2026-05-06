@@ -40,6 +40,7 @@ export async function GET() {
       },
     },
     orderBy: { game: { group: { stage: { stageOrder: "asc" } } } },
+    take: 50,
   });
 
   const formatted = results.map((r) => ({

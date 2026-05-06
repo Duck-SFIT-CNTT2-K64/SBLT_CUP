@@ -99,14 +99,23 @@ export async function POST(
 
       const game = await tx.game.findUnique({ where: { id: gameId } });
       if (game) {
-        const groupPlayers = await tx.groupPlayer.findMany({ where: { groupId: game.groupId } });
-        for (const gp of groupPlayers) {
-          const allResults = await tx.gameResult.findMany({
-            where: { playerId: gp.playerId, game: { groupId: game.groupId } },
-          });
-          const totalPoints = allResults.reduce((sum, r) => sum + r.points, 0);
-          await tx.groupPlayer.update({ where: { id: gp.id }, data: { totalPoints } });
-        }
+        // 1 query aggregate thay vì N query per player
+        const totals = await tx.$queryRaw<{ playerId: string; total: bigint }[]>`
+          SELECT gr."playerId", COALESCE(SUM(gr.points), 0)::bigint AS total
+          FROM "GameResult" gr
+          JOIN "Game" g ON g.id = gr."gameId"
+          WHERE g."groupId" = ${game.groupId}
+          GROUP BY gr."playerId"
+        `;
+        // Batch update tất cả groupPlayer trong 1 lần
+        await Promise.all(
+          totals.map((t) =>
+            tx.groupPlayer.update({
+              where: { groupId_playerId: { groupId: game.groupId, playerId: t.playerId } },
+              data: { totalPoints: Number(t.total) },
+            })
+          )
+        );
       }
     });
 
