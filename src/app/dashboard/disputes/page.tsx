@@ -36,7 +36,7 @@ export default function DisputesPage() {
   const fetchData = async () => {
     const [d, t] = await Promise.all([fetch("/api/disputes"), fetch("/api/tournaments")]);
     if (d.ok) setDisputes(await d.json());
-    if (t.ok) setTournaments(await t.json());
+    if (t.ok) { const json = await t.json(); setTournaments(json.data); }
     setLoading(false);
   };
 

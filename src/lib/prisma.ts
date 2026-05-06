@@ -7,9 +7,15 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient() {
   const { PrismaPg } = require("@prisma/adapter-pg");
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-  return new PrismaClient({ adapter });
+  return new PrismaClient({
+    adapter,
+    // Tắt log query trong production để giảm overhead
+    log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
+  });
 }
 
+// LUÔN cache vào globalThis — kể cả production
+// Next.js hot-reload sẽ tạo instance mới nếu không cache
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+globalForPrisma.prisma = prisma;

@@ -46,8 +46,8 @@ export default function TournamentsPage() {
     try {
       const res = await fetch("/api/tournaments");
       if (res.ok) {
-        const data = await res.json();
-        setTournaments(data);
+        const json = await res.json();
+        setTournaments(json.data); // API trả { data, pagination }
       }
     } catch {
       setError("Không thể tải danh sách giải đấu. Vui lòng thử lại.");

@@ -50,9 +50,9 @@ export default function AdminPlayersPage() {
     try {
       const res = await fetch("/api/tournaments");
       if (res.ok) {
-        const data = await res.json();
-        setTournaments(data);
-        if (data.length > 0) setSelectedTournamentId(data[0].id);
+        const json = await res.json();
+        setTournaments(json.data);
+        if (json.data.length > 0) setSelectedTournamentId(json.data[0].id);
         else setLoading(false);
       }
     } catch { setError("Không thể tải dữ liệu đăng ký."); setLoading(false); }

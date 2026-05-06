@@ -2,20 +2,50 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
-  const tournaments = await prisma.tournament.findMany({
-    orderBy: { season: "desc" },
-    include: {
-      _count: {
-        select: {
-          registrations: true,
-          stages: true,
+export async function GET(req: NextRequest) {
+  // Phân trang: mặc định 20 bản ghi
+  const page = Math.max(1, Number(req.nextUrl.searchParams.get("page")) || 1);
+  const limit = Math.min(Math.max(1, Number(req.nextUrl.searchParams.get("limit")) || 20), 100);
+  const skip = (page - 1) * limit;
+
+  const [tournaments, total] = await Promise.all([
+    prisma.tournament.findMany({
+      orderBy: { season: "desc" },
+      take: limit,
+      skip,
+      // select thay vì include — chỉ lấy trường cần thiết cho list view
+      select: {
+        id: true,
+        name: true,
+        season: true,
+        description: true,
+        status: true,
+        regStart: true,
+        regEnd: true,
+        startDate: true,
+        endDate: true,
+        maxPlayers: true,
+        prizePool: true,
+        _count: {
+          select: {
+            registrations: true,
+            stages: true,
+          },
         },
       },
+    }),
+    prisma.tournament.count(),
+  ]);
+
+  return NextResponse.json({
+    data: tournaments,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
   });
-
-  return NextResponse.json(tournaments);
 }
 
 export async function POST(req: NextRequest) {
@@ -27,7 +57,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { name, season, description, regStart, regEnd, startDate, endDate, maxPlayers, prizePool } = body;
 
-  // S-04: Validate required fields
   if (!name || typeof name !== "string" || name.trim().length < 2 || name.trim().length > 200) {
     return NextResponse.json({ error: "Tên giải đấu phải từ 2 đến 200 ký tự" }, { status: 400 });
   }
@@ -52,7 +81,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // B-14: Server-side date validation
   const reg_start = new Date(regStart);
   const reg_end = new Date(regEnd);
   const start = new Date(startDate);

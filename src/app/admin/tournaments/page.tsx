@@ -32,7 +32,7 @@ export default function AdminTournamentsPage() {
   const fetchTournaments = async () => {
     try {
       const res = await fetch("/api/tournaments");
-      if (res.ok) setTournaments(await res.json());
+      if (res.ok) { const json = await res.json(); setTournaments(json.data); }
     } catch { setError("Không thể tải danh sách giải đấu."); } finally { setLoading(false); }
   };
 
