@@ -12,11 +12,13 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "admin@sbltcup.com")
   .split(",")
   .map((e: string) => e.trim().toLowerCase());
 
-// 64 tuyển thủ: 15 khách mời nổi tiếng + 49 tuyển thủ thường
+// 16 khách mời — KHÔNG đăng ký vào tournament (chỉ tham gia từ Vòng 2)
+// 49 tuyển thủ thường — đăng ký vào tournament (64 slot cho regular players)
 const GUEST_PLAYERS = [
   "5van", "Koi", "Stillness", "Em Dứa TFT", "Ngọc 6 Múi",
   "Mai Hương Day", "Dizzyland", "Luckyboiz", "Linhbodoi", "Mezino",
   "Phương GB", ".Furyy TFT", "Trâu TV", "Trần Duyên TFT", "Tiger1 Bố Già TFT",
+  "KhachMoi16",
 ];
 
 const REGULAR_PLAYERS = [
@@ -109,11 +111,12 @@ async function main() {
   }
   console.log("Prizes created");
 
-  // Guest players (15)
+  // Guest players (16) — Tạo User + Player nhưng KHÔNG đăng ký vào tournament
+  // Khách mời chỉ tham gia từ Vòng 2 (SEMI_1), được admin bốc thăm sau
   for (let i = 0; i < GUEST_PLAYERS.length; i++) {
     const email = `guest${i + 1}@sbltcup.com`;
     const pw = await bcrypt.hash("guest123", 12);
-    const user = await prisma.user.upsert({
+    await prisma.user.upsert({
       where: { email },
       update: {},
       create: {
@@ -123,17 +126,9 @@ async function main() {
         role: "PLAYER",
         player: { create: { ign: GUEST_PLAYERS[i], isGuest: true } },
       },
-      include: { player: true },
     });
-    if (user.player) {
-      await prisma.registration.upsert({
-        where: { tournamentId_playerId: { tournamentId: tournament.id, playerId: user.player.id } },
-        update: {},
-        create: { tournamentId: tournament.id, playerId: user.player.id, status: "APPROVED" },
-      });
-    }
   }
-  console.log(`${GUEST_PLAYERS.length} guest players created`);
+  console.log(`${GUEST_PLAYERS.length} guest players created (no tournament registration — join from Round 2)`);
 
   // Regular players (49)
   for (let i = 0; i < REGULAR_PLAYERS.length; i++) {
@@ -174,9 +169,9 @@ async function main() {
     });
   }
 
-  const total = 1 + GUEST_PLAYERS.length + REGULAR_PLAYERS.length; // admin + 15 + 49 = 65
+  const total = 1 + GUEST_PLAYERS.length + REGULAR_PLAYERS.length; // admin + 16 + 49 = 66
   console.log(`\nSeeding completed! Total users: ${total} (1 admin + ${GUEST_PLAYERS.length} guests + ${REGULAR_PLAYERS.length} players)`);
-  console.log(`Registered for tournament: ${GUEST_PLAYERS.length + REGULAR_PLAYERS.length} players`);
+  console.log(`Registered for tournament: ${REGULAR_PLAYERS.length} players (guests join from Round 2)`);
 }
 
 main()

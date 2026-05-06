@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { TOURNAMENT_FORMAT } from "@/lib/constants";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/advance
@@ -137,41 +136,13 @@ export async function POST(
       });
 
       if (nextGroups.length > 0) {
-        let allPlayersToPlace: { playerId: string; ign: string }[] = advancingPlayers.map((p) => ({
+        const allPlayersToPlace: { playerId: string; ign: string }[] = advancingPlayers.map((p) => ({
           playerId: p.playerId,
           ign: p.ign,
         }));
 
-        // SEMI_1: Auto-fill guest players into remaining slots
-        if (nextStage.stageType === "SEMI_1") {
-          const format = TOURNAMENT_FORMAT.semi1;
-          const totalNeeded = nextGroups.length * format.playersPerGroup;
-          const slotsRemaining = totalNeeded - allPlayersToPlace.length;
-
-          if (slotsRemaining > 0) {
-            // Get all guest players with approved registrations in this tournament
-            const guestRegistrations = await tx.registration.findMany({
-              where: {
-                tournamentId,
-                status: "APPROVED",
-                player: { isGuest: true },
-              },
-              include: { player: { select: { id: true, ign: true } } },
-            });
-
-            // Filter out guests who are already advancing (shouldn't happen, but safe)
-            const advancingIds = new Set(allPlayersToPlace.map((p) => p.playerId));
-            const availableGuests = guestRegistrations
-              .filter((r) => !advancingIds.has(r.playerId))
-              .map((r) => ({ playerId: r.playerId, ign: r.player.ign }));
-
-            // Take only what we need
-            const guestsToAdd = availableGuests.slice(0, slotsRemaining);
-            allPlayersToPlace = [...allPlayersToPlace, ...guestsToAdd];
-          }
-        }
-
-        // Distribute players into next stage groups
+        // Distribute advancing players into next stage groups
+        // Guests sẽ được bốc thăm riêng qua draw route (không auto-fill)
         // For SEMI_2: balanced by source group (players from same Semi 1 group go to different Semi 2 groups)
         const assignments = (nextStage.stageType === "SEMI_2")
           ? balancedDraft(allPlayersToPlace, nextGroups.length, advancingPlayers)

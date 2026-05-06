@@ -6,11 +6,8 @@ import { prisma } from "@/lib/prisma";
  * GET  — Preview kết quả bốc thăm (chưa lưu)
  * POST — Xác nhận và lưu kết quả bốc thăm
  *
- * Seeding logic:
- * - Chia players thành tiers theo rank (Thách Đấu, Cao Thủ, Bạch Kim, Vàng...)
- * - Trong mỗi tier: shuffle ngẫu nhiên
- * - Snake draft qua các groups để đảm bảo mỗi group có đại diện từ mỗi tier
- * - Guest players được phân bổ đều
+ * QUALIFIER: Chỉ bốc regular players (không bao gồm khách mời)
+ * SEMI_1: Chỉ bốc khách mời vào bảng (advancing players đã được gán từ advance route)
  */
 
 const RANK_TIERS: Record<string, number> = {
@@ -50,7 +47,6 @@ function seededDraw(
   const groups: typeof players[] = Array.from({ length: numGroups }, () => []);
   const groupCounts = new Array(numGroups).fill(0);
 
-  // Helper: find next group with capacity using snake direction
   function addToNextGroup(player: typeof players[0], startIdx: number, dir: number): boolean {
     let idx = startIdx;
     for (let attempt = 0; attempt < numGroups; attempt++) {
@@ -63,7 +59,7 @@ function seededDraw(
       if (idx >= numGroups) { idx = numGroups - 1; dir = -1; }
       else if (idx < 0) { idx = 0; dir = 1; }
     }
-    return false; // all groups full
+    return false;
   }
 
   // Separate guests and regular players
@@ -78,13 +74,12 @@ function seededDraw(
     byTier.get(tier)!.push(p);
   }
 
-  // Sort tiers and shuffle within each
   const tieredPlayers: typeof regulars = [];
   for (const tier of [...byTier.keys()].sort()) {
     tieredPlayers.push(...shuffle(byTier.get(tier)!));
   }
 
-  // Snake draft for regular players — respects 8-player cap
+  // Snake draft for regular players
   let dir = 1;
   let idx = 0;
   for (const player of tieredPlayers) {
@@ -94,7 +89,7 @@ function seededDraw(
     else if (idx < 0) { idx = 0; dir = 1; }
   }
 
-  // Distribute guests evenly — respects 8-player cap
+  // Distribute guests evenly
   let guestIdx = 0;
   for (const guest of guests) {
     if (!addToNextGroup(guest, guestIdx, 1)) break;
@@ -102,6 +97,34 @@ function seededDraw(
   }
 
   return groups;
+}
+
+// Bốc thăm chỉ khách mời vào các bảng (dùng cho SEMI_1)
+function drawGuestsIntoGroups(
+  guests: { id: string; ign: string }[],
+  groups: { id: string; currentCount: number }[]
+): { groupId: string; guestIds: string[] }[] {
+  const shuffled = shuffle(guests);
+  const assignments = groups.map((g) => ({ groupId: g.id, guestIds: [] as string[] }));
+
+  let groupIdx = 0;
+  for (const guest of shuffled) {
+    // Tìm bảng còn chỗ
+    let attempts = 0;
+    while (attempts < groups.length) {
+      const target = assignments[groupIdx];
+      const groupInfo = groups.find((g) => g.id === target.groupId);
+      if (groupInfo && groupInfo.currentCount + target.guestIds.length < MAX_PER_GROUP) {
+        target.guestIds.push(guest.id);
+        groupIdx = (groupIdx + 1) % groups.length;
+        break;
+      }
+      groupIdx = (groupIdx + 1) % groups.length;
+      attempts++;
+    }
+  }
+
+  return assignments;
 }
 
 export async function GET(
@@ -139,26 +162,82 @@ export async function GET(
     return NextResponse.json({ error: "Vòng đấu chưa có bảng. Tạo bảng trước khi bốc thăm." }, { status: 400 });
   }
 
-  const players = tournament.registrations.map((r) => ({
-    id: r.player.id,
-    ign: r.player.ign,
-    rank: r.player.rank,
-    isGuest: r.player.isGuest,
-  }));
+  // SEMI_1: Trả về advancing players + guests riêng biệt
+  if (stage.stageType === "SEMI_1") {
+    // Tìm stage QUALIFIER trước đó
+    const qualifierStage = await prisma.stage.findFirst({
+      where: { tournamentId, stageType: "QUALIFIER" },
+      include: {
+        groups: {
+          include: {
+            players: {
+              where: { finalRank: { lte: 2 } },
+              include: { player: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Lấy advancing players từ QUALIFIER (top 2 mỗi bảng)
+    const advancingPlayers = qualifierStage
+      ? qualifierStage.groups.flatMap((g) =>
+          g.players.map((gp) => ({
+            id: gp.playerId,
+            ign: gp.player.ign,
+            rank: gp.player.rank,
+            fromGroup: g.name,
+            finalRank: gp.finalRank,
+          }))
+        )
+      : [];
+
+    // Lấy tất cả guests trong hệ thống
+    const allGuests = await prisma.player.findMany({
+      where: { isGuest: true },
+      select: { id: true, ign: true, rank: true },
+    });
+
+    // Lấy thông tin bảng hiện tại (đã có advancing players)
+    const groupsWithCounts = await Promise.all(
+      stage.groups.map(async (g) => {
+        const count = await prisma.groupPlayer.count({ where: { groupId: g.id } });
+        return { id: g.id, name: g.name, currentCount: count };
+      })
+    );
+
+    return NextResponse.json({
+      stageType: "SEMI_1",
+      advancingPlayers,
+      guestPlayers: allGuests.map((g) => ({ ...g, isGuest: true })),
+      groups: groupsWithCounts,
+      totalAdvancing: advancingPlayers.length,
+      totalGuests: allGuests.length,
+    });
+  }
+
+  // QUALIFIER: Chỉ lấy regular players
+  const regularPlayers = tournament.registrations
+    .filter((r) => !r.player.isGuest)
+    .map((r) => ({
+      id: r.player.id,
+      ign: r.player.ign,
+      rank: r.player.rank,
+      isGuest: false,
+    }));
 
   const numGroups = stage.groups.length;
 
-  // Check capacity before preview
-  if (players.length > numGroups * MAX_PER_GROUP) {
+  if (regularPlayers.length > numGroups * MAX_PER_GROUP) {
     return NextResponse.json({
-      error: `${players.length} tuyển thủ không thể chia đều vào ${numGroups} bảng (tối đa ${numGroups * MAX_PER_GROUP}). Tạo thêm bảng.`,
-      totalPlayers: players.length,
+      error: `${regularPlayers.length} tuyển thủ không thể chia đều vào ${numGroups} bảng (tối đa ${numGroups * MAX_PER_GROUP}). Tạo thêm bảng.`,
+      totalPlayers: regularPlayers.length,
       numGroups,
       maxCapacity: numGroups * MAX_PER_GROUP,
     }, { status: 400 });
   }
 
-  const drawResult = seededDraw(players, numGroups);
+  const drawResult = seededDraw(regularPlayers, numGroups);
 
   const preview = [...stage.groups]
     .sort((a, b) => a.groupOrder - b.groupOrder)
@@ -169,10 +248,11 @@ export async function GET(
     }));
 
   return NextResponse.json({
+    stageType: "QUALIFIER",
     preview,
-    totalPlayers: players.length,
+    totalPlayers: regularPlayers.length,
     numGroups,
-    playersPerGroup: Math.ceil(players.length / numGroups),
+    playersPerGroup: Math.ceil(regularPlayers.length / numGroups),
   });
 }
 
@@ -188,10 +268,12 @@ export async function POST(
   const { id: tournamentId, stageId } = await params;
   const body = await req.json();
 
-  // Body can be:
-  // { confirm: true } — run new draw and save
-  // { assignments: [{ groupId, playerIds[] }] } — save a specific preview result
-  const { confirm, assignments } = body;
+  // Body:
+  // { confirm: true } — QUALIFIER: chạy seeded draw mới
+  // { assignments: [{ groupId, playerIds[] }] } — QUALIFIER: lưu kết quả thủ công
+  // { drawType: "random_seeded" } — SEMI_1: bốc thăm guests ngẫu nhiên
+  // { drawType: "wheel_spin", guestAssignments: [{ groupId, guestIds[] }] } — SEMI_1: lưu kết quả từ wheel
+  const { confirm, assignments, drawType, guestAssignments } = body;
 
   const stage = await prisma.stage.findFirst({
     where: { id: stageId, tournamentId },
@@ -202,10 +284,84 @@ export async function POST(
     return NextResponse.json({ error: "Không tìm thấy vòng đấu" }, { status: 404 });
   }
 
+  // ═══ SEMI_1: Chỉ bốc thăm khách mời ═══
+  if (stage.stageType === "SEMI_1") {
+    // Lấy advancing players hiện có trong các bảng
+    const existingGroupPlayers = await prisma.groupPlayer.findMany({
+      where: { groupId: { in: stage.groups.map((g) => g.id) } },
+    });
+
+    // Lấy tất cả guests
+    const allGuests = await prisma.player.findMany({
+      where: { isGuest: true },
+      select: { id: true, ign: true },
+    });
+
+    let finalGuestAssignments: { groupId: string; guestIds: string[] }[];
+
+    if (drawType === "wheel_spin" && guestAssignments) {
+      // Wheel spin: admin đã gán guests vào bảng qua wheel UI
+      finalGuestAssignments = guestAssignments;
+    } else if (drawType === "random_seeded") {
+      // Random seeded: tự động chia guests vào bảng
+      const groupsWithCounts = stage.groups.map((g) => ({
+        id: g.id,
+        currentCount: existingGroupPlayers.filter((gp) => gp.groupId === g.id).length,
+      }));
+      finalGuestAssignments = drawGuestsIntoGroups(allGuests, groupsWithCounts);
+    } else {
+      return NextResponse.json({ error: "Cần drawType: 'random_seeded' hoặc 'wheel_spin' với guestAssignments" }, { status: 400 });
+    }
+
+    // Validate: mỗi guest chỉ ở 1 bảng
+    const allGuestIds = finalGuestAssignments.flatMap((a) => a.guestIds);
+    if (new Set(allGuestIds).size !== allGuestIds.length) {
+      return NextResponse.json({ error: "Có khách mời bị trùng giữa các bảng" }, { status: 400 });
+    }
+
+    // Tạo Registration cho guests nếu chưa có (APPROVED)
+    await Promise.all(
+      allGuests.map(async (guest) => {
+        const existing = await prisma.registration.findUnique({
+          where: { tournamentId_playerId: { tournamentId, playerId: guest.id } },
+        });
+        if (!existing) {
+          await prisma.registration.create({
+            data: { tournamentId, playerId: guest.id, status: "APPROVED" },
+          });
+        }
+      })
+    );
+
+    // Lưu guest assignments vào GroupPlayer
+    const result = await prisma.$transaction(async (tx) => {
+      let totalAdded = 0;
+      for (const assignment of finalGuestAssignments) {
+        for (const guestId of assignment.guestIds) {
+          const existing = await tx.groupPlayer.findUnique({
+            where: { groupId_playerId: { groupId: assignment.groupId, playerId: guestId } },
+          });
+          if (!existing) {
+            await tx.groupPlayer.create({
+              data: { groupId: assignment.groupId, playerId: guestId },
+            });
+            totalAdded++;
+          }
+        }
+      }
+      return totalAdded;
+    });
+
+    return NextResponse.json({
+      message: `Bốc thăm khách mời hoàn tất. Đã phân bổ ${result} khách mời vào ${stage.groups.length} bảng.`,
+      totalAdded: result,
+    });
+  }
+
+  // ═══ QUALIFIER: Bốc thăm regular players ═══
   let finalAssignments: { groupId: string; playerIds: string[] }[];
 
   if (assignments) {
-    // Validate each group doesn't exceed 8 players
     for (const a of assignments) {
       if (a.playerIds.length > 8) {
         return NextResponse.json(
@@ -214,7 +370,6 @@ export async function POST(
         );
       }
     }
-    // Validate no player appears in multiple groups
     const allPlayerIds = assignments.flatMap((a: { playerIds: string[] }) => a.playerIds);
     const uniquePlayerIds = new Set(allPlayerIds);
     if (uniquePlayerIds.size !== allPlayerIds.length) {
@@ -225,7 +380,6 @@ export async function POST(
     }
     finalAssignments = assignments;
   } else if (confirm) {
-    // Run fresh draw
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },
       include: {
@@ -238,29 +392,31 @@ export async function POST(
 
     if (!tournament) return NextResponse.json({ error: "Không tìm thấy giải đấu" }, { status: 404 });
 
+    // Chỉ lấy regular players cho QUALIFIER
+    const regularPlayers = tournament.registrations
+      .filter((r) => !r.player.isGuest)
+      .map((r) => ({
+        id: r.player.id,
+        ign: r.player.ign,
+        rank: r.player.rank,
+        isGuest: false,
+      }));
+
     const numGroupsForCheck = stage.groups.length;
-    if (tournament.registrations.length > numGroupsForCheck * 8) {
+    if (regularPlayers.length > numGroupsForCheck * 8) {
       return NextResponse.json(
-        { error: `${tournament.registrations.length} tuyển thủ không thể chia đều vào ${numGroupsForCheck} bảng (tối đa ${numGroupsForCheck * 8}). Tạo thêm bảng hoặc bớt tuyển thủ.` },
+        { error: `${regularPlayers.length} tuyển thủ không thể chia đều vào ${numGroupsForCheck} bảng (tối đa ${numGroupsForCheck * 8}). Tạo thêm bảng hoặc bớt tuyển thủ.` },
         { status: 400 }
       );
     }
 
-    const players = tournament.registrations.map((r) => ({
-      id: r.player.id,
-      ign: r.player.ign,
-      rank: r.player.rank,
-      isGuest: r.player.isGuest,
-    }));
-
     const numGroups = stage.groups.length;
-    const drawResult = seededDraw(players, numGroups);
+    const drawResult = seededDraw(regularPlayers, numGroups);
 
-    // Verify all players were placed
     const totalPlaced = drawResult.reduce((sum, g) => sum + g.length, 0);
-    if (totalPlaced < players.length) {
+    if (totalPlaced < regularPlayers.length) {
       return NextResponse.json(
-        { error: `Chỉ xếp được ${totalPlaced}/${players.length} tuyển thủ. Tăng số bảng hoặc giảm tuyển thủ.` },
+        { error: `Chỉ xếp được ${totalPlaced}/${regularPlayers.length} tuyển thủ. Tăng số bảng hoặc giảm tuyển thủ.` },
         { status: 400 }
       );
     }
@@ -275,22 +431,17 @@ export async function POST(
     return NextResponse.json({ error: "Cần confirm: true hoặc assignments" }, { status: 400 });
   }
 
-  // B-02: Wrap in transaction for atomicity
   const result = await prisma.$transaction(async (tx) => {
-    // Clear existing group players first
     await tx.groupPlayer.deleteMany({
       where: { groupId: { in: finalAssignments.map((a) => a.groupId) } },
     });
 
-    // B-09: Batch create instead of loop
     const createData = finalAssignments.flatMap(({ groupId, playerIds }) =>
       playerIds.map((playerId) => ({ groupId, playerId }))
     );
 
     let totalAdded = 0;
     if (createData.length > 0) {
-      // Use createMany for efficiency, but it doesn't return created records
-      // Split into chunks to avoid potential limits
       const CHUNK_SIZE = 500;
       for (let i = 0; i < createData.length; i += CHUNK_SIZE) {
         const chunk = createData.slice(i, i + CHUNK_SIZE);
