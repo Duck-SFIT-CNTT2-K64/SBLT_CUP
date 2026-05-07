@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { GuestCard } from "@/components/tft";
 import { formatCurrency } from "@/lib/utils";
 
 interface Tournament {
@@ -292,27 +293,43 @@ export default function TournamentDetailPage() {
               Tuyển thủ đã đăng ký
             </h2>
 
+            {/* Khách mời — dùng GuestCard */}
             {guestPlayers.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-3 font-semibold">Khách mời</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {guestPlayers.map((r) => (
-                    <div key={r.id} className="bg-sblt-dark rounded-lg px-4 py-3 flex items-center gap-3 border border-sblt-border">
-                      <span className="w-2.5 h-2.5 bg-sblt-red rounded-full shrink-0" />
-                      <span className="text-white truncate font-medium">{r.player.ign}</span>
-                    </div>
+              <div className="mb-8">
+                <h3 className="text-xs uppercase tracking-widest text-sblt-muted mb-4 font-semibold flex items-center gap-2">
+                  <span className="w-4 h-px bg-sblt-border" />
+                  Khách mời ({guestPlayers.length})
+                </h3>
+                {/* pt-10 để chừa chỗ cho mascot break-out */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-10">
+                  {guestPlayers.map((r, i) => (
+                    <GuestCard
+                      key={r.id}
+                      name={r.player.ign}
+                      role="Khách mời"
+                      confirmed={true}
+                      image={null}
+                      index={i}
+                    />
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Tuyển thủ thường — list đơn giản */}
             {regularPlayers.length > 0 && (
               <div>
-                <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-3 font-semibold">Tuyển thủ</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <h3 className="text-xs uppercase tracking-widest text-sblt-muted mb-4 font-semibold flex items-center gap-2">
+                  <span className="w-4 h-px bg-sblt-border" />
+                  Tuyển thủ ({regularPlayers.length})
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {regularPlayers.map((r) => (
-                    <div key={r.id} className="bg-sblt-dark rounded-lg px-4 py-3 border border-sblt-border">
-                      <span className="text-white truncate font-medium">{r.player.ign}</span>
+                    <div
+                      key={r.id}
+                      className="bg-sblt-dark rounded-lg px-3 py-2.5 border border-sblt-border hover:border-sblt-red/30 transition-colors"
+                    >
+                      <span className="text-white text-sm font-medium truncate block">{r.player.ign}</span>
                     </div>
                   ))}
                 </div>

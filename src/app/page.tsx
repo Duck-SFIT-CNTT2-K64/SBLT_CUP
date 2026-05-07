@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Trophy, Users, Calendar, Gift, ArrowRight, Zap, Target, Crown, Mic } from "lucide-react";
+import { Trophy, Users, Calendar, Gift, ArrowRight, Zap, Target, Crown } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { SCORING, PRIZES, CELEBRITY_GUESTS, COMMENTATORS } from "@/lib/constants";
+import { SCORING, PRIZES, CELEBRITY_GUESTS } from "@/lib/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -50,7 +50,7 @@ export default async function Home() {
   const session = await auth();
 
   return (
-    <div>
+    <div suppressHydrationWarning>
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         {/* Background effects */}
@@ -230,66 +230,102 @@ export default async function Home() {
       {/* ===== CELEBRITY GUESTS ===== */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeading title="Khách mời nổi tiếng" subtitle="16 tuyển thủ khách mời & bình luận viên" />
+          <SectionHeading title="Khách mời nổi tiếng" subtitle="Những tuyển thủ đặc biệt tham gia từ Vòng 2" />
 
-          {/* Hosts */}
-          <div className="mb-8">
-            <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-4 flex items-center gap-2">
-              <Crown className="h-4 w-4 text-sblt-red" /> Host
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
+          {/* Hosts — 2 người, card lớn, ảnh căn giữa đồng đều */}
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-5">
+              <Crown className="h-4 w-4 text-sblt-red" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-sblt-muted">Host & Tổ chức</span>
+              <div className="flex-1 h-px bg-sblt-border ml-2" />
+            </div>
+            {/* Grid 2 cột, không giới hạn max-w để card đủ lớn */}
+            <div className="grid grid-cols-2 gap-5 max-w-lg mx-auto">
               {CELEBRITY_GUESTS.filter((g) => g.role === "Host").map((guest) => (
-                <Card key={guest.name} className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sblt-red to-sblt-red-dark flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {guest.name.charAt(0)}
+                <div
+                  key={guest.name}
+                  className="group relative rounded-2xl overflow-hidden bg-sblt-card border border-sblt-border hover:border-sblt-red/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+                >
+                  {/* Ảnh: aspect-[3/4] để cao hơn, object-center để căn giữa */}
+                  <div className="aspect-[3/4] relative bg-gradient-to-br from-sblt-red/10 to-sblt-dark">
+                    {guest.image ? (
+                      <Image
+                        src={guest.image}
+                        alt={guest.name}
+                        fill
+                        className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 50vw, 256px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-7xl font-black text-sblt-red/20 sblt-heading select-none">
+                          {guest.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    {/* Gradient overlay từ dưới lên */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-sblt-black via-sblt-black/20 to-transparent" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{guest.name}</div>
-                    <Badge variant="red" className="mt-0.5">{guest.role}</Badge>
+                  {/* Info nổi trên ảnh */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="text-white font-bold text-base leading-tight mb-1.5">{guest.name}</div>
+                    <span className="inline-flex items-center gap-1 text-xs bg-sblt-red/20 text-sblt-red border border-sblt-red/30 px-2 py-0.5 rounded-full font-medium">
+                      <Crown className="h-2.5 w-2.5" /> {guest.role}
+                    </span>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Guests */}
-          <div className="mb-8">
-            <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-4 flex items-center gap-2">
-              <Users className="h-4 w-4 text-sblt-red" /> Tuyển thủ khách mời
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
-              {CELEBRITY_GUESTS.filter((g) => g.role !== "Host").map((guest) => (
-                <Card key={guest.name} className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-sblt-border flex items-center justify-center text-sblt-muted font-bold text-sm shrink-0">
-                    {guest.name.charAt(0)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{guest.name}</div>
-                    <Badge variant={guest.confirmed ? "green" : "yellow"} className="mt-0.5">
-                      {guest.confirmed ? "Đã xác nhận" : "Chờ xác nhận"}
-                    </Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Commentators */}
+          {/* Guest players — grid đồng đều, ảnh căn giữa */}
           <div>
-            <h3 className="text-sm uppercase tracking-wider text-sblt-muted mb-4 flex items-center gap-2">
-              <Mic className="h-4 w-4 text-sblt-red" /> Bình luận viên
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {COMMENTATORS.map((commentator) => (
-                <Card key={commentator.name} className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sblt-red/50 to-sblt-red-dark/50 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {commentator.name.charAt(0)}
+            <div className="flex items-center gap-2 mb-5">
+              <Users className="h-4 w-4 text-sblt-red" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-sblt-muted">Tuyển thủ khách mời</span>
+              <div className="flex-1 h-px bg-sblt-border ml-2" />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              {CELEBRITY_GUESTS.filter((g) => g.role === "Khách mời").map((guest) => (
+                <div
+                  key={guest.name}
+                  className={`group relative rounded-xl overflow-hidden border transition-all duration-300 ${
+                    guest.confirmed
+                      ? "bg-sblt-card border-sblt-border hover:border-sblt-red/50 hover:shadow-[0_0_12px_rgba(220,38,38,0.15)]"
+                      : "bg-sblt-dark border-sblt-border/50 opacity-60"
+                  }`}
+                >
+                  {/* Ảnh: aspect-[3/4] đồng đều với host, object-center căn giữa */}
+                  <div className="aspect-[3/4] relative bg-gradient-to-br from-sblt-border/30 to-sblt-dark">
+                    {guest.image ? (
+                      <Image
+                        src={guest.image}
+                        alt={guest.name}
+                        fill
+                        className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 160px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-4xl font-black text-sblt-border sblt-heading select-none">
+                          {guest.name.replace(/^\./, "").charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-sblt-black via-sblt-black/10 to-transparent" />
+                    {!guest.confirmed && (
+                      <div className="absolute top-1.5 right-1.5 bg-sblt-dark/90 text-sblt-muted text-[10px] px-1.5 py-0.5 rounded-full border border-sblt-border font-medium">
+                        TBC
+                      </div>
+                    )}
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{commentator.name}</div>
-                    <Badge variant="red" className="mt-0.5">{commentator.role}</Badge>
+                  {/* Tên */}
+                  <div className="absolute bottom-0 left-0 right-0 px-2 pb-2.5 pt-6">
+                    <div className="text-white font-semibold text-xs leading-tight text-center truncate">
+                      {guest.name}
+                    </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           </div>

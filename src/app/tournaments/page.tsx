@@ -1,37 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Trophy, Calendar, Users, ArrowRight, Gift } from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Trophy } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { formatCurrency } from "@/lib/utils";
+import { TournamentCard } from "@/components/tft";
 
 interface Tournament {
   id: string;
   name: string;
   season: number;
   description: string | null;
-  status: string;
+  status: "UPCOMING" | "REGISTRATION_OPEN" | "IN_PROGRESS" | "COMPLETED" | "REGISTRATION_CLOSED" | "CANCELLED";
   startDate: string;
   endDate: string;
   maxPlayers: number;
   prizePool: number;
-  _count: {
-    registrations: number;
-  };
+  _count: { registrations: number };
 }
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "red" | "green" | "yellow" | "live" | "default" }> = {
-  UPCOMING: { label: "Sắp diễn ra", variant: "default" },
-  REGISTRATION_OPEN: { label: "Đang mở đăng ký", variant: "green" },
-  REGISTRATION_CLOSED: { label: "Đã đóng đăng ký", variant: "yellow" },
-  IN_PROGRESS: { label: "Đang diễn ra", variant: "live" },
-  COMPLETED: { label: "Đã kết thúc", variant: "default" },
-  CANCELLED: { label: "Đã hủy", variant: "red" },
-};
+/** Chọn accent dựa trên trạng thái giải đấu */
+function getAccent(status: string, season: number): "hextech" | "gold" | "red" {
+  if (status === "IN_PROGRESS") return "red";
+  if (status === "COMPLETED") return "gold";
+  // Xen kẽ hextech / red cho các giải sắp tới
+  return season % 2 === 0 ? "hextech" : "red";
+}
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -39,22 +33,12 @@ export default function TournamentsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTournaments();
+    fetch("/api/tournaments")
+      .then((r) => r.json())
+      .then((json) => setTournaments(json.data ?? []))
+      .catch(() => setError("Không thể tải danh sách giải đấu. Vui lòng thử lại."))
+      .finally(() => setLoading(false));
   }, []);
-
-  const fetchTournaments = async () => {
-    try {
-      const res = await fetch("/api/tournaments");
-      if (res.ok) {
-        const json = await res.json();
-        setTournaments(json.data); // API trả { data, pagination }
-      }
-    } catch {
-      setError("Không thể tải danh sách giải đấu. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -72,60 +56,30 @@ export default function TournamentsPage() {
         subtitle="Theo dõi và tham gia các mùa giải đấu Đấu Trường Chân Lý"
       />
 
-      {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
+      {error && (
+        <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {tournaments.map((tournament) => {
-          const statusCfg = STATUS_CONFIG[tournament.status] || STATUS_CONFIG.UPCOMING;
-          return (
-            <Link key={tournament.id} href={`/tournaments/${tournament.id}`}>
-              <Card className="p-6 h-full group">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs text-sblt-muted">Mùa {tournament.season}</span>
-                  <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
-                </div>
-
-                <h2 className="text-xl font-bold mb-2 group-hover:text-sblt-red transition-colors">
-                  {tournament.name}
-                </h2>
-
-                {tournament.description && (
-                  <p className="text-sblt-muted text-sm mb-4 line-clamp-2">
-                    {tournament.description}
-                  </p>
-                )}
-
-                <div className="space-y-2.5 mb-5">
-                  <div className="flex items-center gap-2 text-sm text-sblt-muted">
-                    <Calendar className="h-4 w-4 shrink-0" />
-                    <span>
-                      {new Date(tournament.startDate).toLocaleDateString("vi-VN")} —{" "}
-                      {new Date(tournament.endDate).toLocaleDateString("vi-VN")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-sblt-muted">
-                    <Users className="h-4 w-4 shrink-0" />
-                    <span>
-                      {tournament._count.registrations}/{tournament.maxPlayers} tuyển thủ
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-sblt-muted">
-                    <Gift className="h-4 w-4 shrink-0" />
-                    <span>{formatCurrency(tournament.prizePool)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end text-sblt-red text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  Xem chi tiết
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </div>
-              </Card>
-            </Link>
-          );
-        })}
+      {/* Grid — pt-12 để chừa chỗ cho mascot break-out */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12">
+        {tournaments.map((t) => (
+          <TournamentCard
+            key={t.id}
+            id={t.id}
+            name={t.name}
+            season={t.season}
+            status={t.status}
+            startDate={t.startDate}
+            endDate={t.endDate}
+            registeredCount={t._count.registrations}
+            maxPlayers={t.maxPlayers}
+            prizePool={t.prizePool}
+            accent={getAccent(t.status, t.season)}
+          />
+        ))}
       </div>
 
-      {tournaments.length === 0 && (
+      {tournaments.length === 0 && !error && (
         <div className="text-center py-20">
           <Trophy className="h-16 w-16 text-sblt-border mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-sblt-muted mb-2">Chưa có giải đấu nào</h2>

@@ -2,8 +2,8 @@
 
 /* ============================================
    SBLT CUP Design System
-   Color palette: Black, White, Red
-   Inspired by: Brackelope, FACEIT, Start.gg, FIFAe
+   Color palette: Black, White, Red + TFT Hextech accents
+   Inspired by: TFT client, League of Legends, Brackelope
    ============================================ */
 
 @theme {
@@ -16,6 +16,13 @@
   --color-sblt-red-dark: #991b1b;
   --color-sblt-red-glow: rgba(220, 38, 38, 0.3);
   --color-sblt-white: #f5f5f5;
+
+  /* TFT Hextech accent palette */
+  --color-hextech-blue: #0bc4e3;
+  --color-hextech-purple: #9b59b6;
+  --color-hextech-gold: #c89b3c;
+  --color-hextech-gold-light: #f0e6d3;
+  --color-hextech-teal: #0ac8b9;
 }
 
 :root {
@@ -29,6 +36,8 @@
   --muted: #737373;
   --glow-red: 0 0 20px rgba(220, 38, 38, 0.3);
   --glow-red-strong: 0 0 40px rgba(220, 38, 38, 0.4);
+  --glow-hextech: 0 0 20px rgba(11, 196, 227, 0.25);
+  --glow-gold: 0 0 20px rgba(200, 155, 60, 0.35);
 }
 
 /* ============================================
@@ -318,3 +327,106 @@ body {
   filter: blur(100px);
   pointer-events: none;
 }
+
+/* ============================================
+   TFT / Hextech Design Extensions
+   ============================================ */
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(22, 22, 22, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+/* Hextech gradient border via pseudo-element */
+.hextech-border {
+  position: relative;
+  border-radius: 16px;
+  background: #161616;
+}
+.hextech-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, #0bc4e3, #9b59b6, #0bc4e3);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.hextech-border:hover::before {
+  opacity: 1;
+}
+
+/* Gold gradient border for top 1 */
+.gold-border {
+  position: relative;
+  border-radius: 16px;
+}
+.gold-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, #c89b3c, #f0e6d3, #c89b3c);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Gradient text variants */
+.text-gradient-hextech {
+  background: linear-gradient(135deg, #0bc4e3, #9b59b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #c89b3c, #f0e6d3, #c89b3c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Live pulse dot */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #1a1a1a 25%, #262626 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Character break-out effect — parent must have overflow: visible */
+.character-card {
+  overflow: visible !important;
+}
+
+/* Neon glow shadows */
+.shadow-neon-red    { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5), 0 0 60px rgba(220, 38, 38, 0.2); }
+.shadow-neon-blue   { box-shadow: 0 0 20px rgba(11, 196, 227, 0.4), 0 0 60px rgba(11, 196, 227, 0.15); }
+.shadow-neon-gold   { box-shadow: 0 0 20px rgba(200, 155, 60, 0.5), 0 0 60px rgba(200, 155, 60, 0.2); }
+.shadow-neon-purple { box-shadow: 0 0 20px rgba(155, 89, 182, 0.4), 0 0 60px rgba(155, 89, 182, 0.15); }
