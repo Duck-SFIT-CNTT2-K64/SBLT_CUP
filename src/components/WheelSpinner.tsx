@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { X, Plus } from "lucide-react";
 
 interface WheelItem {
   id: string;
   label: string;
+  type?: "advancing" | "guest";
+  fromGroup?: string;
 }
 
 interface Group {
@@ -14,8 +17,8 @@ interface Group {
 }
 
 interface Assignment {
-  guestId: string;
-  guestName: string;
+  playerId: string;
+  playerName: string;
   groupId: string;
   groupName: string;
 }
@@ -23,8 +26,10 @@ interface Assignment {
 interface WheelSpinnerProps {
   items: WheelItem[];
   groups: Group[];
-  onAssignmentsComplete: (assignments: { groupId: string; guestIds: string[] }[]) => void;
+  onAssignmentsComplete: (assignments: { groupId: string; playerIds: string[] }[]) => void;
   onCancel: () => void;
+  onAddItem?: (label: string) => void;
+  addableItems?: { id: string; label: string }[];
 }
 
 const COLORS = [
@@ -34,13 +39,15 @@ const COLORS = [
   "#9333ea", "#e11d48", "#0284c7", "#84cc16",
 ];
 
-export default function WheelSpinner({ items, groups, onAssignmentsComplete, onCancel }: WheelSpinnerProps) {
+export default function WheelSpinner({ items, groups, onAssignmentsComplete, onCancel, onAddItem, addableItems }: WheelSpinnerProps) {
   const [remaining, setRemaining] = useState<WheelItem[]>(items);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [winner, setWinner] = useState<WheelItem | null>(null);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
+  const [showAddDropdown, setShowAddDropdown] = useState(false);
   const wheelRef = useRef<HTMLDivElement>(null);
 
   const segmentAngle = remaining.length > 0 ? 360 / remaining.length : 360;
@@ -51,17 +58,13 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
     setWinner(null);
     setShowGroupPicker(false);
 
-    // Random winner
     const winnerIndex = Math.floor(Math.random() * remaining.length);
-
-    // Calculate rotation: multiple full spins + land on winner
-    const fullSpins = 5 + Math.floor(Math.random() * 3); // 5-7 full spins
+    const fullSpins = 5 + Math.floor(Math.random() * 3);
     const targetAngle = 360 - (winnerIndex * segmentAngle + segmentAngle / 2);
     const newRotation = rotation + fullSpins * 360 + targetAngle;
 
     setRotation(newRotation);
 
-    // Wait for animation to complete
     setTimeout(() => {
       setSpinning(false);
       setWinner(remaining[winnerIndex]);
@@ -73,8 +76,8 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
     if (!winner) return;
 
     const newAssignment: Assignment = {
-      guestId: winner.id,
-      guestName: winner.label,
+      playerId: winner.id,
+      playerName: winner.label,
       groupId,
       groupName,
     };
@@ -85,18 +88,28 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
     setWinner(null);
     setShowGroupPicker(false);
 
-    // If all guests assigned, call complete
     if (remaining.length === 1) {
       const grouped = new Map<string, string[]>();
       for (const a of newAssignments) {
         if (!grouped.has(a.groupId)) grouped.set(a.groupId, []);
-        grouped.get(a.groupId)!.push(a.guestId);
+        grouped.get(a.groupId)!.push(a.playerId);
       }
       onAssignmentsComplete(
-        Array.from(grouped.entries()).map(([groupId, guestIds]) => ({ groupId, guestIds }))
+        Array.from(grouped.entries()).map(([groupId, playerIds]) => ({ groupId, playerIds }))
       );
     }
   }, [winner, assignments, remaining.length, onAssignmentsComplete]);
+
+  const removeItem = (id: string) => {
+    setRemaining((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleAddFromDropdown = (item: { id: string; label: string }) => {
+    if (remaining.find((r) => r.id === item.id)) return;
+    setRemaining((prev) => [...prev, { id: item.id, label: item.label }]);
+    setAddSearch("");
+    setShowAddDropdown(false);
+  };
 
   const getGroupCount = (groupId: string) => {
     const group = groups.find((g) => g.id === groupId);
@@ -104,7 +117,6 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
     return (group?.currentCount || 0) + assigned;
   };
 
-  // Build conic gradient
   const buildGradient = () => {
     if (remaining.length === 0) return "#111111";
     const segments = remaining.map((_, i) => {
@@ -115,27 +127,85 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
     return `conic-gradient(${segments.join(", ")})`;
   };
 
+  const filteredAddable = (addableItems || []).filter(
+    (item) =>
+      !remaining.find((r) => r.id === item.id) &&
+      !assignments.find((a) => a.playerId === item.id) &&
+      item.label.toLowerCase().includes(addSearch.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-start">
-      {/* Left: Remaining guests */}
-      <div className="w-full lg:w-48 shrink-0">
+      {/* Left: Remaining items */}
+      <div className="w-full lg:w-56 shrink-0">
         <h4 className="text-sm font-semibold text-white mb-3">
           Chưa quay ({remaining.length})
         </h4>
-        <div className="space-y-1 max-h-80 overflow-y-auto">
+        <div className="space-y-1 max-h-60 overflow-y-auto">
           {remaining.map((item, i) => (
             <div
               key={item.id}
-              className="flex items-center gap-2 px-3 py-1.5 bg-sblt-dark rounded-lg text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-sblt-dark rounded-lg text-sm group"
             >
               <span
                 className="w-3 h-3 rounded-full shrink-0"
                 style={{ backgroundColor: COLORS[i % COLORS.length] }}
               />
-              <span className="text-sblt-white truncate">{item.label}</span>
+              <span className="text-sblt-white truncate flex-1">{item.label}</span>
+              {item.type === "advancing" && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 shrink-0">
+                  Đi tiếp{item.fromGroup ? ` ${item.fromGroup}` : ""}
+                </span>
+              )}
+              {item.type === "guest" && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-sblt-red/20 text-sblt-red shrink-0">
+                  Khách
+                </span>
+              )}
+              <button
+                onClick={() => removeItem(item.id)}
+                className="opacity-0 group-hover:opacity-100 text-sblt-muted hover:text-red-400 transition-all shrink-0"
+                title="Xóa khỏi vòng quay"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
           ))}
+          {remaining.length === 0 && (
+            <p className="text-xs text-sblt-muted">Đã hết</p>
+          )}
         </div>
+
+        {/* Add player input */}
+        {addableItems && addableItems.length > 0 && (
+          <div className="mt-3 relative">
+            <div className="flex items-center gap-1">
+              <Plus className="h-3 w-3 text-sblt-muted" />
+              <input
+                type="text"
+                placeholder="Thêm tuyển thủ..."
+                value={addSearch}
+                onChange={(e) => { setAddSearch(e.target.value); setShowAddDropdown(true); }}
+                onFocus={() => setShowAddDropdown(true)}
+                onBlur={() => setTimeout(() => setShowAddDropdown(false), 200)}
+                className="bg-sblt-dark border border-sblt-border rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-sblt-red w-full"
+              />
+            </div>
+            {showAddDropdown && addSearch.length > 0 && filteredAddable.length > 0 && (
+              <div className="absolute z-10 top-full mt-1 w-full bg-sblt-dark border border-sblt-border rounded-lg shadow-lg max-h-36 overflow-y-auto">
+                {filteredAddable.slice(0, 10).map((item) => (
+                  <button
+                    key={item.id}
+                    onMouseDown={(e) => { e.preventDefault(); handleAddFromDropdown(item); }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-white hover:bg-sblt-border transition-colors"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Center: Wheel */}
@@ -156,11 +226,10 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
               transition: spinning ? "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)" : "none",
             }}
           >
-            {/* Segment labels */}
             {remaining.map((item, i) => {
               const angle = i * segmentAngle + segmentAngle / 2;
               const rad = (angle * Math.PI) / 180;
-              const radius = 35; // % from center
+              const radius = 35;
               const x = 50 + radius * Math.sin(rad);
               const y = 50 - radius * Math.cos(rad);
 
@@ -201,8 +270,14 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
         {showGroupPicker && winner && (
           <div className="mt-4 bg-sblt-card border border-sblt-red rounded-xl p-4 text-center w-full max-w-md">
             <p className="text-sblt-muted text-sm mb-1">Trúng tuyển!</p>
-            <p className="text-xl font-bold text-white mb-4">{winner.label}</p>
-            <p className="text-xs text-sblt-muted mb-3">Chọn bảng cho khách mời này:</p>
+            <p className="text-xl font-bold text-white mb-2">{winner.label}</p>
+            {winner.type === "advancing" && (
+              <p className="text-xs text-green-400 mb-2">Người đi tiếp{winner.fromGroup ? ` từ ${winner.fromGroup}` : ""}</p>
+            )}
+            {winner.type === "guest" && (
+              <p className="text-xs text-sblt-red mb-2">Khách mời</p>
+            )}
+            <p className="text-xs text-sblt-muted mb-3">Chọn bảng:</p>
             <div className="grid grid-cols-2 gap-2">
               {groups.map((group) => {
                 const count = getGroupCount(group.id);
@@ -228,18 +303,18 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
         )}
       </div>
 
-      {/* Right: Assigned guests */}
+      {/* Right: Assigned items */}
       <div className="w-full lg:w-56 shrink-0">
         <h4 className="text-sm font-semibold text-white mb-3">
           Đã phân bổ ({assignments.length})
         </h4>
-        <div className="space-y-1 max-h-80 overflow-y-auto">
+        <div className="space-y-1 max-h-60 overflow-y-auto">
           {assignments.map((a) => (
             <div
-              key={a.guestId}
+              key={a.playerId}
               className="flex items-center justify-between px-3 py-1.5 bg-sblt-dark rounded-lg text-sm"
             >
-              <span className="text-sblt-white truncate">{a.guestName}</span>
+              <span className="text-sblt-white truncate">{a.playerName}</span>
               <span className="text-sblt-red font-medium text-xs shrink-0 ml-2">{a.groupName}</span>
             </div>
           ))}
@@ -261,6 +336,14 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
             );
           })}
         </div>
+
+        {/* Cancel button */}
+        <button
+          onClick={onCancel}
+          className="mt-4 w-full text-sm text-sblt-muted hover:text-white py-2 rounded-lg border border-sblt-border hover:bg-sblt-dark transition-colors"
+        >
+          Hủy
+        </button>
       </div>
     </div>
   );

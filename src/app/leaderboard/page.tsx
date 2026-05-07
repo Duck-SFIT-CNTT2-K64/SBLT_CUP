@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trophy, Medal } from "lucide-react";
+import Link from "next/link";
+import { Trophy, Medal, Target } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -42,6 +43,16 @@ export default function LeaderboardPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SectionHeading title="Bảng xếp hạng" subtitle="Tổng hợp thành tích tất cả các giải đấu" />
+
+      <div className="mb-6">
+        <Link
+          href="/predictions/leaderboard"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-colors"
+        >
+          <Target className="h-4 w-4" />
+          Xem bảng xếp hạng Dự đoán
+        </Link>
+      </div>
 
       {players.length === 0 ? (
         <div className="text-center py-20 text-sblt-muted">Chưa có dữ liệu</div>

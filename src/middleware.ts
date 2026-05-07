@@ -111,7 +111,7 @@ export function middleware(request: NextRequest) {
   // Giới hạn: 1 request / 3 giây cho mỗi IP
   if (
     pathname.startsWith("/api/auth/register") ||
-    pathname.startsWith("/api/auth/login")
+    pathname.startsWith("/api/auth/callback")
   ) {
     const authKey = `auth:${clientIp}`;
     if (!checkRateLimit(authKey, 1, 3_000)) {
@@ -132,8 +132,19 @@ export function middleware(request: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/tournaments") ||
+    pathname.startsWith("/predictions") ||
     pathname.startsWith("/rules") ||
-    pathname.startsWith("/announcements")
+    pathname.startsWith("/announcements") ||
+    pathname === "/api/health" ||
+    pathname === "/api/tournaments" ||
+    /^\/api\/tournaments\/[^/]+$/.test(pathname) ||
+    pathname === "/api/leaderboard" ||
+    pathname === "/api/predictions/leaderboard" ||
+    /^\/api\/tournaments\/[^/]+\/predictions\/[^/]+\/leaderboard$/.test(pathname) ||
+    /^\/api\/tournaments\/[^/]+\/predictions(\/[^/]+)?$/.test(pathname) ||
+    pathname === "/api/announcements" ||
+    /^\/api\/announcements\/[^/]+$/.test(pathname) ||
+    pathname.startsWith("/api/auth")
   ) {
     return NextResponse.next();
   }

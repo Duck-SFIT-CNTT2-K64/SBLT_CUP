@@ -12,6 +12,7 @@ const navLinks = [
   { href: "/", label: "Trang chủ" },
   { href: "/tournaments", label: "Giải đấu" },
   { href: "/leaderboard", label: "Xếp hạng" },
+  { href: "/predictions/leaderboard", label: "Dự đoán" },
   { href: "/rules", label: "Quy định" },
   { href: "/announcements", label: "Thông báo" },
 ];

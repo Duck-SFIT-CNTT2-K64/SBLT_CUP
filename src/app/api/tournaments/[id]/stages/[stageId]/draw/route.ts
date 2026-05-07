@@ -179,26 +179,35 @@ export async function GET(
       },
     });
 
-    // Lấy advancing players từ QUALIFIER (top 2 mỗi bảng)
+    // Lấy danh sách player đã được gán vào SEMI_1 groups
+    const existingAssignments = await prisma.groupPlayer.findMany({
+      where: { groupId: { in: stage.groups.map((g) => g.id) } },
+      select: { playerId: true },
+    });
+    const assignedPlayerIds = new Set(existingAssignments.map((gp) => gp.playerId));
+
+    // Lấy advancing players từ QUALIFIER (top 2 mỗi bảng) — chỉ lấy người chưa được gán bảng
     const advancingPlayers = qualifierStage
       ? qualifierStage.groups.flatMap((g) =>
-          g.players.map((gp) => ({
-            id: gp.playerId,
-            ign: gp.player.ign,
-            rank: gp.player.rank,
-            fromGroup: g.name,
-            finalRank: gp.finalRank,
-          }))
+          g.players
+            .filter((gp) => !assignedPlayerIds.has(gp.playerId))
+            .map((gp) => ({
+              id: gp.playerId,
+              ign: gp.player.ign,
+              rank: gp.player.rank,
+              fromGroup: g.name,
+              finalRank: gp.finalRank,
+            }))
         )
       : [];
 
-    // Lấy tất cả guests trong hệ thống
+    // Lấy tất cả guests trong hệ thống — chỉ lấy người chưa được gán bảng
     const allGuests = await prisma.player.findMany({
-      where: { isGuest: true },
+      where: { isGuest: true, id: { notIn: [...assignedPlayerIds] } },
       select: { id: true, ign: true, rank: true },
     });
 
-    // Lấy thông tin bảng hiện tại (đã có advancing players)
+    // Lấy thông tin bảng hiện tại
     const groupsWithCounts = await Promise.all(
       stage.groups.map(async (g) => {
         const count = await prisma.groupPlayer.count({ where: { groupId: g.id } });
@@ -206,10 +215,17 @@ export async function GET(
       })
     );
 
+    // Tạo danh sách tất cả items cho vòng quay (advancing + guests)
+    const allWheelItems = [
+      ...advancingPlayers.map((p) => ({ id: p.id, label: p.ign, type: "advancing" as const, fromGroup: p.fromGroup })),
+      ...allGuests.map((g) => ({ id: g.id, label: g.ign, type: "guest" as const })),
+    ];
+
     return NextResponse.json({
       stageType: "SEMI_1",
       advancingPlayers,
       guestPlayers: allGuests.map((g) => ({ ...g, isGuest: true })),
+      allWheelItems,
       groups: groupsWithCounts,
       totalAdvancing: advancingPlayers.length,
       totalGuests: allGuests.length,
@@ -284,66 +300,99 @@ export async function POST(
     return NextResponse.json({ error: "Không tìm thấy vòng đấu" }, { status: 404 });
   }
 
-  // ═══ SEMI_1: Chỉ bốc thăm khách mời ═══
+  // ═══ SEMI_1: Bốc thăm khách MỜI + players đi tiếp ═══
   if (stage.stageType === "SEMI_1") {
-    // Lấy advancing players hiện có trong các bảng
-    const existingGroupPlayers = await prisma.groupPlayer.findMany({
-      where: { groupId: { in: stage.groups.map((g) => g.id) } },
+    // Lấy advancing player IDs từ QUALIFIER (top 2 mỗi bảng)
+    const qualifierStage = await prisma.stage.findFirst({
+      where: { tournamentId, stageType: "QUALIFIER" },
+      include: {
+        groups: {
+          include: {
+            players: {
+              where: { finalRank: { lte: 2 } },
+              select: { playerId: true },
+            },
+          },
+        },
+      },
     });
+    const advancingPlayerIds = new Set(
+      qualifierStage?.groups.flatMap((g) => g.players.map((gp) => gp.playerId)) || []
+    );
 
-    // Lấy tất cả guests
-    const allGuests = await prisma.player.findMany({
-      where: { isGuest: true },
-      select: { id: true, ign: true },
+    // Lấy tất cả players liên quan
+    const allPlayerIds: string[] = assignments
+      ? assignments.flatMap((a: { groupId: string; playerIds: string[] }) => a.playerIds)
+      : [];
+    const players = await prisma.player.findMany({
+      where: { id: { in: allPlayerIds } },
+      select: { id: true, ign: true, isGuest: true },
     });
+    const playerMap = new Map(players.map((p) => [p.id, p]));
 
-    let finalGuestAssignments: { groupId: string; guestIds: string[] }[];
+    let finalAssignments: { groupId: string; playerIds: string[] }[];
 
-    if (drawType === "wheel_spin" && guestAssignments) {
-      // Wheel spin: admin đã gán guests vào bảng qua wheel UI
-      finalGuestAssignments = guestAssignments;
+    if (drawType === "wheel_spin" && assignments) {
+      // Wheel spin: admin đã gán cả guests lẫn advancing players qua wheel UI
+      // Validate: mỗi player chỉ ở 1 bảng
+      if (new Set(allPlayerIds).size !== allPlayerIds.length) {
+        return NextResponse.json({ error: "Có tuyển thủ bị trùng giữa các bảng" }, { status: 400 });
+      }
+      // Validate: advancing players phải thực sự đi tiếp từ QUALIFIER
+      for (const playerId of allPlayerIds) {
+        const p = playerMap.get(playerId);
+        if (p && !p.isGuest && !advancingPlayerIds.has(playerId)) {
+          return NextResponse.json({ error: `Tuyển thủ "${p.ign}" không phải người đi tiếp từ Vòng Loại` }, { status: 400 });
+        }
+      }
+      finalAssignments = assignments;
     } else if (drawType === "random_seeded") {
-      // Random seeded: tự động chia guests vào bảng
+      // Random seeded: chỉ bốc thăm guests (advancing players đã được gán trước đó)
+      const existingGroupPlayers = await prisma.groupPlayer.findMany({
+        where: { groupId: { in: stage.groups.map((g) => g.id) } },
+      });
+      const allGuests = await prisma.player.findMany({
+        where: { isGuest: true },
+        select: { id: true, ign: true },
+      });
       const groupsWithCounts = stage.groups.map((g) => ({
         id: g.id,
         currentCount: existingGroupPlayers.filter((gp) => gp.groupId === g.id).length,
       }));
-      finalGuestAssignments = drawGuestsIntoGroups(allGuests, groupsWithCounts);
+      finalAssignments = drawGuestsIntoGroups(allGuests, groupsWithCounts).map((a) => ({
+        groupId: a.groupId,
+        playerIds: a.guestIds,
+      }));
     } else {
-      return NextResponse.json({ error: "Cần drawType: 'random_seeded' hoặc 'wheel_spin' với guestAssignments" }, { status: 400 });
-    }
-
-    // Validate: mỗi guest chỉ ở 1 bảng
-    const allGuestIds = finalGuestAssignments.flatMap((a) => a.guestIds);
-    if (new Set(allGuestIds).size !== allGuestIds.length) {
-      return NextResponse.json({ error: "Có khách mời bị trùng giữa các bảng" }, { status: 400 });
+      return NextResponse.json({ error: "Cần drawType: 'random_seeded' hoặc 'wheel_spin' với assignments" }, { status: 400 });
     }
 
     // Tạo Registration cho guests nếu chưa có (APPROVED)
+    const guestIds = allPlayerIds.filter((id: string) => playerMap.get(id)?.isGuest);
     await Promise.all(
-      allGuests.map(async (guest) => {
+      guestIds.map(async (guestId) => {
         const existing = await prisma.registration.findUnique({
-          where: { tournamentId_playerId: { tournamentId, playerId: guest.id } },
+          where: { tournamentId_playerId: { tournamentId, playerId: guestId } },
         });
         if (!existing) {
           await prisma.registration.create({
-            data: { tournamentId, playerId: guest.id, status: "APPROVED" },
+            data: { tournamentId, playerId: guestId, status: "APPROVED" },
           });
         }
       })
     );
 
-    // Lưu guest assignments vào GroupPlayer
+    // Lưu assignments vào GroupPlayer
     const result = await prisma.$transaction(async (tx) => {
       let totalAdded = 0;
-      for (const assignment of finalGuestAssignments) {
-        for (const guestId of assignment.guestIds) {
+      for (const assignment of finalAssignments) {
+        for (const playerId of assignment.playerIds) {
           const existing = await tx.groupPlayer.findUnique({
-            where: { groupId_playerId: { groupId: assignment.groupId, playerId: guestId } },
+            where: { groupId_playerId: { groupId: assignment.groupId, playerId } },
           });
           if (!existing) {
             await tx.groupPlayer.create({
-              data: { groupId: assignment.groupId, playerId: guestId },
+              data: { groupId: assignment.groupId, playerId },
             });
             totalAdded++;
           }
@@ -353,7 +402,7 @@ export async function POST(
     });
 
     return NextResponse.json({
-      message: `Bốc thăm khách mời hoàn tất. Đã phân bổ ${result} khách mời vào ${stage.groups.length} bảng.`,
+      message: `Bốc thăm hoàn tất. Đã phân bổ ${result} tuyển thủ vào ${stage.groups.length} bảng.`,
       totalAdded: result,
     });
   }

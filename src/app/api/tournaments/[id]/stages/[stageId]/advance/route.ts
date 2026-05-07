@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { scorePredictionsForStage } from "@/lib/predictions";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/advance
@@ -131,7 +132,8 @@ export async function POST(
     });
 
     // If next stage exists, populate its groups
-    if (nextStage) {
+    // SEMI_1: chỉ set finalRank, KHÔNG auto-assign — players sẽ được gán bảng qua vòng quay
+    if (nextStage && nextStage.stageType !== "SEMI_1") {
       const nextGroups = await tx.group.findMany({
         where: { stageId: nextStage.id },
         orderBy: { groupOrder: "asc" },
@@ -171,8 +173,17 @@ export async function POST(
     return advancingPlayers;
   });
 
+  // Chấm điểm dự đoán (best-effort, không ảnh hưởng advance nếu lỗi)
+  let predictionScored = 0;
+  try {
+    const { scored } = await scorePredictionsForStage(stageId);
+    predictionScored = scored;
+  } catch (err) {
+    console.error("[PREDICTION SCORING ERROR]", err);
+  }
+
   return NextResponse.json({
-    message: `Hoàn thành vòng đấu. ${result.length} tuyển thủ thăng hạng.`,
+    message: `Hoàn thành vòng đấu. ${result.length} tuyển thủ thăng hạng.${predictionScored > 0 ? ` ${predictionScored} dự đoán đã được chấm điểm.` : ""}`,
     advancingPlayers: result,
     nextStage: nextStage ? { id: nextStage.id, name: nextStage.name } : null,
   });

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Trophy, Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChart3, Medal, Download } from "lucide-react";
+import { Trophy, Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChart3, Medal, Download, Target } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -189,7 +189,7 @@ export default function TournamentDetailPage() {
           <Swords className="h-7 w-7 text-sblt-red" />
           Tra cứu giải đấu
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
               href: `/tournaments/${tournament.id}/brackets`,
@@ -223,6 +223,14 @@ export default function TournamentDetailPage() {
               color: "from-emerald-500/20 to-transparent",
               iconColor: "text-emerald-400",
               download: true,
+            },
+            {
+              href: `/tournaments/${tournament.id}/predictions`,
+              label: "Dự đoán",
+              desc: "Dự đoán top 4 mỗi bảng để nhận giải thưởng từ Riot",
+              icon: Target,
+              color: "from-purple-500/20 to-transparent",
+              iconColor: "text-purple-400",
             },
           ].map((link) => (
             <Link

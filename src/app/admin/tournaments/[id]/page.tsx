@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Save, Trash2, ArrowLeft, Users, X, Trophy, Pencil, Check, Shuffle, ChevronRight, UserCheck, Activity } from "lucide-react";
+import { Plus, Save, Trash2, ArrowLeft, Users, X, Trophy, Pencil, Check, Shuffle, ChevronRight, UserCheck, Activity, Target } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -19,10 +19,12 @@ interface Tournament { id: string; name: string; season: number; status: string;
 
 interface DrawPreview { groupId: string; groupName: string; players: { id: string; ign: string; rank: string | null; isGuest: boolean }[]; }
 interface AdvancePreview { groupName: string; players: { playerId: string; ign: string; totalPoints: number; top1Count: number; rank: number; advancing: boolean }[]; }
+interface WheelItemData { id: string; label: string; type: "advancing" | "guest"; fromGroup?: string; }
 interface Semi1DrawData {
   stageType: string;
   advancingPlayers: { id: string; ign: string; rank: string | null; fromGroup: string; finalRank: number }[];
   guestPlayers: { id: string; ign: string; rank: string | null; isGuest: boolean }[];
+  allWheelItems: WheelItemData[];
   groups: { id: string; name: string; currentCount: number }[];
   totalAdvancing: number;
   totalGuests: number;
@@ -59,7 +61,7 @@ export default function AdminTournamentDetailPage() {
   const [editingGroupName, setEditingGroupName] = useState("");
   const [showCreateStage, setShowCreateStage] = useState(false);
 
-  const [activePanel, setActivePanel] = useState<"status" | "checkin" | "draw" | "advance" | null>(null);
+  const [activePanel, setActivePanel] = useState<"status" | "checkin" | "draw" | "advance" | "predictions" | null>(null);
   const [statusInfo, setStatusInfo] = useState<StatusInfo | null>(null);
   const [checkinData, setCheckinData] = useState<CheckinSummary | null>(null);
   const [drawPreview, setDrawPreview] = useState<DrawPreview[] | null>(null);
@@ -99,6 +101,7 @@ export default function AdminTournamentDetailPage() {
         }
       }
       else if (panel === "advance" && selectedStage) { const res = await fetch(`/api/tournaments/${params.id}/stages/${selectedStage}/advance`); if (res.ok) { const d = await res.json(); setAdvancePreview(d.preview); } }
+      else if (panel === "predictions") { /* No data to fetch — uses tournament.stages directly */ }
     } finally { setPanelLoading(false); }
   };
 
@@ -147,14 +150,14 @@ export default function AdminTournamentDetailPage() {
     } finally { setPanelLoading(false); }
   };
 
-  const handleWheelSpinComplete = async (guestAssignments: { groupId: string; guestIds: string[] }[]) => {
+  const handleWheelSpinComplete = async (assignments: { groupId: string; playerIds: string[] }[]) => {
     if (!selectedStage) return;
     setPanelLoading(true);
     try {
       const res = await fetch(`/api/tournaments/${params.id}/stages/${selectedStage}/draw`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ drawType: "wheel_spin", guestAssignments }),
+        body: JSON.stringify({ drawType: "wheel_spin", assignments }),
       });
       const data = await res.json();
       setPanelMsg(data.message || data.error);
@@ -310,9 +313,9 @@ export default function AdminTournamentDetailPage() {
 
         {/* Tool buttons */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {(["status", "checkin", "draw", "advance"] as const).map((panel) => {
-            const icons = { status: Activity, checkin: UserCheck, draw: Shuffle, advance: ChevronRight };
-            const labels = { status: "Trạng thái", checkin: "Check-in", draw: "Bốc thăm", advance: "Thăng hạng" };
+          {(["status", "checkin", "draw", "advance", "predictions"] as const).map((panel) => {
+            const icons = { status: Activity, checkin: UserCheck, draw: Shuffle, advance: ChevronRight, predictions: Target };
+            const labels = { status: "Trạng thái", checkin: "Check-in", draw: "Bốc thăm", advance: "Thăng hạng", predictions: "Dự đoán" };
             const Icon = icons[panel];
             if ((panel === "draw" || panel === "advance") && !selectedStage) return null;
             return (
@@ -333,6 +336,7 @@ export default function AdminTournamentDetailPage() {
                 {activePanel === "checkin" && "Check-in tuyển thủ"}
                 {activePanel === "draw" && "Bốc thăm chia bảng"}
                 {activePanel === "advance" && "Xếp hạng & Thăng hạng"}
+                {activePanel === "predictions" && "Quản lý dự đoán"}
               </h3>
               <button onClick={() => { setActivePanel(null); setPanelMsg(null); }} className="text-sblt-muted hover:text-white"><X className="h-4 w-4" /></button>
             </div>
@@ -432,27 +436,23 @@ export default function AdminTournamentDetailPage() {
                     {/* SEMI_1: Bốc thăm khách mời */}
                     {semi1DrawData ? (
                       <>
-                        {/* Phần 1: Advancing players (readonly) */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-2">
-                            Người đi tiếp từ Vòng Loại ({semi1DrawData.totalAdvancing})
-                          </p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-                            {semi1DrawData.advancingPlayers.map((p) => (
-                              <div key={p.id} className="text-xs bg-sblt-dark rounded-lg px-2 py-1.5 flex items-center gap-1.5">
-                                <span className="text-green-400">✓</span>
-                                <span className="text-sblt-white truncate">{p.ign}</span>
-                                <span className="text-sblt-border text-[10px]">({p.fromGroup})</span>
-                              </div>
-                            ))}
+                        {/* Tổng quan players */}
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div className="bg-sblt-dark rounded-lg px-3 py-2">
+                            <p className="text-xs text-sblt-muted">Người đi tiếp</p>
+                            <p className="text-lg font-bold text-green-400">{semi1DrawData.totalAdvancing}</p>
+                          </div>
+                          <div className="bg-sblt-dark rounded-lg px-3 py-2">
+                            <p className="text-xs text-sblt-muted">Khách mời</p>
+                            <p className="text-lg font-bold text-sblt-red">{semi1DrawData.totalGuests}</p>
                           </div>
                         </div>
 
-                        {/* Phần 2: Chọn cách bốc thăm khách mời */}
+                        {/* Chọn cách bốc thăm */}
                         {!drawMode && (
                           <div>
                             <p className="text-xs font-semibold text-white mb-2">
-                              Bốc thăm {semi1DrawData.totalGuests} khách mời vào {semi1DrawData.groups.length} bảng
+                              Bốc thăm {semi1DrawData.totalAdvancing + semi1DrawData.totalGuests} tuyển thủ vào {semi1DrawData.groups.length} bảng
                             </p>
                             <div className="flex gap-3">
                               <button
@@ -460,23 +460,26 @@ export default function AdminTournamentDetailPage() {
                                 className="flex-1 bg-sblt-dark hover:bg-sblt-red/20 border border-sblt-border hover:border-sblt-red text-white text-sm py-3 rounded-xl transition-colors"
                               >
                                 <Shuffle className="h-4 w-4 inline mr-2" />
-                                Bốc thăm nhanh
+                                Bốc thăm nhanh (chỉ khách mời)
                               </button>
                               <button
                                 onClick={() => setDrawMode("wheel")}
                                 className="flex-1 bg-sblt-dark hover:bg-sblt-red/20 border border-sblt-border hover:border-sblt-red text-white text-sm py-3 rounded-xl transition-colors"
                               >
-                                🎡 Quay vòng quay
+                                🎡 Quay vòng quay (tất cả)
                               </button>
                             </div>
                           </div>
                         )}
 
-                        {/* Phần 2a: Random seeded draw */}
+                        {/* Random seeded draw */}
                         {drawMode === "random" && (
                           <div className="text-center py-4">
                             <p className="text-sblt-muted text-sm mb-3">
                               Chia {semi1DrawData.totalGuests} khách mời đều vào {semi1DrawData.groups.length} bảng (ngẫu nhiên)
+                            </p>
+                            <p className="text-xs text-yellow-400 mb-3">
+                              Lưu ý: Chỉ bốc thăm khách mời. Players đi tiếp cần được gán qua vòng quay hoặc thủ công.
                             </p>
                             <div className="flex gap-2 justify-center">
                               <Button size="sm" onClick={handleRandomDrawSemi1} disabled={panelLoading}>
@@ -487,14 +490,17 @@ export default function AdminTournamentDetailPage() {
                           </div>
                         )}
 
-                        {/* Phần 2b: Wheel spinner */}
+                        {/* Wheel spinner — quay cả advancing + guests */}
                         {drawMode === "wheel" && (
                           <div>
                             <WheelSpinner
-                              items={semi1DrawData.guestPlayers.map((g) => ({ id: g.id, label: g.ign }))}
+                              items={semi1DrawData.allWheelItems}
                               groups={semi1DrawData.groups}
                               onAssignmentsComplete={handleWheelSpinComplete}
                               onCancel={() => setDrawMode(null)}
+                              addableItems={approvedPlayers
+                                .filter((p) => !semi1DrawData.allWheelItems.find((w) => w.id === p.id))
+                                .map((p) => ({ id: p.id, label: p.ign }))}
                             />
                           </div>
                         )}
@@ -560,6 +566,53 @@ export default function AdminTournamentDetailPage() {
                         <Button onClick={() => openPanel("advance")}>Xem kết quả xếp hạng</Button>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {activePanel === "predictions" && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-sblt-muted">
+                      Quản lý cửa sổ dự đoán cho các vòng Semi 1, Semi 2, và Chung Kết.
+                    </p>
+                    <div className="space-y-2">
+                      {tournament.stages
+                        .filter((s) => ["SEMI_1", "SEMI_2", "FINAL"].includes(s.stageType))
+                        .map((stage) => {
+                          const hasPlayers = stage.groups.some((g) => g.players.length > 0);
+                          let status: string;
+                          let statusVariant: "green" | "yellow" | "blue" | "default";
+                          if (stage.status === "COMPLETED") { status = "Đã chấm điểm"; statusVariant = "blue"; }
+                          else if (stage.status === "IN_PROGRESS") { status = "Đã khóa"; statusVariant = "yellow"; }
+                          else if (hasPlayers) { status = "Đang mở"; statusVariant = "green"; }
+                          else { status = "Chưa sẵn sàng"; statusVariant = "default"; }
+
+                          return (
+                            <div key={stage.id} className="flex items-center justify-between bg-sblt-dark rounded-lg px-4 py-3">
+                              <div>
+                                <span className="text-sm text-white font-medium">{stage.name}</span>
+                                <span className="text-xs text-sblt-muted ml-2">({stage.groups.length} bảng)</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={statusVariant}>{status}</Badge>
+                                <Link
+                                  href={`/tournaments/${tournament.id}/predictions/${stage.id}/leaderboard`}
+                                  className="text-xs text-sblt-muted hover:text-white"
+                                  target="_blank"
+                                >
+                                  Xem BXH
+                                </Link>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <Link
+                      href={`/tournaments/${tournament.id}/predictions`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-xs text-sblt-muted hover:text-white"
+                    >
+                      Xem trang dự đoán →
+                    </Link>
                   </div>
                 )}
               </>

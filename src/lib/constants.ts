@@ -47,6 +47,17 @@ export const COMMENTATORS = [
   { name: "RRQ MidFeed", role: "BLV", confirmed: true },
 ];
 
+// Điểm dự đoán: đúng top 1-4 đều được 10đ. Chung kết x2 (20đ/rank).
+export const PREDICTION_SCORING: Record<number, number> = {
+  1: 10,
+  2: 10,
+  3: 10,
+  4: 10,
+};
+
+// Các vòng được phép dự đoán (vòng 2 trở đi)
+export const PREDICTABLE_STAGES: string[] = ["SEMI_1", "SEMI_2", "FINAL"];
+
 export const TOURNAMENT_FORMAT = {
   qualifier: {
     name: "Vòng Loại",

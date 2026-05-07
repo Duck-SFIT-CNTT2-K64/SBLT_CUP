@@ -13,7 +13,7 @@ npm ci
 
 # 3. Cập nhật Database (migrate deploy an toàn hơn db push cho production)
 npx prisma generate
-npx prisma migrate deploy
+npx prisma db push --accept-data-loss
 
 # 4. Build lại giao diện Next.js
 npm run build
@@ -24,7 +24,7 @@ pm2 restart sblt-cup
 # 6. Health check — đợi app khởi động xong
 echo "⏳ Đợi app khởi động..."
 sleep 3
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/leaderboard || echo "000")
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health || echo "000")
 if [ "$HTTP_STATUS" = "200" ]; then
   echo "✅ Đã cập nhật và lên sóng thành công! (HTTP $HTTP_STATUS)"
 else

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { scorePredictionsForStage } from "@/lib/predictions";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/status
@@ -74,6 +75,25 @@ export async function POST(
     data: { status: newStatus },
   });
 
+  // Khóa tất cả dự đoán khi stage bắt đầu
+  if (newStatus === "IN_PROGRESS") {
+    await prisma.prediction.updateMany({
+      where: { stageId, status: "OPEN" },
+      data: { status: "LOCKED" },
+    });
+  }
+
+  // Chấm điểm dự đoán khi stage chuyển sang COMPLETED (best-effort)
+  let predictionScored = 0;
+  if (newStatus === "COMPLETED") {
+    try {
+      const { scored } = await scorePredictionsForStage(stageId);
+      predictionScored = scored;
+    } catch (err) {
+      console.error("[PREDICTION SCORING ERROR]", err);
+    }
+  }
+
   const labels: Record<string, string> = {
     SCHEDULED: "Sắp diễn ra",
     IN_PROGRESS: "Đang diễn ra",
@@ -81,7 +101,7 @@ export async function POST(
   };
 
   return NextResponse.json({
-    message: `Vòng đấu chuyển sang "${labels[newStatus]}"`,
+    message: `Vòng đấu chuyển sang "${labels[newStatus]}"${predictionScored > 0 ? `. ${predictionScored} dự đoán đã được chấm điểm.` : ""}`,
     status: updated.status,
   });
 }

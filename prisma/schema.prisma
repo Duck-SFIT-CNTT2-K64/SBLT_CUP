@@ -60,6 +60,12 @@ enum DisputeStatus {
   REJECTED
 }
 
+enum PredictionStatus {
+  OPEN
+  LOCKED
+  SCORED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -74,6 +80,7 @@ model User {
 
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
+  predictions         Prediction[]
 }
 
 model Player {
@@ -91,7 +98,11 @@ model Player {
   groupPlayers  GroupPlayer[]
   gameResults   GameResult[]
   prizes        Prize[]
-  disputes      Dispute[]     @relation("DisputeSubmitter")
+  disputes      Dispute[]         @relation("DisputeSubmitter")
+  predictionsRank1 PredictionEntry[] @relation("PredRank1")
+  predictionsRank2 PredictionEntry[] @relation("PredRank2")
+  predictionsRank3 PredictionEntry[] @relation("PredRank3")
+  predictionsRank4 PredictionEntry[] @relation("PredRank4")
 }
 
 model Tournament {
@@ -144,7 +155,8 @@ model Stage {
   totalGames   Int         @default(3)
   status       StageStatus @default(SCHEDULED)
 
-  groups Group[]
+  groups      Group[]
+  predictions Prediction[]
 
   @@unique([tournamentId, stageType])
   @@index([tournamentId])
@@ -157,8 +169,9 @@ model Group {
   name      String
   groupOrder Int
 
-  players GroupPlayer[]
-  games   Game[]
+  players    GroupPlayer[]
+  games      Game[]
+  predictions PredictionEntry[]
 
   @@index([stageId])
 }
@@ -283,4 +296,48 @@ model AuditLog {
   @@index([userId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+model Prediction {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stageId    String
+  stage      Stage            @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  status     PredictionStatus @default(OPEN)
+  totalScore Int              @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  entries PredictionEntry[]
+
+  @@unique([userId, stageId])
+  @@index([stageId])
+  @@index([userId])
+}
+
+model PredictionEntry {
+  id           String     @id @default(cuid())
+  predictionId String
+  prediction   Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  groupId      String
+  group        Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  rank1PlayerId String
+  rank1Player   Player @relation("PredRank1", fields: [rank1PlayerId], references: [id], onDelete: Cascade)
+  rank2PlayerId String
+  rank2Player   Player @relation("PredRank2", fields: [rank2PlayerId], references: [id], onDelete: Cascade)
+  rank3PlayerId String
+  rank3Player   Player @relation("PredRank3", fields: [rank3PlayerId], references: [id], onDelete: Cascade)
+  rank4PlayerId String
+  rank4Player   Player @relation("PredRank4", fields: [rank4PlayerId], references: [id], onDelete: Cascade)
+
+  rank1Points Int @default(0)
+  rank2Points Int @default(0)
+  rank3Points Int @default(0)
+  rank4Points Int @default(0)
+
+  @@unique([predictionId, groupId])
+  @@index([predictionId])
+  @@index([groupId])
 }
