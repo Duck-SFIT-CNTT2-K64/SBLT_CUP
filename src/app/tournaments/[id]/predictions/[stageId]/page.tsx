@@ -145,7 +145,7 @@ export default function PredictionFormPage() {
   if (sessionStatus === "loading" || loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-8 w-8 text-sblt-red animate-spin" />
+        <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />
       </div>
     );
   }
@@ -155,7 +155,7 @@ export default function PredictionFormPage() {
       {/* Back link */}
       <Link
         href={`/tournaments/${tournamentId}/predictions`}
-        className="inline-flex items-center gap-1 text-sm text-sblt-muted hover:text-white mb-6"
+        className="inline-flex items-center gap-1 text-sm text-[#888] hover:text-[#f5f5f5] mb-6"
       >
         <ArrowLeft className="h-4 w-4" />
         Quay lại
@@ -163,8 +163,8 @@ export default function PredictionFormPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Target className="h-7 w-7 text-sblt-red" />
+        <h1 className="text-2xl font-bold text-[#f5f5f5] flex items-center gap-3">
+          <Target className="h-7 w-7 text-[#dc2626]" />
           Dự đoán {stageName}
         </h1>
         {isLocked && (
@@ -199,7 +199,7 @@ export default function PredictionFormPage() {
       {/* Submit */}
       {!isLocked && (
         <div className="mt-8 flex items-center justify-between">
-          <p className="text-sm text-sblt-muted">
+          <p className="text-sm text-[#888]">
             {allComplete
               ? "Tất cả bảng đã dự đoán xong. Nhấn gửi để lưu."
               : `Đã dự đoán ${Array.from(entries.values()).filter((e) => e.rank1PlayerId && e.rank2PlayerId && e.rank3PlayerId && e.rank4PlayerId).length}/${groups.length} bảng`}

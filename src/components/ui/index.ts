@@ -6,3 +6,4 @@ export type { AvatarProps } from "./Avatar";
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./DataTable";
 export { SectionHeading } from "./SectionHeading";
 export { Alert } from "./Alert";
+export { RevealOnScroll } from "./RevealOnScroll";

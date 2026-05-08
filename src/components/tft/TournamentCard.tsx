@@ -86,8 +86,8 @@ export default function TournamentCard({
         {/* ── Outer wrapper — overflow:visible để mascot break out ── */}
         <div className={`
           relative rounded-2xl
-          bg-sblt-card/80 backdrop-blur-xl
-          border border-sblt-border
+          bg-[#111]/80 backdrop-blur-xl
+          border border-[#222]
           transition-all duration-300
           ${accentCfg.border} ${accentCfg.glow}
           group
@@ -126,7 +126,7 @@ export default function TournamentCard({
                   Mùa {season}
                 </span>
                 {/* Title */}
-                <h3 className={`font-bold text-lg leading-tight text-white group-hover:${accentCfg.text} transition-all duration-300`}>
+                <h3 className={`font-bold text-lg leading-tight text-[#f5f5f5] group-hover:${accentCfg.text} transition-all duration-300`}>
                   {name}
                 </h3>
               </div>
@@ -156,11 +156,11 @@ export default function TournamentCard({
 
             {/* Stats row */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="flex items-center gap-2 text-xs text-sblt-muted">
+              <div className="flex items-center gap-2 text-xs text-[#888]">
                 <Calendar className="h-3.5 w-3.5 shrink-0" />
                 <span>{new Date(startDate).toLocaleDateString("vi-VN")} – {new Date(endDate).toLocaleDateString("vi-VN")}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-sblt-muted">
+              <div className="flex items-center gap-2 text-xs text-[#888]">
                 <Zap className="h-3.5 w-3.5 shrink-0 text-yellow-500" />
                 <span className="font-semibold text-yellow-500">
                   {new Intl.NumberFormat("vi-VN").format(prizePool)} VNĐ
@@ -171,12 +171,12 @@ export default function TournamentCard({
             {/* Registration progress */}
             <div className="mb-4">
               <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="flex items-center gap-1 text-sblt-muted">
+                <span className="flex items-center gap-1 text-[#888]">
                   <Users className="h-3 w-3" /> Đăng ký
                 </span>
-                <span className="text-white font-medium">{registeredCount}/{maxPlayers}</span>
+                <span className="text-[#f5f5f5] font-medium">{registeredCount}/{maxPlayers}</span>
               </div>
-              <div className="h-1.5 bg-sblt-border rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[#222] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   whileInView={{ width: `${fillPct}%` }}
@@ -195,8 +195,8 @@ export default function TournamentCard({
 
             {/* CTA */}
             <div className="flex items-center justify-between">
-              <span className="text-xs text-sblt-muted">Xem chi tiết</span>
-              <ArrowRight className="h-4 w-4 text-sblt-muted group-hover:text-white group-hover:translate-x-1 transition-all duration-200" />
+              <span className="text-xs text-[#888]">Xem chi tiết</span>
+              <ArrowRight className="h-4 w-4 text-[#888] group-hover:text-[#f5f5f5] group-hover:translate-x-1 transition-all duration-200" />
             </div>
           </div>
         </div>

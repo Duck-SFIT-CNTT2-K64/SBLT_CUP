@@ -4,26 +4,26 @@ import { MessageSquare, Globe, ExternalLink } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-sblt-black border-t border-sblt-border mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-[#0a0a0a] border-t border-[#222] mt-auto">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <Image src="/logo.png" alt="SBLT CUP" width={36} height={36} className="rounded-md" />
-              <span className="sblt-heading text-xl text-white tracking-wider">SBLT CUP</span>
+              <Image src="/logo.png" alt="SBLT CUP" width={32} height={32} className="rounded" />
+              <span className="sblt-heading text-lg text-white tracking-widest">SBLT CUP</span>
             </div>
-            <p className="text-sblt-muted text-sm leading-relaxed">
+            <p className="text-[#888] text-sm leading-relaxed">
               Giải đấu Đấu Trường Chân Lý (TFT) hàng đầu Việt Nam. Sân chơi giao lưu vui vẻ cho cộng đồng TFT.
             </p>
-            <p className="text-sblt-muted text-sm mt-2">
+            <p className="text-[#555] text-sm mt-2">
               Tổ chức bởi Team 5van & Koi
             </p>
           </div>
 
           {/* Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Liên kết</h3>
+            <h3 className="text-[#f5f5f5] font-semibold mb-4 text-xs uppercase tracking-widest">Liên kết</h3>
             <ul className="space-y-2.5">
               {[
                 { href: "/tournaments", label: "Giải đấu" },
@@ -32,7 +32,7 @@ export default function Footer() {
                 { href: "/announcements", label: "Thông báo" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sblt-muted hover:text-white text-sm transition-colors">
+                  <Link href={link.href} className="text-[#888] hover:text-white text-sm transition-colors duration-300">
                     {link.label}
                   </Link>
                 </li>
@@ -42,13 +42,13 @@ export default function Footer() {
 
           {/* Social & Contact */}
           <div>
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Theo dõi chúng tôi</h3>
+            <h3 className="text-[#f5f5f5] font-semibold mb-4 text-xs uppercase tracking-widest">Theo dõi chúng tôi</h3>
             <div className="flex gap-3 mb-6">
               <a
                 href="https://youtube.com/@SBLT5vanII"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-sblt-card border border-sblt-border flex items-center justify-center text-sblt-muted hover:text-red-400 hover:border-red-800 transition-colors"
+                className="w-10 h-10 rounded-lg bg-[#111] border border-[#222] flex items-center justify-center text-[#888] hover:text-[#dc2626] hover:border-[#dc2626]/40 hover:shadow-[0_0_12px_rgba(220,38,38,0.15)] transition-all duration-300"
               >
                 <ExternalLink className="h-5 w-5" />
               </a>
@@ -56,7 +56,7 @@ export default function Footer() {
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-sblt-card border border-sblt-border flex items-center justify-center text-sblt-muted hover:text-indigo-400 hover:border-indigo-800 transition-colors"
+                className="w-10 h-10 rounded-lg bg-[#111] border border-[#222] flex items-center justify-center text-[#888] hover:text-[#f5f5f5] hover:border-[#444] transition-all duration-300"
               >
                 <MessageSquare className="h-5 w-5" />
               </a>
@@ -64,19 +64,19 @@ export default function Footer() {
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-sblt-card border border-sblt-border flex items-center justify-center text-sblt-muted hover:text-sky-400 hover:border-sky-800 transition-colors"
+                className="w-10 h-10 rounded-lg bg-[#111] border border-[#222] flex items-center justify-center text-[#888] hover:text-[#f5f5f5] hover:border-[#444] transition-all duration-300"
               >
                 <Globe className="h-5 w-5" />
               </a>
             </div>
-            <div className="text-sblt-muted text-sm space-y-1">
+            <div className="text-[#888] text-sm space-y-1">
               <p>Đại diện: 5van</p>
               <p>
                 <a
                   href="https://youtube.com/@SBLT5vanII"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors duration-300"
                 >
                   YouTube: SBLT 5van II
                 </a>
@@ -87,11 +87,11 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="sblt-divider mt-10 mb-6" />
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sblt-muted text-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-[#555] text-sm">
           <p>&copy; {new Date().getFullYear()} SBLT CUP. All rights reserved.</p>
           <p>
             Designed for{" "}
-            <span className="text-sblt-red font-medium">Đấu Trường Chân Lý</span>{" "}
+            <span className="text-[#dc2626] font-medium">Đấu Trường Chân Lý</span>{" "}
             community
           </p>
         </div>

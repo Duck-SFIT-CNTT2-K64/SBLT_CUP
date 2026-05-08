@@ -28,11 +28,11 @@ const RANK_COLORS: Record<string, { text: string; glow: string; bg: string }> = 
 };
 
 function getRankStyle(rank?: string) {
-  if (!rank) return { text: "text-sblt-muted", glow: "", bg: "bg-sblt-border/30" };
+  if (!rank) return { text: "text-[#888]", glow: "", bg: "bg-[#222]/30" };
   for (const [key, val] of Object.entries(RANK_COLORS)) {
     if (rank.includes(key)) return val;
   }
-  return { text: "text-sblt-muted", glow: "", bg: "bg-sblt-border/30" };
+  return { text: "text-[#888]", glow: "", bg: "bg-[#222]/30" };
 }
 
 function getGlobalRankStyle(pos?: number) {
@@ -41,7 +41,7 @@ function getGlobalRankStyle(pos?: number) {
   if (pos === 2) return { icon: "🥈", color: "text-zinc-300",        border: "border-zinc-400/40" };
   if (pos === 3) return { icon: "🥉", color: "text-amber-600",       border: "border-amber-700/40" };
   if (pos <= 10) return { icon: `#${pos}`, color: "text-[#0bc4e3]", border: "border-[#0bc4e3]/30" };
-  return { icon: `#${pos}`, color: "text-sblt-muted", border: "border-sblt-border" };
+  return { icon: `#${pos}`, color: "text-[#888]", border: "border-[#222]" };
 }
 
 export default function PlayerProfileCard({
@@ -72,11 +72,11 @@ export default function PlayerProfileCard({
     >
       <div className={`
         relative rounded-2xl overflow-visible
-        bg-sblt-card/80 backdrop-blur-xl
+        bg-[#111]/80 backdrop-blur-xl
         border transition-all duration-300 group
         ${globalRank === 1
           ? "border-[#c89b3c]/40 hover:border-[#c89b3c]/70 hover:shadow-neon-gold"
-          : "border-sblt-border hover:border-[#0bc4e3]/40 hover:shadow-neon-blue"
+          : "border-[#222] hover:border-[#0bc4e3]/40 hover:shadow-neon-blue"
         }
       `}>
 
@@ -113,13 +113,13 @@ export default function PlayerProfileCard({
             {/* Avatar */}
             <div className="relative shrink-0">
               <div className={`w-14 h-14 rounded-xl overflow-hidden border-2 ${
-                globalRank === 1 ? "border-[#c89b3c]/60" : "border-sblt-border"
+                globalRank === 1 ? "border-[#c89b3c]/60" : "border-[#222]"
               }`}>
                 {avatar ? (
                   <Image src={avatar} alt={ign} fill className="object-cover" sizes="56px" />
                 ) : (
                   <div className={`w-full h-full flex items-center justify-center ${
-                    globalRank === 1 ? "bg-gradient-to-b from-[#2a1f08] to-[#1a1208]" : "bg-sblt-dark"
+                    globalRank === 1 ? "bg-gradient-to-b from-[#2a1f08] to-[#1a1208]" : "bg-[#111]"
                   }`}>
                     <span className={`text-xl font-black sblt-heading ${
                       globalRank === 1 ? "text-gradient-gold" : "text-gradient-hextech"
@@ -131,7 +131,7 @@ export default function PlayerProfileCard({
               </div>
               {/* Global rank badge */}
               {rankBadge && (
-                <div className={`absolute -bottom-1.5 -right-1.5 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-xs font-bold border bg-sblt-black ${rankBadge.border} ${rankBadge.color}`}>
+                <div className={`absolute -bottom-1.5 -right-1.5 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-xs font-bold border bg-[#0a0a0a] ${rankBadge.border} ${rankBadge.color}`}>
                   {rankBadge.icon}
                 </div>
               )}
@@ -140,7 +140,7 @@ export default function PlayerProfileCard({
             {/* Name & rank */}
             <div className="flex-1 min-w-0 pr-16">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <h4 className="font-bold text-white text-sm truncate">{ign}</h4>
+                <h4 className="font-bold text-[#f5f5f5] text-sm truncate">{ign}</h4>
                 {isGuest && (
                   <span className="shrink-0 text-xs font-bold uppercase tracking-wider bg-[#c89b3c]/15 text-[#c89b3c] border border-[#c89b3c]/30 px-1.5 py-0.5 rounded-full">
                     Khách
@@ -166,21 +166,21 @@ export default function PlayerProfileCard({
               { icon: TrendingUp,label: "Top 4%",      value: `${top4Rate}%`,    color: "text-green-400" },
               { icon: Zap,       label: "TB điểm",     value: avgPoints,         color: "text-[#0bc4e3]" },
             ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} className="bg-sblt-dark/60 rounded-xl p-2.5 text-center">
+              <div key={label} className="bg-[#111]/60 rounded-xl p-2.5 text-center">
                 <Icon className={`h-3.5 w-3.5 mx-auto mb-1 ${color}`} />
                 <div className={`text-base font-bold ${color}`}>{value}</div>
-                <div className="text-xs text-sblt-muted">{label}</div>
+                <div className="text-xs text-[#888]">{label}</div>
               </div>
             ))}
           </div>
 
           {/* Games played */}
-          <div className="flex items-center justify-between text-xs text-sblt-muted">
+          <div className="flex items-center justify-between text-xs text-[#888]">
             <span className="flex items-center gap-1">
               <Medal className="h-3 w-3" /> {totalGames} trận
             </span>
             {globalRank && (
-              <span className={`font-semibold ${rankBadge?.color || "text-sblt-muted"}`}>
+              <span className={`font-semibold ${rankBadge?.color || "text-[#888]"}`}>
                 Hạng {globalRank} toàn hệ thống
               </span>
             )}

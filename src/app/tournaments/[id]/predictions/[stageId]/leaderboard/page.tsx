@@ -62,18 +62,18 @@ export default function StagePredictionLeaderboardPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Link
         href={`/tournaments/${tournamentId}/predictions`}
-        className="inline-flex items-center gap-1 text-sm text-sblt-muted hover:text-white mb-6"
+        className="inline-flex items-center gap-1 text-sm text-[#888] hover:text-[#f5f5f5] mb-6"
       >
         <ArrowLeft className="h-4 w-4" />
         Quay lại
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3 mb-2">
-          <Trophy className="h-7 w-7 text-sblt-red" />
+        <h1 className="text-2xl font-bold text-[#f5f5f5] flex items-center gap-3 mb-2">
+          <Trophy className="h-7 w-7 text-[#dc2626]" />
           Bảng xếp hạng dự đoán &mdash; {stageName}
         </h1>
-        <p className="text-sblt-muted">
+        <p className="text-[#888]">
           Kết quả dự đoán của tất cả người tham gia cho vòng đấu này. Nhấp vào để xem chi tiết.
         </p>
       </div>
@@ -82,10 +82,10 @@ export default function StagePredictionLeaderboardPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 text-sblt-red animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />
         </div>
       ) : leaderboard.length === 0 ? (
-        <div className="text-center py-12 text-sblt-muted">
+        <div className="text-center py-12 text-[#888]">
           Chưa có kết quả dự đoán cho vòng đấu này.
         </div>
       ) : (

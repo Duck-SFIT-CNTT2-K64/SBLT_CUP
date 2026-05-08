@@ -12,10 +12,10 @@ export default function RulesPage() {
         {/* Player Rules */}
         <Card hover={false} className="p-6">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Users className="h-5 w-5 text-sblt-red" />
+            <Users className="h-5 w-5 text-[#dc2626]" />
             Quy định cho tuyển thủ
           </h2>
-          <ul className="space-y-3 text-sm text-sblt-muted">
+          <ul className="space-y-3 text-sm text-[#888]">
             {[
               "Tuyển thủ tham gia bắt buộc phải tắt chế độ che tên (Streamer mode) để Ban Tổ Chức (BTC) tiện theo dõi và xác nhận kết quả.",
               "Tại Chung kết tổng, các tuyển thủ cần phải stream màn hình và cam của mình để tiện cho việc bình luận và Livestream giải.",
@@ -24,7 +24,7 @@ export default function RulesPage() {
               "Tuyển thủ tự chuẩn bị và đảm bảo thiết bị thi đấu (PC/Mobile) cũng như kết nối internet cá nhân.",
             ].map((rule, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="text-sblt-red mt-0.5 shrink-0">{i + 1}.</span>
+                <span className="text-[#dc2626] mt-0.5 shrink-0">{i + 1}.</span>
                 <span className="leading-relaxed">{rule}</span>
               </li>
             ))}
@@ -34,7 +34,7 @@ export default function RulesPage() {
         {/* BTC Rights */}
         <Card hover={false} className="p-6">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Shield className="h-5 w-5 text-sblt-red" />
+            <Shield className="h-5 w-5 text-[#dc2626]" />
             Quyền hạn của BTC
           </h2>
           <div className="space-y-4">
@@ -46,9 +46,9 @@ export default function RulesPage() {
               { title: "2.5 Quyền từ chối đăng ký", content: "BTC có quyền từ chối sự tham gia của bất kỳ cá nhân nào nếu phát hiện thông tin đăng ký không trung thực, tuyển thủ đang trong thời gian bị cấm thi đấu từ các giải chính thức của VNG/Riot, hoặc có lịch sử gây ảnh hưởng tiêu cực đến cộng đồng." },
               { title: "2.6 Quyền quyết định cuối cùng", content: "Trong mọi trường hợp xảy ra khiếu nại hoặc tranh chấp, sau khi xem xét các bằng chứng và tham khảo ý kiến đội ngũ trọng tài, quyết định của BTC là quyết định cuối cùng và có hiệu lực thi hành ngay lập tức. Các bên liên quan không có quyền khiếu nại thêm sau khi quyết định cuối cùng đã được đưa ra." },
             ].map((section, i) => (
-              <div key={i} className="border-l-2 border-sblt-border pl-4">
-                <h3 className="font-semibold text-white mb-1 text-sm">{section.title}</h3>
-                <p className="text-sblt-muted text-sm leading-relaxed">{section.content}</p>
+              <div key={i} className="border-l-2 border-[#222] pl-4">
+                <h3 className="font-semibold text-[#f5f5f5] mb-1 text-sm">{section.title}</h3>
+                <p className="text-[#888] text-sm leading-relaxed">{section.content}</p>
               </div>
             ))}
           </div>
@@ -60,7 +60,7 @@ export default function RulesPage() {
             <Ban className="h-5 w-5 text-red-500" />
             Các hành vi bị cấm
           </h2>
-          <ul className="space-y-3 text-sm text-sblt-muted">
+          <ul className="space-y-3 text-sm text-[#888]">
             {[
               "Tuyệt đối không được đầu hàng (Surrender) trong lúc thi đấu dưới bất kỳ hình thức nào.",
               "Nghiêm cấm lợi dụng lỗi game (bugs), thông đồng, sắp đặt kết quả (teaming).",
@@ -79,22 +79,22 @@ export default function RulesPage() {
         {/* Scoring */}
         <Card hover={false} className="p-6">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Monitor className="h-5 w-5 text-sblt-red" />
+            <Monitor className="h-5 w-5 text-[#dc2626]" />
             Hệ thống tính điểm
           </h2>
-          <div className="bg-sblt-dark rounded-xl overflow-hidden border border-sblt-border">
-            <div className="grid grid-cols-2 text-center font-semibold bg-sblt-black border-b-2 border-sblt-red">
-              <div className="py-3 border-r border-sblt-border text-sm text-sblt-muted uppercase tracking-wider">Thứ hạng</div>
-              <div className="py-3 text-sm text-sblt-muted uppercase tracking-wider">Điểm số</div>
+          <div className="bg-[#0e0e0e] rounded-xl overflow-hidden border border-[#222]">
+            <div className="grid grid-cols-2 text-center font-semibold bg-[#0a0a0a] border-b-2 border-[#dc2626]">
+              <div className="py-3 border-r border-[#222] text-sm text-[#888] uppercase tracking-wider">Thứ hạng</div>
+              <div className="py-3 text-sm text-[#888] uppercase tracking-wider">Điểm số</div>
             </div>
             {Object.entries(SCORING).map(([rank, points], i) => (
-              <div key={rank} className={`grid grid-cols-2 text-center ${i % 2 === 0 ? "bg-sblt-dark" : "bg-sblt-card"} ${i < 7 ? "border-b border-sblt-border" : ""}`}>
-                <div className="py-3 border-r border-sblt-border font-medium text-sblt-white">Top {rank}</div>
-                <div className={`py-3 font-bold ${Number(rank) <= 4 ? "text-sblt-red" : "text-sblt-muted"}`}>{points}</div>
+              <div key={rank} className={`grid grid-cols-2 text-center ${i % 2 === 0 ? "bg-[#0e0e0e]" : "bg-[#111]"} ${i < 7 ? "border-b border-[#222]" : ""}`}>
+                <div className="py-3 border-r border-[#222] font-medium text-[#f5f5f5]">Top {rank}</div>
+                <div className={`py-3 font-bold ${Number(rank) <= 4 ? "text-[#dc2626]" : "text-[#888]"}`}>{points}</div>
               </div>
             ))}
           </div>
-          <p className="text-sblt-muted text-sm mt-4">
+          <p className="text-[#888] text-sm mt-4">
             Trong trường hợp có tuyển thủ bằng điểm, phân chia thứ hạng dựa trên thứ hạng của game đấu cuối cùng.
           </p>
         </Card>
@@ -102,17 +102,17 @@ export default function RulesPage() {
         {/* Check-in */}
         <Card hover={false} className="p-6">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-sblt-red" />
+            <Clock className="h-5 w-5 text-[#dc2626]" />
             Điểm danh
           </h2>
-          <ul className="space-y-3 text-sm text-sblt-muted">
+          <ul className="space-y-3 text-sm text-[#888]">
             {[
               "Tuyển thủ phải điểm danh trước 15 phút khi trận đấu bắt đầu.",
               "Nếu không điểm danh đúng giờ, tuyển thủ có thể bị xử thua hoặc tước quyền thi đấu.",
               "Vui lòng theo dõi kênh Discord và thông báo của BTC để biết lịch trình chính xác.",
             ].map((rule, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="text-sblt-red mt-0.5 shrink-0">{i + 1}.</span>
+                <span className="text-[#dc2626] mt-0.5 shrink-0">{i + 1}.</span>
                 <span className="leading-relaxed">{rule}</span>
               </li>
             ))}

@@ -77,7 +77,7 @@ export default function DashboardPredictionsPage() {
   if (sessionStatus === "loading" || loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-8 w-8 text-sblt-red animate-spin" />
+        <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />
       </div>
     );
   }
@@ -85,9 +85,9 @@ export default function DashboardPredictionsPage() {
   if (!session?.user?.id) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-4xl text-center">
-        <Target className="h-16 w-16 text-sblt-red mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-white mb-4">Dự đoán của bạn</h1>
-        <p className="text-sblt-muted mb-6">Đăng nhập để xem lịch sử dự đoán.</p>
+        <Target className="h-16 w-16 text-[#dc2626] mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-[#f5f5f5] mb-4">Dự đoán của bạn</h1>
+        <p className="text-[#888] mb-6">Đăng nhập để xem lịch sử dự đoán.</p>
         <Link href="/auth/login">
           <Button>Đăng nhập</Button>
         </Link>
@@ -101,8 +101,8 @@ export default function DashboardPredictionsPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3 mb-2">
-          <Target className="h-7 w-7 text-sblt-red" />
+        <h1 className="text-2xl font-bold text-[#f5f5f5] flex items-center gap-3 mb-2">
+          <Target className="h-7 w-7 text-[#dc2626]" />
           Dự đoán của bạn
         </h1>
       </div>
@@ -111,30 +111,30 @@ export default function DashboardPredictionsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card hover={false}>
           <CardContent className="pt-6 text-center">
-            <Trophy className="h-8 w-8 text-sblt-red mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{totalPoints}</p>
-            <p className="text-sm text-sblt-muted">Tổng điểm dự đoán</p>
+            <Trophy className="h-8 w-8 text-[#dc2626] mx-auto mb-2" />
+            <p className="text-2xl font-bold text-[#f5f5f5]">{totalPoints}</p>
+            <p className="text-sm text-[#888]">Tổng điểm dự đoán</p>
           </CardContent>
         </Card>
         <Card hover={false}>
           <CardContent className="pt-6 text-center">
             <CheckCircle className="h-8 w-8 text-green-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{predictions.length}</p>
-            <p className="text-sm text-sblt-muted">Vòng đã dự đoán</p>
+            <p className="text-2xl font-bold text-[#f5f5f5]">{predictions.length}</p>
+            <p className="text-sm text-[#888]">Vòng đã dự đoán</p>
           </CardContent>
         </Card>
         <Card hover={false}>
           <CardContent className="pt-6 text-center">
             <Target className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{scoredCount}</p>
-            <p className="text-sm text-sblt-muted">Vòng đã chấm điểm</p>
+            <p className="text-2xl font-bold text-[#f5f5f5]">{scoredCount}</p>
+            <p className="text-sm text-[#888]">Vòng đã chấm điểm</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Predictions list */}
       {predictions.length === 0 ? (
-        <div className="text-center py-12 text-sblt-muted">
+        <div className="text-center py-12 text-[#888]">
           Bạn chưa dự đoán vòng nào.
         </div>
       ) : (
@@ -154,12 +154,12 @@ export default function DashboardPredictionsPage() {
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-white font-medium">{pred.stageName}</p>
-                      <p className="text-xs text-sblt-muted">{pred.tournamentName}</p>
+                      <p className="text-[#f5f5f5] font-medium">{pred.stageName}</p>
+                      <p className="text-xs text-[#888]">{pred.tournamentName}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       {pred.status === "SCORED" && (
-                        <span className="text-lg font-bold text-sblt-red">{pred.totalScore}đ</span>
+                        <span className="text-lg font-bold text-[#dc2626]">{pred.totalScore}đ</span>
                       )}
                       <Badge variant={pred.status === "SCORED" ? "blue" : pred.status === "LOCKED" ? "yellow" : "green"}>
                         {statusIcon}

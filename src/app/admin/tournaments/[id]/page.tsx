@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import WheelSpinner from "@/components/WheelSpinner";
+import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 interface Player { id: string; ign: string; isGuest: boolean; }
 interface GroupPlayer { id: string; playerId: string; player: Player; totalPoints: number; }
@@ -101,7 +102,7 @@ export default function AdminTournamentDetailPage() {
         }
       }
       else if (panel === "advance" && selectedStage) { const res = await fetch(`/api/tournaments/${params.id}/stages/${selectedStage}/advance`); if (res.ok) { const d = await res.json(); setAdvancePreview(d.preview); } }
-      else if (panel === "predictions") { /* No data to fetch — uses tournament.stages directly */ }
+      else if (panel === "predictions") { /* No data to fetch -- uses tournament.stages directly */ }
     } finally { setPanelLoading(false); }
   };
 
@@ -263,10 +264,10 @@ export default function AdminTournamentDetailPage() {
   };
   const handleDragEnd = () => setDragIdx(null);
 
-  const inputClass = "w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red";
+  const inputClass = "w-full px-4 py-2.5 bg-[#0d0d0d] border border-[#222] rounded-xl text-[#f5f5f5] placeholder:text-[#222] focus:outline-none focus:ring-2 focus:ring-[#dc2626]";
 
-  if (loading) return <div className="p-8 text-center"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
-  if (!tournament) return <div className="p-8 text-center text-sblt-muted">Không tìm thấy giải đấu</div>;
+  if (loading) return <div className="p-8 text-center"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
+  if (!tournament) return <div className="p-8 text-center text-[#888]">Không tìm thấy giải đấu</div>;
 
   const currentStage = tournament.stages.find((s) => s.id === selectedStage);
   const currentGroup = currentStage?.groups.find((g) => g.id === selectedGroup);
@@ -274,42 +275,46 @@ export default function AdminTournamentDetailPage() {
 
   return (
     <>
-      <div className="p-6 lg:p-8 max-w-7xl">
+      <div className="py-12 px-6 lg:px-8 max-w-[1280px]">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/admin/tournaments" className="text-sblt-muted hover:text-white"><ArrowLeft className="h-6 w-6" /></Link>
-          <div>
-            <h1 className="text-2xl font-bold text-white">{tournament.name}</h1>
-            <p className="text-sblt-muted text-sm">Mùa {tournament.season} — Quản lý chi tiết</p>
+        <RevealOnScroll>
+          <div className="flex items-center gap-4 mb-6">
+            <Link href="/admin/tournaments" className="text-[#888] hover:text-white"><ArrowLeft className="h-6 w-6" /></Link>
+            <div>
+              <h1 className="text-2xl font-bold text-[#f5f5f5] sblt-heading">{tournament.name}</h1>
+              <p className="text-[#888] text-sm">Mùa {tournament.season} — Quản lý chi tiết</p>
+            </div>
+            <Link href={`/admin/tournaments/${params.id}/prizes`} className="ml-auto bg-[#0d0d0d] hover:bg-[#222] text-[#f5f5f5] text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+              <Trophy className="h-4 w-4 text-[#dc2626]" /> Giải thưởng
+            </Link>
+            <div className="flex gap-1">
+              {["registrations", "standings", "results", "prizes"].map((type) => (
+                <a key={type} href={`/api/tournaments/${params.id}/export?type=${type}`} download
+                  className="bg-[#0d0d0d] hover:bg-[#222] text-[#888] hover:text-white text-xs px-2 py-1.5 rounded-lg transition-colors"
+                  title={`Export ${type} CSV`}>
+                  ↓ {type === "registrations" ? "ĐK" : type === "standings" ? "XH" : type === "results" ? "KQ" : "GT"}
+                </a>
+              ))}
+            </div>
           </div>
-          <Link href={`/admin/tournaments/${params.id}/prizes`} className="ml-auto bg-sblt-dark hover:bg-sblt-border text-sblt-white text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
-            <Trophy className="h-4 w-4 text-sblt-red" /> Giải thưởng
-          </Link>
-          <div className="flex gap-1">
-            {["registrations", "standings", "results", "prizes"].map((type) => (
-              <a key={type} href={`/api/tournaments/${params.id}/export?type=${type}`} download
-                className="bg-sblt-dark hover:bg-sblt-border text-sblt-muted hover:text-white text-xs px-2 py-1.5 rounded-lg transition-colors"
-                title={`Export ${type} CSV`}>
-                ↓ {type === "registrations" ? "ĐK" : type === "standings" ? "XH" : type === "results" ? "KQ" : "GT"}
-              </a>
-            ))}
-          </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "Vòng đấu", value: tournament.stages.length },
-            { label: "Bảng đấu", value: tournament.stages.reduce((s, st) => s + st.groups.length, 0) },
-            { label: "Tuyển thủ", value: tournament.registrations.filter((r) => r.status === "APPROVED").length },
-            { label: "Trận đấu", value: tournament.stages.reduce((s, st) => s + st.groups.reduce((gs, g) => gs + g.games.length, 0), 0) },
-          ].map((stat) => (
-            <Card key={stat.label} hover={false} className="p-4 text-center">
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="text-xs text-sblt-muted mt-1">{stat.label}</div>
-            </Card>
-          ))}
-        </div>
+        <RevealOnScroll>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: "Vòng đấu", value: tournament.stages.length },
+              { label: "Bảng đấu", value: tournament.stages.reduce((s, st) => s + st.groups.length, 0) },
+              { label: "Tuyển thủ", value: tournament.registrations.filter((r) => r.status === "APPROVED").length },
+              { label: "Trận đấu", value: tournament.stages.reduce((s, st) => s + st.groups.reduce((gs, g) => gs + g.games.length, 0), 0) },
+            ].map((stat) => (
+              <Card key={stat.label} hover={false} className="p-4 text-center hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
+                <div className="text-2xl font-bold text-[#f5f5f5]">{stat.value}</div>
+                <div className="text-xs text-[#888] mt-1">{stat.label}</div>
+              </Card>
+            ))}
+          </div>
+        </RevealOnScroll>
 
         {/* Tool buttons */}
         <div className="flex flex-wrap gap-2 mb-4">
@@ -320,7 +325,7 @@ export default function AdminTournamentDetailPage() {
             if ((panel === "draw" || panel === "advance") && !selectedStage) return null;
             return (
               <button key={panel} onClick={() => activePanel === panel ? setActivePanel(null) : openPanel(panel)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${activePanel === panel ? "bg-sblt-red text-white" : "bg-sblt-dark text-sblt-muted hover:text-white hover:bg-sblt-border"}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${activePanel === panel ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#0d0d0d] text-[#888] hover:text-white hover:bg-[#222]"}`}>
                 <Icon className="h-3.5 w-3.5" /> {labels[panel]}
               </button>
             );
@@ -329,56 +334,56 @@ export default function AdminTournamentDetailPage() {
 
         {/* Tool Panel */}
         {activePanel && (
-          <Card hover={false} className="p-5 mb-6">
+          <Card hover={false} className="p-5 mb-6 hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm text-white">
+              <h3 className="font-semibold text-sm text-[#f5f5f5]">
                 {activePanel === "status" && "Quản lý trạng thái giải đấu"}
                 {activePanel === "checkin" && "Check-in tuyển thủ"}
                 {activePanel === "draw" && "Bốc thăm chia bảng"}
                 {activePanel === "advance" && "Xếp hạng & Thăng hạng"}
                 {activePanel === "predictions" && "Quản lý dự đoán"}
               </h3>
-              <button onClick={() => { setActivePanel(null); setPanelMsg(null); }} className="text-sblt-muted hover:text-white"><X className="h-4 w-4" /></button>
+              <button onClick={() => { setActivePanel(null); setPanelMsg(null); }} className="text-[#888] hover:text-white"><X className="h-4 w-4" /></button>
             </div>
 
-            {panelMsg && <div className="bg-sblt-dark border border-sblt-border text-sm px-3 py-2 rounded-xl mb-4 text-sblt-white">{panelMsg}</div>}
+            {panelMsg && <div className="bg-[#0d0d0d] border border-[#222] text-sm px-3 py-2 rounded-xl mb-4 text-[#f5f5f5]">{panelMsg}</div>}
 
             {panelLoading ? (
-              <div className="text-center text-sblt-muted py-4 text-sm">Đang tải...</div>
+              <div className="text-center text-[#888] py-4 text-sm">Đang tải...</div>
             ) : (
               <>
                 {activePanel === "status" && statusInfo && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-sblt-muted">Hiện tại:</span>
+                      <span className="text-sm text-[#888]">Hiện tại:</span>
                       <Badge variant={STATUS_MAP[statusInfo.currentStatus]?.variant || "default"}>{statusInfo.currentLabel}</Badge>
-                      <span className="text-xs text-sblt-border">{statusInfo.stats.approvedPlayers}/{statusInfo.stats.maxPlayers} tuyển thủ</span>
+                      <span className="text-xs text-[#222]">{statusInfo.stats.approvedPlayers}/{statusInfo.stats.maxPlayers} tuyển thủ</span>
                     </div>
                     {statusInfo.suggestions.length > 0 && (
                       <div>
-                        <p className="text-xs text-sblt-muted mb-2">Gợi ý:</p>
+                        <p className="text-xs text-[#888] mb-2">Gợi ý:</p>
                         {statusInfo.suggestions.map((s) => (
-                          <div key={s.status} className="flex items-center justify-between bg-sblt-dark rounded-xl px-3 py-2 mb-1.5">
-                            <div><span className="text-sm font-medium text-white">{s.label}</span><span className="text-xs text-sblt-muted ml-2">— {s.reason}</span></div>
+                          <div key={s.status} className="flex items-center justify-between bg-[#0d0d0d] rounded-xl px-3 py-2 mb-1.5">
+                            <div><span className="text-sm font-medium text-[#f5f5f5]">{s.label}</span><span className="text-xs text-[#888] ml-2">— {s.reason}</span></div>
                             <Button size="sm" onClick={() => handleStatusChange(s.status)}>Chuyển</Button>
                           </div>
                         ))}
                       </div>
                     )}
                     <div>
-                      <p className="text-xs text-sblt-muted mb-2">Chuyển thủ công:</p>
+                      <p className="text-xs text-[#888] mb-2">Chuyển thủ công:</p>
                       <div className="flex flex-wrap gap-2">
                         {statusInfo.validTransitions.map((t) => (
-                          <button key={t.status} onClick={() => handleStatusChange(t.status)} className="bg-sblt-dark hover:bg-sblt-border text-sblt-white text-xs px-3 py-1.5 rounded-lg border border-sblt-border transition-colors">→ {t.label}</button>
+                          <button key={t.status} onClick={() => handleStatusChange(t.status)} className="bg-[#0d0d0d] hover:bg-[#222] text-[#f5f5f5] text-xs px-3 py-1.5 rounded-lg border border-[#222] transition-colors">→ {t.label}</button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-sblt-muted mb-2">Trạng thái vòng đấu:</p>
+                      <p className="text-xs text-[#888] mb-2">Trạng thái vòng đấu:</p>
                       <div className="space-y-1.5">
                         {tournament.stages.map((stage) => (
-                          <div key={stage.id} className="flex items-center justify-between bg-sblt-dark rounded-xl px-3 py-2">
-                            <span className="text-sm text-white">{stage.name}</span>
+                          <div key={stage.id} className="flex items-center justify-between bg-[#0d0d0d] rounded-xl px-3 py-2">
+                            <span className="text-sm text-[#f5f5f5]">{stage.name}</span>
                             <div className="flex items-center gap-2">
                               <Badge variant={STAGE_STATUS_MAP[stage.status]?.variant || "default"}>{STAGE_STATUS_MAP[stage.status]?.label || stage.status}</Badge>
                               {stage.status === "SCHEDULED" && <button onClick={() => handleStageStatus(stage.id, "IN_PROGRESS")} className="text-xs text-blue-400 hover:text-blue-300">Bắt đầu</button>}
@@ -395,28 +400,28 @@ export default function AdminTournamentDetailPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { label: "Tổng", value: checkinData.total, color: "text-white" },
+                        { label: "Tổng", value: checkinData.total, color: "text-[#f5f5f5]" },
                         { label: "Đã check-in", value: checkinData.checkedIn, color: "text-green-400" },
-                        { label: "Chưa check-in", value: checkinData.notCheckedIn, color: "text-sblt-red" },
+                        { label: "Chưa check-in", value: checkinData.notCheckedIn, color: "text-[#dc2626]" },
                       ].map((s) => (
                         <Card key={s.label} hover={false} className="p-3 text-center">
                           <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
-                          <div className="text-xs text-sblt-muted">{s.label}</div>
+                          <div className="text-xs text-[#888]">{s.label}</div>
                         </Card>
                       ))}
                     </div>
                     {checkinData.notCheckedIn > 0 && (
-                      <button onClick={() => handleCheckinAction("", "bulk_reject_no_checkin")} className="w-full bg-sblt-red/20 hover:bg-sblt-red/30 text-sblt-red text-sm py-2 rounded-xl border border-sblt-red/30 transition-colors">
+                      <button onClick={() => handleCheckinAction("", "bulk_reject_no_checkin")} className="w-full bg-[#dc2626]/20 hover:bg-[#dc2626]/30 text-[#dc2626] text-sm py-2 rounded-xl border border-[#dc2626]/30 transition-colors">
                         Từ chối tất cả {checkinData.notCheckedIn} người chưa check-in
                       </button>
                     )}
                     <div className="max-h-64 overflow-y-auto space-y-1">
                       {checkinData.registrations.map((r) => (
-                        <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-sblt-dark rounded-xl text-sm">
+                        <div key={r.id} className="flex items-center justify-between px-3 py-2 bg-[#0d0d0d] rounded-xl text-sm">
                           <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${r.checkedIn ? "bg-green-400" : "bg-red-400"}`} />
-                            <span className="text-white">{r.player.ign}</span>
-                            {r.player.isGuest && <span className="text-xs text-sblt-red">Khách</span>}
+                            <span className="text-[#f5f5f5]">{r.player.ign}</span>
+                            {r.player.isGuest && <span className="text-xs text-[#dc2626]">Khách</span>}
                           </div>
                           <div className="flex items-center gap-2">
                             {r.checkedIn ? (
@@ -438,33 +443,33 @@ export default function AdminTournamentDetailPage() {
                       <>
                         {/* Tổng quan players */}
                         <div className="grid grid-cols-2 gap-3 mb-3">
-                          <div className="bg-sblt-dark rounded-lg px-3 py-2">
-                            <p className="text-xs text-sblt-muted">Người đi tiếp</p>
+                          <div className="bg-[#0d0d0d] rounded-lg px-3 py-2">
+                            <p className="text-xs text-[#888]">Người đi tiếp</p>
                             <p className="text-lg font-bold text-green-400">{semi1DrawData.totalAdvancing}</p>
                           </div>
-                          <div className="bg-sblt-dark rounded-lg px-3 py-2">
-                            <p className="text-xs text-sblt-muted">Khách mời</p>
-                            <p className="text-lg font-bold text-sblt-red">{semi1DrawData.totalGuests}</p>
+                          <div className="bg-[#0d0d0d] rounded-lg px-3 py-2">
+                            <p className="text-xs text-[#888]">Khách mời</p>
+                            <p className="text-lg font-bold text-[#dc2626]">{semi1DrawData.totalGuests}</p>
                           </div>
                         </div>
 
                         {/* Chọn cách bốc thăm */}
                         {!drawMode && (
                           <div>
-                            <p className="text-xs font-semibold text-white mb-2">
+                            <p className="text-xs font-semibold text-[#f5f5f5] mb-2">
                               Bốc thăm {semi1DrawData.totalAdvancing + semi1DrawData.totalGuests} tuyển thủ vào {semi1DrawData.groups.length} bảng
                             </p>
                             <div className="flex gap-3">
                               <button
                                 onClick={() => setDrawMode("random")}
-                                className="flex-1 bg-sblt-dark hover:bg-sblt-red/20 border border-sblt-border hover:border-sblt-red text-white text-sm py-3 rounded-xl transition-colors"
+                                className="flex-1 bg-[#0d0d0d] hover:bg-[#dc2626]/20 border border-[#222] hover:border-[#dc2626] text-[#f5f5f5] text-sm py-3 rounded-xl transition-colors"
                               >
                                 <Shuffle className="h-4 w-4 inline mr-2" />
                                 Bốc thăm nhanh (chỉ khách mời)
                               </button>
                               <button
                                 onClick={() => setDrawMode("wheel")}
-                                className="flex-1 bg-sblt-dark hover:bg-sblt-red/20 border border-sblt-border hover:border-sblt-red text-white text-sm py-3 rounded-xl transition-colors"
+                                className="flex-1 bg-[#0d0d0d] hover:bg-[#dc2626]/20 border border-[#222] hover:border-[#dc2626] text-[#f5f5f5] text-sm py-3 rounded-xl transition-colors"
                               >
                                 🎡 Quay vòng quay (tất cả)
                               </button>
@@ -475,7 +480,7 @@ export default function AdminTournamentDetailPage() {
                         {/* Random seeded draw */}
                         {drawMode === "random" && (
                           <div className="text-center py-4">
-                            <p className="text-sblt-muted text-sm mb-3">
+                            <p className="text-[#888] text-sm mb-3">
                               Chia {semi1DrawData.totalGuests} khách mời đều vào {semi1DrawData.groups.length} bảng (ngẫu nhiên)
                             </p>
                             <p className="text-xs text-yellow-400 mb-3">
@@ -485,12 +490,12 @@ export default function AdminTournamentDetailPage() {
                               <Button size="sm" onClick={handleRandomDrawSemi1} disabled={panelLoading}>
                                 {panelLoading ? "Đang xử lý..." : "✓ Xác nhận bốc thăm"}
                               </Button>
-                              <button onClick={() => setDrawMode(null)} className="text-sblt-muted hover:text-white text-sm px-4 py-2">Hủy</button>
+                              <button onClick={() => setDrawMode(null)} className="text-[#888] hover:text-white text-sm px-4 py-2">Hủy</button>
                             </div>
                           </div>
                         )}
 
-                        {/* Wheel spinner — quay cả advancing + guests */}
+                        {/* Wheel spinner */}
                         {drawMode === "wheel" && (
                           <div>
                             <WheelSpinner
@@ -508,13 +513,13 @@ export default function AdminTournamentDetailPage() {
                     ) : drawPreview ? (
                       /* QUALIFIER: Bốc thăm regular players */
                       <>
-                        <p className="text-xs text-sblt-muted">Preview — Bấm &quot;Xác nhận&quot; để lưu hoặc &quot;Bốc lại&quot; để random lại.</p>
+                        <p className="text-xs text-[#888]">Preview — Bấm &quot;Xác nhận&quot; để lưu hoặc &quot;Bốc lại&quot; để random lại.</p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-72 overflow-y-auto">
                           {drawPreview.map((group) => (
                             <Card key={group.groupId} hover={false} className="p-3">
-                              <p className="text-xs font-semibold text-sblt-white mb-2">{group.groupName}</p>
+                              <p className="text-xs font-semibold text-[#f5f5f5] mb-2">{group.groupName}</p>
                               {group.players.map((p) => (
-                                <div key={p.id} className="text-xs text-sblt-muted py-0.5 flex items-center gap-1">
+                                <div key={p.id} className="text-xs text-[#888] py-0.5 flex items-center gap-1">
                                   {p.ign}
                                 </div>
                               ))}
@@ -523,12 +528,12 @@ export default function AdminTournamentDetailPage() {
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" onClick={handleConfirmDraw}>✓ Xác nhận</Button>
-                          <button onClick={() => openPanel("draw")} className="bg-sblt-dark hover:bg-sblt-border text-sblt-white text-sm px-4 py-2 rounded-lg transition-colors">↺ Bốc lại</button>
+                          <button onClick={() => openPanel("draw")} className="bg-[#0d0d0d] hover:bg-[#222] text-[#f5f5f5] text-sm px-4 py-2 rounded-lg transition-colors">↺ Bốc lại</button>
                         </div>
                       </>
                     ) : (
                       <div className="text-center py-4">
-                        <p className="text-sblt-muted text-sm mb-3">Bốc thăm ngẫu nhiên có seeding theo rank</p>
+                        <p className="text-[#888] text-sm mb-3">Bốc thăm ngẫu nhiên có seeding theo rank</p>
                         <Button onClick={() => openPanel("draw")}>Bốc thăm</Button>
                       </div>
                     )}
@@ -539,7 +544,7 @@ export default function AdminTournamentDetailPage() {
                   <div className="space-y-4">
                     {advancePreview ? (
                       <>
-                        <p className="text-xs text-sblt-muted">Xếp hạng: Tổng điểm → Top1 → Top4 → Placement tốt nhất. Màu xanh = thăng hạng.</p>
+                        <p className="text-xs text-[#888]">Xếp hạng: Tổng điểm → Top1 → Top4 → Placement tốt nhất. Màu xanh = thăng hạng.</p>
                         {currentStage?.stageType === "QUALIFIER" && (
                           <p className="text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded-lg px-3 py-2">
                             Lưu ý: Khách mời sẽ không được tự động thêm vào Vòng 2. Sau khi thăng hạng, hãy bốc thăm khách mời riêng.
@@ -548,9 +553,9 @@ export default function AdminTournamentDetailPage() {
                         <div className="space-y-3 max-h-72 overflow-y-auto">
                           {advancePreview.map((group) => (
                             <Card key={group.groupName} hover={false} className="p-3">
-                              <p className="text-xs font-semibold text-sblt-white mb-2">{group.groupName}</p>
+                              <p className="text-xs font-semibold text-[#f5f5f5] mb-2">{group.groupName}</p>
                               {group.players.map((p) => (
-                                <div key={p.playerId} className={`flex items-center justify-between text-xs py-1 ${p.advancing ? "text-green-400" : "text-sblt-muted"}`}>
+                                <div key={p.playerId} className={`flex items-center justify-between text-xs py-1 ${p.advancing ? "text-green-400" : "text-[#888]"}`}>
                                   <span>{p.rank}. {p.ign}</span>
                                   <span>{p.totalPoints}đ {p.advancing ? "→ Thăng" : ""}</span>
                                 </div>
@@ -562,7 +567,7 @@ export default function AdminTournamentDetailPage() {
                       </>
                     ) : (
                       <div className="text-center py-4">
-                        <p className="text-sblt-muted text-sm mb-3">Tính xếp hạng và chọn tuyển thủ thăng hạng</p>
+                        <p className="text-[#888] text-sm mb-3">Tính xếp hạng và chọn tuyển thủ thăng hạng</p>
                         <Button onClick={() => openPanel("advance")}>Xem kết quả xếp hạng</Button>
                       </div>
                     )}
@@ -571,7 +576,7 @@ export default function AdminTournamentDetailPage() {
 
                 {activePanel === "predictions" && (
                   <div className="space-y-4">
-                    <p className="text-xs text-sblt-muted">
+                    <p className="text-xs text-[#888]">
                       Quản lý cửa sổ dự đoán cho các vòng Semi 1, Semi 2, và Chung Kết.
                     </p>
                     <div className="space-y-2">
@@ -587,16 +592,16 @@ export default function AdminTournamentDetailPage() {
                           else { status = "Chưa sẵn sàng"; statusVariant = "default"; }
 
                           return (
-                            <div key={stage.id} className="flex items-center justify-between bg-sblt-dark rounded-lg px-4 py-3">
+                            <div key={stage.id} className="flex items-center justify-between bg-[#0d0d0d] rounded-lg px-4 py-3">
                               <div>
-                                <span className="text-sm text-white font-medium">{stage.name}</span>
-                                <span className="text-xs text-sblt-muted ml-2">({stage.groups.length} bảng)</span>
+                                <span className="text-sm text-[#f5f5f5] font-medium">{stage.name}</span>
+                                <span className="text-xs text-[#888] ml-2">({stage.groups.length} bảng)</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Badge variant={statusVariant}>{status}</Badge>
                                 <Link
                                   href={`/tournaments/${tournament.id}/predictions/${stage.id}/leaderboard`}
-                                  className="text-xs text-sblt-muted hover:text-white"
+                                  className="text-xs text-[#888] hover:text-white"
                                   target="_blank"
                                 >
                                   Xem BXH
@@ -609,7 +614,7 @@ export default function AdminTournamentDetailPage() {
                     <Link
                       href={`/tournaments/${tournament.id}/predictions`}
                       target="_blank"
-                      className="inline-flex items-center gap-1 text-xs text-sblt-muted hover:text-white"
+                      className="inline-flex items-center gap-1 text-xs text-[#888] hover:text-white"
                     >
                       Xem trang dự đoán →
                     </Link>
@@ -624,11 +629,11 @@ export default function AdminTournamentDetailPage() {
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
           {tournament.stages.map((stage) => (
             <button key={stage.id} onClick={() => { setSelectedStage(stage.id); setSelectedGroup(null); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${selectedStage === stage.id ? "bg-sblt-red text-white" : "bg-sblt-dark text-sblt-muted hover:text-white hover:bg-sblt-border"}`}>
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${selectedStage === stage.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#0d0d0d] text-[#888] hover:text-white hover:bg-[#222]"}`}>
               {stage.name}
             </button>
           ))}
-          <button onClick={() => setShowCreateStage(true)} className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-sblt-dark text-sblt-red hover:bg-sblt-border flex items-center gap-1 transition-colors">
+          <button onClick={() => setShowCreateStage(true)} className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-[#0d0d0d] text-[#dc2626] hover:bg-[#222] flex items-center gap-1 transition-colors">
             <Plus className="h-4 w-4" /> Thêm vòng
           </button>
         </div>
@@ -639,33 +644,33 @@ export default function AdminTournamentDetailPage() {
             <div className="lg:col-span-1">
               <Card hover={false} className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-semibold text-white">Bảng đấu</h2>
-                  <button onClick={() => handleCreateGroups(currentStage.id, 1)} className="text-sblt-red hover:text-red-400"><Plus className="h-5 w-5" /></button>
+                  <h2 className="font-semibold text-[#f5f5f5]">Bảng đấu</h2>
+                  <button onClick={() => handleCreateGroups(currentStage.id, 1)} className="text-[#dc2626] hover:text-red-400"><Plus className="h-5 w-5" /></button>
                 </div>
                 <div className="space-y-2">
                   {currentStage.groups.map((group) => (
                     <div key={group.id}
                       className={`w-full text-left px-4 py-3 rounded-xl transition-colors group/item flex items-center justify-between ${
-                        selectedGroup === group.id ? "bg-sblt-red/15 border border-sblt-red/40" : "bg-sblt-dark hover:bg-sblt-border"}`}>
+                        selectedGroup === group.id ? "bg-[#dc2626]/15 border border-[#dc2626]/40" : "bg-[#0d0d0d] hover:bg-[#222]"}`}>
                       {editingGroupId === group.id ? (
                         <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
                           <input autoFocus value={editingGroupName} onChange={(e) => setEditingGroupName(e.target.value)}
                             onKeyDown={(e) => { if (e.key === "Enter") handleRenameGroup(group.id, editingGroupName); if (e.key === "Escape") setEditingGroupId(null); }}
-                            className="flex-1 bg-sblt-dark border border-sblt-border rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-sblt-red" />
+                            className="flex-1 bg-[#0d0d0d] border border-[#222] rounded-lg px-2 py-1 text-sm text-[#f5f5f5] focus:outline-none focus:ring-1 focus:ring-[#dc2626]" />
                           <button onClick={() => handleRenameGroup(group.id, editingGroupName)} className="text-green-400 hover:text-green-300" title="Lưu"><Check className="h-4 w-4" /></button>
-                          <button onClick={() => setEditingGroupId(null)} className="text-sblt-muted hover:text-white" title="Hủy"><X className="h-4 w-4" /></button>
+                          <button onClick={() => setEditingGroupId(null)} className="text-[#888] hover:text-white" title="Hủy"><X className="h-4 w-4" /></button>
                         </div>
                       ) : (
                         <>
                           <button className="flex-1 text-left" onClick={() => setSelectedGroup(group.id)}>
                             <div className="flex justify-between items-center">
-                              <span className="font-medium text-white">{group.name}</span>
-                              <span className={`text-xs font-medium ${group.players.length >= 8 ? "text-red-400" : "text-sblt-muted"}`}>{group.players.length}/8</span>
+                              <span className="font-medium text-[#f5f5f5]">{group.name}</span>
+                              <span className={`text-xs font-medium ${group.players.length >= 8 ? "text-red-400" : "text-[#888]"}`}>{group.players.length}/8</span>
                             </div>
                           </button>
                           <div className="flex items-center gap-1 ml-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); setEditingGroupId(group.id); setEditingGroupName(group.name); }} className="text-sblt-muted hover:text-white p-1 rounded" title="Đổi tên"><Pencil className="h-3.5 w-3.5" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(group.id); }} className="text-sblt-muted hover:text-red-400 p-1 rounded" title="Xóa bảng"><Trash2 className="h-3.5 w-3.5" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); setEditingGroupId(group.id); setEditingGroupName(group.name); }} className="text-[#888] hover:text-white p-1 rounded" title="Đổi tên"><Pencil className="h-3.5 w-3.5" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(group.id); }} className="text-[#888] hover:text-red-400 p-1 rounded" title="Xóa bảng"><Trash2 className="h-3.5 w-3.5" /></button>
                           </div>
                         </>
                       )}
@@ -674,9 +679,9 @@ export default function AdminTournamentDetailPage() {
                 </div>
                 {currentStage.groups.length === 0 && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-xs text-sblt-muted text-center mb-3">Tạo nhanh</p>
+                    <p className="text-xs text-[#888] text-center mb-3">Tạo nhanh</p>
                     {[{ n: 8, label: "8 bảng (Vòng Loại)" }, { n: 4, label: "4 bảng (Vòng 2)" }, { n: 2, label: "2 bảng (Vòng 3)" }].map((opt) => (
-                      <button key={opt.n} onClick={() => handleCreateGroups(currentStage.id, opt.n)} className="w-full bg-sblt-dark hover:bg-sblt-border text-white py-2 rounded-xl text-sm transition-colors">{opt.label}</button>
+                      <button key={opt.n} onClick={() => handleCreateGroups(currentStage.id, opt.n)} className="w-full bg-[#0d0d0d] hover:bg-[#222] text-[#f5f5f5] py-2 rounded-xl text-sm transition-colors">{opt.label}</button>
                     ))}
                   </div>
                 )}
@@ -688,11 +693,11 @@ export default function AdminTournamentDetailPage() {
               {currentGroup ? (
                 <div className="space-y-5">
                   {/* Players section */}
-                  <Card hover={false} className="p-5">
+                  <Card hover={false} className="p-5 hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-white">{currentGroup.name} — Tuyển thủ</h3>
+                      <h3 className="font-semibold text-[#f5f5f5]">{currentGroup.name} — Tuyển thủ</h3>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleQuickScore(currentGroup)} className="bg-sblt-red/20 hover:bg-sblt-red/30 text-sblt-red hover:text-red-300 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors" title="Nhập điểm nhanh">🎮 Nhập điểm nhanh</button>
+                        <button onClick={() => handleQuickScore(currentGroup)} className="bg-[#dc2626]/20 hover:bg-[#dc2626]/30 text-[#dc2626] hover:text-red-300 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors" title="Nhập điểm nhanh">🎮 Nhập điểm nhanh</button>
                         {currentGroup.players.length >= 8 ? (
                           <span className="text-xs text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg">Đã đủ 8/8</span>
                         ) : (
@@ -704,10 +709,10 @@ export default function AdminTournamentDetailPage() {
                               onChange={(e) => { setPlayerSearch(e.target.value); setShowPlayerDropdown(true); }}
                               onFocus={() => setShowPlayerDropdown(true)}
                               onBlur={() => setTimeout(() => setShowPlayerDropdown(false), 200)}
-                              className="bg-sblt-dark border border-sblt-border rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sblt-red w-48"
+                              className="bg-[#0d0d0d] border border-[#222] rounded-lg px-3 py-1.5 text-sm text-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-[#dc2626] w-48"
                             />
                             {showPlayerDropdown && playerSearch.length > 0 && (
-                              <div className="absolute z-10 top-full mt-1 w-full bg-sblt-dark border border-sblt-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                              <div className="absolute z-10 top-full mt-1 w-full bg-[#0d0d0d] border border-[#222] rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                 {approvedPlayers
                                   .filter((p) => !currentGroup.players.find((gp) => gp.playerId === p.id))
                                   .filter((p) => p.ign.toLowerCase().includes(playerSearch.toLowerCase()))
@@ -715,7 +720,7 @@ export default function AdminTournamentDetailPage() {
                                     <button
                                       key={p.id}
                                       onMouseDown={(e) => { e.preventDefault(); handleAddPlayer(currentGroup.id, p.id); setPlayerSearch(""); setShowPlayerDropdown(false); }}
-                                      className="w-full text-left px-3 py-2 text-sm text-white hover:bg-sblt-border transition-colors"
+                                      className="w-full text-left px-3 py-2 text-sm text-[#f5f5f5] hover:bg-[#222] transition-colors"
                                     >
                                       {p.ign}{p.isGuest ? " (Khách mời)" : ""}
                                     </button>
@@ -723,7 +728,7 @@ export default function AdminTournamentDetailPage() {
                                 {approvedPlayers
                                   .filter((p) => !currentGroup.players.find((gp) => gp.playerId === p.id))
                                   .filter((p) => p.ign.toLowerCase().includes(playerSearch.toLowerCase())).length === 0 && (
-                                  <div className="px-3 py-2 text-sm text-sblt-muted">Không tìm thấy</div>
+                                  <div className="px-3 py-2 text-sm text-[#888]">Không tìm thấy</div>
                                 )}
                               </div>
                             )}
@@ -734,35 +739,35 @@ export default function AdminTournamentDetailPage() {
                     {currentGroup.players.length > 0 ? (
                       <div className="space-y-1.5">
                         {[...currentGroup.players].sort((a, b) => b.totalPoints - a.totalPoints).map((gp, idx) => (
-                          <div key={gp.id} className="flex items-center justify-between px-3 py-2.5 bg-sblt-dark rounded-xl group">
+                          <div key={gp.id} className="flex items-center justify-between px-3 py-2.5 bg-[#0d0d0d] rounded-xl group">
                             <div className="flex items-center gap-3">
-                              <span className="text-xs text-sblt-muted w-5">{idx + 1}</span>
-                              <span className="text-sm font-medium text-white">{gp.player.ign}</span>
+                              <span className="text-xs text-[#888] w-5">{idx + 1}</span>
+                              <span className="text-sm font-medium text-[#f5f5f5]">{gp.player.ign}</span>
                               {gp.player.isGuest && <Badge variant="red">Khách mời</Badge>}
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-sblt-red">{gp.totalPoints} điểm</span>
-                              <button onClick={() => handleRemovePlayer(currentGroup.id, gp.playerId)} className="opacity-0 group-hover:opacity-100 text-sblt-muted hover:text-red-400 transition-all" title="Xóa khỏi bảng"><Trash2 className="h-4 w-4" /></button>
+                              <span className="text-sm font-bold text-[#dc2626]">{gp.totalPoints} điểm</span>
+                              <button onClick={() => handleRemovePlayer(currentGroup.id, gp.playerId)} className="opacity-0 group-hover:opacity-100 text-[#888] hover:text-red-400 transition-all" title="Xóa khỏi bảng"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-center text-sblt-muted text-sm py-4">Chưa có tuyển thủ</p>
+                      <p className="text-center text-[#888] text-sm py-4">Chưa có tuyển thủ</p>
                     )}
                   </Card>
 
                   {/* Games section */}
-                  <Card hover={false} className="p-5">
+                  <Card hover={false} className="p-5 hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-white">Trận đấu</h3>
-                      <button onClick={() => handleCreateGames(currentGroup.id, 1)} className="text-sblt-red hover:text-red-400" title="Thêm game"><Plus className="h-5 w-5" /></button>
+                      <h3 className="font-semibold text-[#f5f5f5]">Trận đấu</h3>
+                      <button onClick={() => handleCreateGames(currentGroup.id, 1)} className="text-[#dc2626] hover:text-red-400" title="Thêm game"><Plus className="h-5 w-5" /></button>
                     </div>
                     {currentGroup.games.length === 0 ? (
                       <div className="space-y-2">
-                        <p className="text-center text-sblt-muted text-sm py-2">Chưa có trận đấu</p>
+                        <p className="text-center text-[#888] text-sm py-2">Chưa có trận đấu</p>
                         {currentGroup.players.length >= 2 && (
-                          <button onClick={() => handleCreateGames(currentGroup.id, 3)} className="w-full bg-sblt-dark hover:bg-sblt-border text-white py-2 rounded-xl text-sm transition-colors">Tạo 3 games (BO3)</button>
+                          <button onClick={() => handleCreateGames(currentGroup.id, 3)} className="w-full bg-[#0d0d0d] hover:bg-[#222] text-[#f5f5f5] py-2 rounded-xl text-sm transition-colors">Tạo 3 games (BO3)</button>
                         )}
                       </div>
                     ) : (
@@ -770,12 +775,12 @@ export default function AdminTournamentDetailPage() {
                         {[...currentGroup.games].sort((a, b) => a.gameNumber - b.gameNumber).map((game) => (
                           <Card key={game.id} hover={false} className="p-4">
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-medium text-white">Game {game.gameNumber}</h4>
+                              <h4 className="font-medium text-[#f5f5f5]">Game {game.gameNumber}</h4>
                               <Badge variant={game.status === "COMPLETED" ? "green" : "default"}>{game.status === "COMPLETED" ? "Đã xong" : "Chưa bắt đầu"}</Badge>
                             </div>
                             {editingGameId === game.id ? (
                               <div>
-                                <p className="text-xs text-sblt-muted mb-3">Kéo thứ tự hoặc dùng ↑↓ để sắp xếp. Điểm tự tính theo placement.</p>
+                                <p className="text-xs text-[#888] mb-3">Kéo thứ tự hoặc dùng ↑↓ để sắp xếp. Điểm tự tính theo placement.</p>
                                 <div className="space-y-1.5 mb-4">
                                   {editingResults.map((r, idx) => {
                                     const player = currentGroup.players.find((gp) => gp.playerId === r.playerId);
@@ -786,15 +791,15 @@ export default function AdminTournamentDetailPage() {
                                         onDragStart={() => handleDragStart(idx)}
                                         onDragOver={(e) => handleDragOver(e, idx)}
                                         onDragEnd={handleDragEnd}
-                                        className={`flex items-center gap-2 bg-sblt-dark rounded-xl px-3 py-2 cursor-grab active:cursor-grabbing ${dragIdx === idx ? "opacity-50" : ""}`}>
+                                        className={`flex items-center gap-2 bg-[#0d0d0d] rounded-xl px-3 py-2 cursor-grab active:cursor-grabbing ${dragIdx === idx ? "opacity-50" : ""}`}>
                                         <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                                          r.placement === 1 ? "bg-sblt-red text-white" : r.placement <= 4 ? "bg-zinc-500 text-white" : "bg-sblt-border text-sblt-white"
+                                          r.placement === 1 ? "bg-[#dc2626] text-[#f5f5f5]" : r.placement <= 4 ? "bg-zinc-500 text-[#f5f5f5]" : "bg-[#222] text-[#f5f5f5]"
                                         }`}>{r.placement}</span>
-                                        <span className="flex-1 text-sm text-white">{player?.player.ign ?? "?"}</span>
-                                        <span className="text-xs text-sblt-red font-semibold w-12 text-right">{pts} điểm</span>
+                                        <span className="flex-1 text-sm text-[#f5f5f5]">{player?.player.ign ?? "?"}</span>
+                                        <span className="text-xs text-[#dc2626] font-semibold w-12 text-right">{pts} điểm</span>
                                         <div className="flex flex-col gap-0.5">
-                                          <button onClick={() => movePlacement(idx, -1)} disabled={idx === 0} className="text-sblt-muted hover:text-white disabled:opacity-20 text-xs leading-none">▲</button>
-                                          <button onClick={() => movePlacement(idx, 1)} disabled={idx === editingResults.length - 1} className="text-sblt-muted hover:text-white disabled:opacity-20 text-xs leading-none">▼</button>
+                                          <button onClick={() => movePlacement(idx, -1)} disabled={idx === 0} className="text-[#888] hover:text-white disabled:opacity-20 text-xs leading-none">▲</button>
+                                          <button onClick={() => movePlacement(idx, 1)} disabled={idx === editingResults.length - 1} className="text-[#888] hover:text-white disabled:opacity-20 text-xs leading-none">▼</button>
                                         </div>
                                       </div>
                                     );
@@ -802,7 +807,7 @@ export default function AdminTournamentDetailPage() {
                                 </div>
                                 <div className="flex gap-2">
                                   <Button size="sm" onClick={() => handleSaveResults(game.id)}><Save className="h-4 w-4" /> Lưu kết quả</Button>
-                                  <button onClick={() => { setEditingResults([]); setEditingGameId(null); }} className="text-sblt-muted hover:text-white px-4 py-2 text-sm">Hủy</button>
+                                  <button onClick={() => { setEditingResults([]); setEditingGameId(null); }} className="text-[#888] hover:text-white px-4 py-2 text-sm">Hủy</button>
                                 </div>
                               </div>
                             ) : (
@@ -810,19 +815,19 @@ export default function AdminTournamentDetailPage() {
                                 {game.results.length > 0 ? (
                                   <div className="grid grid-cols-2 gap-1.5 mb-3">
                                     {[...game.results].sort((a, b) => a.placement - b.placement).map((r) => (
-                                      <div key={r.id} className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-sm ${r.placement <= 4 ? "bg-sblt-dark" : "bg-sblt-dark/50"}`}>
+                                      <div key={r.id} className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-sm ${r.placement <= 4 ? "bg-[#0d0d0d]" : "bg-[#0d0d0d]/50"}`}>
                                         <div className="flex items-center gap-2">
-                                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${r.placement === 1 ? "bg-sblt-red text-white" : "bg-sblt-border text-sblt-white"}`}>{r.placement}</span>
-                                          <span className="text-sblt-white truncate max-w-[80px]">{r.player.ign}</span>
+                                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${r.placement === 1 ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#222] text-[#f5f5f5]"}`}>{r.placement}</span>
+                                          <span className="text-[#f5f5f5] truncate max-w-[80px]">{r.player.ign}</span>
                                         </div>
-                                        <span className="text-sblt-red font-semibold">{r.points}đ</span>
+                                        <span className="text-[#dc2626] font-semibold">{r.points}đ</span>
                                       </div>
                                     ))}
                                   </div>
                                 ) : (
-                                  <p className="text-center text-sblt-muted text-sm py-2 mb-2">Chưa có kết quả</p>
+                                  <p className="text-center text-[#888] text-sm py-2 mb-2">Chưa có kết quả</p>
                                 )}
-                                <button onClick={() => startEditing(game, currentGroup.players)} className="text-sblt-red hover:text-red-400 text-sm font-medium">
+                                <button onClick={() => startEditing(game, currentGroup.players)} className="text-[#dc2626] hover:text-red-400 text-sm font-medium">
                                   {game.results.length > 0 ? "✏️ Sửa kết quả" : "➕ Nhập kết quả"}
                                 </button>
                               </>
@@ -834,10 +839,10 @@ export default function AdminTournamentDetailPage() {
                   </Card>
                 </div>
               ) : (
-                <Card hover={false} className="p-12 text-center">
-                  <Users className="h-12 w-12 text-sblt-border mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-sblt-muted mb-2">Chọn bảng đấu</h3>
-                  <p className="text-sblt-border text-sm">Chọn một bảng bên trái để quản lý tuyển thủ và nhập điểm</p>
+                <Card hover={false} className="p-12 text-center hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
+                  <Users className="h-12 w-12 text-[#222] mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-[#888] mb-2">Chọn bảng đấu</h3>
+                  <p className="text-[#222] text-sm">Chọn một bảng bên trái để quản lý tuyển thủ và nhập điểm</p>
                 </Card>
               )}
             </div>
@@ -850,16 +855,16 @@ export default function AdminTournamentDetailPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <Card hover={false} className="p-6 w-full max-w-lg">
             <div className="flex justify-between items-center mb-5">
-              <h2 className="text-xl font-bold text-white">Tạo vòng đấu mới</h2>
-              <button onClick={() => setShowCreateStage(false)} className="text-sblt-muted hover:text-white"><X className="h-5 w-5" /></button>
+              <h2 className="text-xl font-bold text-[#f5f5f5]">Tạo vòng đấu mới</h2>
+              <button onClick={() => setShowCreateStage(false)} className="text-[#888] hover:text-white"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleCreateStage} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-sblt-muted mb-1.5">Tên vòng đấu *</label>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Tên vòng đấu *</label>
                 <input type="text" value={stageForm.name} onChange={(e) => setStageForm((p) => ({ ...p, name: e.target.value }))} className={inputClass} placeholder="Vòng Loại" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-sblt-muted mb-1.5">Loại vòng *</label>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Loại vòng *</label>
                 <select value={stageForm.stageType} onChange={(e) => setStageForm((p) => ({ ...p, stageType: e.target.value }))} className={inputClass}>
                   <option value="QUALIFIER">Vòng Loại</option>
                   <option value="SEMI_1">Bán Kết 1</option>
@@ -869,24 +874,24 @@ export default function AdminTournamentDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-sblt-muted mb-1.5">Thứ tự *</label>
+                  <label className="block text-sm font-medium text-[#888] mb-1.5">Thứ tự *</label>
                   <input type="number" value={stageForm.stageOrder} min={1} onChange={(e) => setStageForm((p) => ({ ...p, stageOrder: parseInt(e.target.value) }))} className={inputClass} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-sblt-muted mb-1.5">Số games</label>
+                  <label className="block text-sm font-medium text-[#888] mb-1.5">Số games</label>
                   <input type="number" value={stageForm.totalGames} min={1} onChange={(e) => setStageForm((p) => ({ ...p, totalGames: parseInt(e.target.value) }))} className={inputClass} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-sblt-muted mb-1.5">Ngày thi đấu *</label>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Ngày thi đấu *</label>
                 <input type="date" value={stageForm.date} onChange={(e) => setStageForm((p) => ({ ...p, date: e.target.value }))} className={inputClass} required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-sblt-muted mb-1.5">Giờ bắt đầu *</label>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Giờ bắt đầu *</label>
                 <input type="text" value={stageForm.startTime} placeholder="19:00" onChange={(e) => setStageForm((p) => ({ ...p, startTime: e.target.value }))} className={inputClass} required />
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreateStage(false)} className="px-4 py-2 text-sblt-muted hover:text-white">Hủy</button>
+                <button type="button" onClick={() => setShowCreateStage(false)} className="px-4 py-2 text-[#888] hover:text-white">Hủy</button>
                 <Button type="submit">Tạo vòng đấu</Button>
               </div>
             </form>

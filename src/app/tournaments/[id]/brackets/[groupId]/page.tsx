@@ -93,14 +93,14 @@ export default function LobbyDetailPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" />
+        <div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!group) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-sblt-muted">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-[#888]">
         Không tìm thấy bảng đấu
       </div>
     );
@@ -150,13 +150,13 @@ export default function LobbyDetailPage() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => router.back()}
-          className="text-sblt-muted hover:text-white transition-colors"
+          className="text-[#888] hover:text-[#f5f5f5] transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-3">
-          <Users className="h-6 w-6 text-sblt-red" />
-          <h1 className="text-2xl font-bold text-white">{group.name}</h1>
+          <Users className="h-6 w-6 text-[#dc2626]" />
+          <h1 className="text-2xl font-bold text-[#f5f5f5]">{group.name}</h1>
           {isLive && <Badge variant="live">LIVE</Badge>}
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function LobbyDetailPage() {
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
                 selectedRound === r
                   ? "bg-white text-black shadow-lg"
-                  : "bg-sblt-dark text-sblt-muted hover:text-white border border-sblt-border hover:border-sblt-red/50"
+                  : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222] hover:border-[#dc2626]/50"
               }`}
             >
               R{r}
@@ -181,25 +181,25 @@ export default function LobbyDetailPage() {
       )}
 
       {/* Results table */}
-      <div className="overflow-x-auto rounded-xl border border-sblt-border bg-sblt-card">
+      <div className="overflow-x-auto rounded-xl border border-[#222] bg-[#111]">
         <table className="w-full">
           <thead>
-            <tr className="border-b-2 border-sblt-red">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-sblt-muted uppercase tracking-wider w-12">#</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-sblt-muted uppercase tracking-wider">PLAYER</th>
+            <tr className="border-b-2 border-[#dc2626]">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider w-12">#</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider">PLAYER</th>
               {rounds.map((r) => (
                 <th
                   key={r}
                   className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider ${
                     r === selectedRound
-                      ? "text-white bg-sblt-red/10"
-                      : "text-sblt-muted"
+                      ? "text-[#f5f5f5] bg-[#dc2626]/10"
+                      : "text-[#888]"
                   }`}
                 >
                   R{r}
                 </th>
               ))}
-              <th className="px-4 py-3 text-center text-xs font-semibold text-sblt-muted uppercase tracking-wider">TOTAL</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-[#888] uppercase tracking-wider">TOTAL</th>
             </tr>
           </thead>
           <tbody>
@@ -208,17 +208,17 @@ export default function LobbyDetailPage() {
               return (
                 <tr
                   key={row.playerId}
-                  className={`border-b border-sblt-border transition-colors hover:bg-sblt-red/5 ${
-                    rank <= 3 ? "bg-sblt-dark/50" : ""
+                  className={`border-b border-[#222] transition-colors hover:bg-[#dc2626]/[0.04] ${
+                    rank <= 3 ? "bg-[#111]/50" : ""
                   }`}
                 >
                   {/* Rank */}
                   <td className="px-4 py-3">
                     <span className={`text-sm font-bold ${
-                      rank === 1 ? "text-sblt-red" :
+                      rank === 1 ? "text-[#dc2626]" :
                       rank === 2 ? "text-amber-400" :
                       rank === 3 ? "text-orange-400" :
-                      "text-sblt-muted"
+                      "text-[#888]"
                     }`}>
                       {rank}
                     </span>
@@ -227,12 +227,12 @@ export default function LobbyDetailPage() {
                   {/* Player */}
                   <td className="px-4 py-3">
                     <span className={`text-sm font-medium ${
-                      rank === 1 ? "text-sblt-red font-bold" : "text-white"
+                      rank === 1 ? "text-[#dc2626] font-bold" : "text-[#f5f5f5]"
                     }`}>
                       {row.ign}
                     </span>
                     {row.isGuest && (
-                      <span className="ml-2 text-xs text-sblt-muted bg-sblt-border px-1.5 py-0.5 rounded">
+                      <span className="ml-2 text-xs text-[#888] bg-[#222] px-1.5 py-0.5 rounded">
                         Khách
                       </span>
                     )}
@@ -245,28 +245,28 @@ export default function LobbyDetailPage() {
                       <td
                         key={r}
                         className={`px-4 py-3 text-center ${
-                          r === selectedRound ? "bg-sblt-red/10" : ""
+                          r === selectedRound ? "bg-[#dc2626]/10" : ""
                         }`}
                       >
                         {rd ? (
                           <div>
                             <div className={`text-xs ${
-                              rd.placement === 1 ? "text-sblt-red font-bold" :
+                              rd.placement === 1 ? "text-[#dc2626] font-bold" :
                               rd.placement <= 3 ? "text-amber-400 font-semibold" :
-                              "text-sblt-muted"
+                              "text-[#888]"
                             }`}>
                               {getPlacementLabel(rd.placement)}
                             </div>
                             <div className={`text-xs mt-0.5 ${
-                              rd.points >= 8 ? "text-white font-bold" :
-                              rd.points >= 5 ? "text-sblt-white" :
-                              "text-sblt-muted"
+                              rd.points >= 8 ? "text-[#f5f5f5] font-bold" :
+                              rd.points >= 5 ? "text-[#f5f5f5]" :
+                              "text-[#888]"
                             }`}>
                               {rd.points}pts
                             </div>
                           </div>
                         ) : (
-                          <span className="text-sblt-border text-xs">—</span>
+                          <span className="text-[#555] text-xs">—</span>
                         )}
                       </td>
                     );
@@ -275,7 +275,7 @@ export default function LobbyDetailPage() {
                   {/* Total */}
                   <td className="px-4 py-3 text-center">
                     <span className={`text-sm font-bold ${
-                      row.totalPoints > 0 ? "text-white" : "text-sblt-border"
+                      row.totalPoints > 0 ? "text-[#f5f5f5]" : "text-[#555]"
                     }`}>
                       {row.totalPoints > 0 ? row.totalPoints : "—"}
                     </span>
@@ -287,7 +287,7 @@ export default function LobbyDetailPage() {
         </table>
 
         {playerRows.length === 0 && (
-          <div className="text-center py-12 text-sblt-muted">
+          <div className="text-center py-12 text-[#888]">
             <Trophy className="h-10 w-10 mx-auto mb-3 opacity-30" />
             <p>Chưa có tuyển thủ trong bảng này</p>
           </div>
@@ -297,7 +297,7 @@ export default function LobbyDetailPage() {
       {/* Lobby switcher */}
       {group.siblingGroups.length > 1 && (
         <div className="mt-6">
-          <p className="text-xs text-sblt-muted mb-3 uppercase tracking-wider">Chuyển bảng</p>
+          <p className="text-xs text-[#888] mb-3 uppercase tracking-wider">Chuyển bảng</p>
           <div className="flex gap-2 flex-wrap">
             {group.siblingGroups.map((sg) => (
               <Link
@@ -305,8 +305,8 @@ export default function LobbyDetailPage() {
                 href={`/tournaments/${params.id}/brackets/${sg.id}`}
                 className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   sg.id === group.id
-                    ? "bg-sblt-red text-white shadow-lg shadow-sblt-red/20"
-                    : "bg-sblt-dark text-sblt-muted hover:text-white border border-sblt-border hover:border-sblt-red/50"
+                    ? "bg-[#dc2626] text-[#f5f5f5] shadow-lg shadow-[#dc2626]/20"
+                    : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222] hover:border-[#dc2626]/50"
                 }`}
               >
                 {sg.name}

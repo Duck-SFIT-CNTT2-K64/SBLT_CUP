@@ -15,8 +15,8 @@ interface Announcement {
 }
 
 const TYPE_CONFIG: Record<string, { icon: typeof Bell; label: string; variant: "red" | "green" | "yellow" | "default"; accentBorder: string; accentBg: string }> = {
-  GENERAL: { icon: Megaphone, label: "Thông báo chung", variant: "default", accentBorder: "border-t-sblt-red", accentBg: "bg-sblt-red/10" },
-  SCHEDULE_CHANGE: { icon: Calendar, label: "Thay đổi lịch", variant: "red", accentBorder: "border-t-sblt-red", accentBg: "bg-sblt-red/10" },
+  GENERAL: { icon: Megaphone, label: "Thông báo chung", variant: "default", accentBorder: "border-t-[#dc2626]", accentBg: "bg-[#dc2626]/10" },
+  SCHEDULE_CHANGE: { icon: Calendar, label: "Thay đổi lịch", variant: "red", accentBorder: "border-t-[#dc2626]", accentBg: "bg-[#dc2626]/10" },
   RULE_UPDATE: { icon: AlertTriangle, label: "Quy định", variant: "yellow", accentBorder: "border-t-amber-500", accentBg: "bg-amber-500/10" },
   RESULT: { icon: Trophy, label: "Kết quả", variant: "green", accentBorder: "border-t-emerald-500", accentBg: "bg-emerald-500/10" },
 };
@@ -133,23 +133,23 @@ export default function AnnouncementPopup() {
         {/* Top accent bar */}
         <div className={`h-1 rounded-t-2xl ${cfg.accentBorder.replace("border-t-", "bg-")} opacity-80`} />
 
-        <div className="bg-sblt-card border border-sblt-border border-t-0 rounded-b-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#111] border border-[#222] border-t-0 rounded-b-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-6 pt-5 pb-3">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl ${cfg.accentBg} flex items-center justify-center`}>
-                <Icon className="h-5 w-5 text-sblt-white" />
+                <Icon className="h-5 w-5 text-[#f5f5f5]" />
               </div>
               <div>
                 <Badge variant={cfg.variant}>{cfg.label}</Badge>
                 {current.tournament && (
-                  <span className="text-xs text-sblt-red ml-2">{current.tournament.name}</span>
+                  <span className="text-xs text-[#dc2626] ml-2">{current.tournament.name}</span>
                 )}
               </div>
             </div>
             <button
               onClick={handleDismiss}
-              className="p-2 text-sblt-muted hover:text-white hover:bg-sblt-border rounded-lg transition-colors"
+              className="p-2 text-[#888] hover:text-[#f5f5f5] hover:bg-[#222] rounded-lg transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -157,34 +157,34 @@ export default function AnnouncementPopup() {
 
           {/* Content */}
           <div className="px-6 pb-2">
-            <h2 className="text-xl font-bold text-white mb-3">{current.title}</h2>
-            <p className="text-sblt-muted text-sm leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto">
+            <h2 className="text-xl font-bold text-[#f5f5f5] mb-3">{current.title}</h2>
+            <p className="text-[#888] text-sm leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto">
               {current.content}
             </p>
-            <p className="text-xs text-sblt-border mt-3">
+            <p className="text-xs text-[#555] mt-3">
               {new Date(current.createdAt).toLocaleString("vi-VN")}
             </p>
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-sblt-border bg-sblt-dark/50">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-[#222] bg-[#111]/50">
             <div className="flex items-center gap-2">
               {announcements.length > 1 && (
                 <>
                   <button
                     onClick={handlePrev}
                     disabled={currentIndex === 0}
-                    className="p-1.5 rounded-lg text-sblt-muted hover:text-white hover:bg-sblt-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1.5 rounded-lg text-[#888] hover:text-[#f5f5f5] hover:bg-[#222] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <span className="text-xs text-sblt-muted">
+                  <span className="text-xs text-[#888]">
                     {currentIndex + 1}/{announcements.length}
                   </span>
                   <button
                     onClick={handleNext}
                     disabled={currentIndex === announcements.length - 1}
-                    className="p-1.5 rounded-lg text-sblt-muted hover:text-white hover:bg-sblt-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1.5 rounded-lg text-[#888] hover:text-[#f5f5f5] hover:bg-[#222] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -195,14 +195,14 @@ export default function AnnouncementPopup() {
               {announcements.length > 1 && (
                 <button
                   onClick={handleDismissAll}
-                  className="text-xs text-sblt-muted hover:text-white px-3 py-2 rounded-lg hover:bg-sblt-border transition-colors"
+                  className="text-xs text-[#888] hover:text-[#f5f5f5] px-3 py-2 rounded-lg hover:bg-[#222] transition-colors"
                 >
                   Đã hiểu tất cả
                 </button>
               )}
               <button
                 onClick={handleDismiss}
-                className="text-sm font-medium bg-sblt-red hover:bg-sblt-red-dark text-white px-5 py-2 rounded-xl transition-colors"
+                className="text-sm font-medium bg-[#dc2626] hover:bg-[#b91c1c] text-[#f5f5f5] px-5 py-2 rounded-xl transition-colors"
               >
                 Đã hiểu
               </button>

@@ -1,30 +1,29 @@
 @import "tailwindcss";
 
 /* ============================================
-   SBLT CUP Design System
-   Color palette: Black, White, Red + TFT Hextech accents
-   Inspired by: TFT client, League of Legends, Brackelope
+   KINETIC NOIR — SBLT CUP Design System
+   High-contrast dark theme. Red accent.
+   Sharp, premium, cinematic.
    ============================================ */
 
 @theme {
-  --color-sblt-black: #0a0a0a;
-  --color-sblt-dark: #111111;
-  --color-sblt-card: #161616;
-  --color-sblt-border: #262626;
-  --color-sblt-muted: #737373;
-  --color-sblt-red: #dc2626;
-  --color-sblt-red-dark: #991b1b;
-  --color-sblt-red-glow: rgba(220, 38, 38, 0.3);
-  --color-sblt-white: #f5f5f5;
+  /* ---- Core Palette ---- */
+  --color-void: #0a0a0a;
+  --color-surface: #111111;
+  --color-surface-alt: #1a1a1a;
+  --color-surface-raised: #222222;
+  --color-border: #222222;
+  --color-border-hover: #333333;
+  --color-border-active: #dc2626;
+  --color-muted: #888888;
+  --color-dim: #555555;
+  --color-white: #f5f5f5;
+  --color-red: #dc2626;
+  --color-red-dark: #b91c1c;
+  --color-red-glow: rgba(220, 38, 38, 0.3);
 
-  /* TFT Hextech accent palette */
-  --color-hextech-blue: #0bc4e3;
-  --color-hextech-purple: #9b59b6;
-  --color-hextech-gold: #c89b3c;
-  --color-hextech-gold-light: #f0e6d3;
-  --color-hextech-teal: #0ac8b9;
-
-  /* Font families — map font-sans to Inter */
+  /* ---- Fonts ---- */
+  --font-heading: "Oswald", "Inter", sans-serif;
   --font-sans: var(--font-inter), "Inter", Arial, Helvetica, sans-serif;
 }
 
@@ -33,14 +32,14 @@
   --foreground: #f5f5f5;
   --accent: #dc2626;
   --accent-hover: #b91c1c;
-  --card-bg: #161616;
-  --card-border: #262626;
+  --card-bg: #111111;
+  --card-border: #222222;
   --card-hover-border: #dc2626;
-  --muted: #737373;
-  --glow-red: 0 0 20px rgba(220, 38, 38, 0.3);
-  --glow-red-strong: 0 0 40px rgba(220, 38, 38, 0.4);
-  --glow-hextech: 0 0 20px rgba(11, 196, 227, 0.25);
-  --glow-gold: 0 0 20px rgba(200, 155, 60, 0.35);
+  --muted: #888888;
+  --dim: #555555;
+  --glow-red: 0 0 24px rgba(220, 38, 38, 0.15);
+  --glow-red-strong: 0 0 40px rgba(220, 38, 38, 0.3);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ============================================
@@ -52,6 +51,8 @@ body {
   color: var(--foreground);
   font-size: 16px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ============================================
@@ -59,16 +60,16 @@ body {
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: #0e0e0e;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #dc2626;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -90,7 +91,7 @@ body {
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -99,9 +100,14 @@ body {
   to { opacity: 1; }
 }
 
-@keyframes glow-breathe {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-pulse-glow {
@@ -113,27 +119,25 @@ body {
 }
 
 .animate-slide-up {
-  animation: slide-up 0.5s ease-out forwards;
+  animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
-}
-
-.animate-glow-breathe {
-  animation: glow-breathe 4s ease-in-out infinite;
+  animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ============================================
-   Reusable Component Styles
+   Reusable Component Classes
    ============================================ */
 
-/* Card — dark glass-morphism with red hover border */
+/* Card — dark surface with red hover glow */
 .sblt-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 12px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 0.5rem;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sblt-card:hover {
@@ -141,11 +145,11 @@ body {
   box-shadow: var(--glow-red);
 }
 
-/* Card without hover effect (static) */
+/* Card without hover (static) */
 .sblt-card-static {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 12px;
+  border-radius: 0.5rem;
 }
 
 /* Gradient text */
@@ -156,13 +160,13 @@ body {
   background-clip: text;
 }
 
-/* Red glow line separator */
+/* Red line separator */
 .sblt-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, #dc2626, transparent);
 }
 
-/* Section heading style */
+/* Section heading — Oswald condensed */
 .sblt-heading {
   font-family: "Oswald", "Inter", sans-serif;
   letter-spacing: 0.05em;
@@ -175,10 +179,10 @@ body {
 .rank-bronze { color: #d97706; }
 
 /* Status badges */
-.badge-confirmed { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
-.badge-pending { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
-.badge-live { background: rgba(220, 38, 38, 0.15); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.3); }
-.badge-completed { background: rgba(107, 114, 128, 0.15); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+.badge-confirmed { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.25); }
+.badge-pending { background: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.25); }
+.badge-live { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.25); }
+.badge-completed { background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.25); }
 
 /* Table styles */
 .sblt-table {
@@ -187,7 +191,7 @@ body {
 }
 
 .sblt-table thead {
-  background: #1a1a1a;
+  background: #111111;
   border-bottom: 2px solid #dc2626;
 }
 
@@ -198,20 +202,20 @@ body {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #a3a3a3;
+  color: #888888;
 }
 
 .sblt-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid #262626;
+  border-bottom: 1px solid #222222;
 }
 
 .sblt-table tbody tr {
-  transition: background-color 0.15s ease;
+  transition: background-color 0.2s ease;
 }
 
 .sblt-table tbody tr:hover {
-  background: rgba(220, 38, 38, 0.05);
+  background: rgba(220, 38, 38, 0.04);
 }
 
 /* Bracket connector lines */
@@ -220,38 +224,7 @@ body {
 }
 
 .bracket-line-ghost {
-  background: #262626;
-}
-
-/* Card with top accent bar */
-.sblt-card-accent {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sblt-card-accent::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #dc2626, #ef4444);
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.sblt-card-accent:hover::before {
-  opacity: 1;
-}
-
-.sblt-card-accent:hover {
-  border-color: var(--card-hover-border);
-  box-shadow: var(--glow-red);
+  background: #222222;
 }
 
 /* Status glow for LIVE/active items */
@@ -271,7 +244,7 @@ body {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, transparent, #262626 10%, #262626 90%, transparent);
+  background: linear-gradient(to bottom, transparent, #222222 10%, #222222 90%, transparent);
   transform: translateX(-50%);
 }
 
@@ -281,45 +254,54 @@ body {
   height: 12px;
   border-radius: 50%;
   background: #dc2626;
-  border: 2px solid #161616;
+  border: 2px solid #111111;
   position: relative;
   z-index: 1;
 }
 
-/* Input styles */
+/* Input styles — bottom border, sharp */
 .sblt-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: #111111;
-  border: 1px solid #262626;
-  border-radius: 0.75rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #333333;
+  border-radius: 0;
   color: #f5f5f5;
   font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sblt-input::placeholder {
-  color: #404040;
+  color: #555555;
 }
 
 .sblt-input:focus {
   outline: none;
-  border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+  border-bottom-color: #dc2626;
 }
 
-/* Stat block */
-.sblt-stat {
-  text-align: center;
-  padding: 1.25rem;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  transition: border-color 0.2s ease;
+/* Full border input variant */
+.sblt-input-bordered {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 0.375rem;
+  color: #f5f5f5;
+  font-size: 1rem;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.sblt-stat:hover {
+.sblt-input-bordered::placeholder {
+  color: #555555;
+}
+
+.sblt-input-bordered:focus {
+  outline: none;
   border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 /* Hero background orbs */
@@ -330,79 +312,7 @@ body {
   pointer-events: none;
 }
 
-/* ============================================
-   TFT / Hextech Design Extensions
-   ============================================ */
-
-/* Glassmorphism card */
-.glass-card {
-  background: rgba(22, 22, 22, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-}
-
-/* Hextech gradient border via pseudo-element */
-.hextech-border {
-  position: relative;
-  border-radius: 16px;
-  background: #161616;
-}
-.hextech-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: linear-gradient(135deg, #0bc4e3, #9b59b6, #0bc4e3);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.hextech-border:hover::before {
-  opacity: 1;
-}
-
-/* Gold gradient border for top 1 */
-.gold-border {
-  position: relative;
-  border-radius: 16px;
-}
-.gold-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: linear-gradient(135deg, #c89b3c, #f0e6d3, #c89b3c);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-/* Gradient text variants */
-.text-gradient-hextech {
-  background: linear-gradient(135deg, #0bc4e3, #9b59b6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-gold {
-  background: linear-gradient(135deg, #c89b3c, #f0e6d3, #c89b3c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* Live pulse dot */
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.4); }
-}
 .live-dot {
   width: 8px;
   height: 8px;
@@ -412,23 +322,38 @@ body {
 }
 
 /* Shimmer loading effect */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
 .shimmer {
-  background: linear-gradient(90deg, #1a1a1a 25%, #262626 50%, #1a1a1a 75%);
+  background: linear-gradient(90deg, #111111 25%, #222222 50%, #111111 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-/* Character break-out effect — parent must have overflow: visible */
+/* Character break-out effect */
 .character-card {
   overflow: visible !important;
 }
 
 /* Neon glow shadows */
-.shadow-neon-red    { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5), 0 0 60px rgba(220, 38, 38, 0.2); }
-.shadow-neon-blue   { box-shadow: 0 0 20px rgba(11, 196, 227, 0.4), 0 0 60px rgba(11, 196, 227, 0.15); }
-.shadow-neon-gold   { box-shadow: 0 0 20px rgba(200, 155, 60, 0.5), 0 0 60px rgba(200, 155, 60, 0.2); }
-.shadow-neon-purple { box-shadow: 0 0 20px rgba(155, 89, 182, 0.4), 0 0 60px rgba(155, 89, 182, 0.15); }
+.shadow-neon-red { box-shadow: 0 0 20px rgba(220, 38, 38, 0.4), 0 0 60px rgba(220, 38, 38, 0.15); }
+
+/* ============================================
+   Scroll Reveal
+   ============================================ */
+
+.kn-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kn-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delays for child reveals */
+.kn-reveal-delay-1 { transition-delay: 0.1s; }
+.kn-reveal-delay-2 { transition-delay: 0.2s; }
+.kn-reveal-delay-3 { transition-delay: 0.3s; }
+.kn-reveal-delay-4 { transition-delay: 0.4s; }

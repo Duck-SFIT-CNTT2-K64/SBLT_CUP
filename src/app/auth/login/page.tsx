@@ -39,36 +39,36 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <div className="animate-pulse-glow rounded-2xl p-2">
-            <Image src="/logo.png" alt="SBLT CUP" width={64} height={64} className="rounded-xl" />
+        <div className="flex justify-center mb-6">
+          <div className="animate-pulse-glow rounded-xl p-2">
+            <Image src="/logo.png" alt="SBLT CUP" width={56} height={56} className="rounded-lg" />
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-white">Đăng nhập</h1>
-        <p className="text-sblt-muted mt-2">Đăng nhập để tham gia giải đấu SBLT CUP</p>
+        <h1 className="sblt-heading text-3xl text-[#f5f5f5] tracking-tight">Đăng nhập</h1>
+        <p className="text-[#888] mt-2 text-sm">Đăng nhập để tham gia giải đấu SBLT CUP</p>
       </div>
 
       <Card hover={false} className="p-6">
         <form onSubmit={handleSubmit}>
           {error && <Alert variant="error" message={error} onDismiss={() => setError("")} className="mb-4" />}
 
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-sblt-muted mb-1.5">Email</label>
+          <div className="mb-5">
+            <label htmlFor="email" className="block text-xs font-semibold text-[#888] mb-2 uppercase tracking-wider">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red focus:border-transparent transition-shadow"
+              className="sblt-input-bordered"
               placeholder="your@email.com"
               required
             />
           </div>
 
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="password" className="block text-sm font-medium text-sblt-muted">Mật khẩu</label>
-              <Link href="/auth/forgot-password" className="text-xs text-sblt-red hover:text-red-400 transition-colors">
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="password" className="block text-xs font-semibold text-[#888] uppercase tracking-wider">Mật khẩu</label>
+              <Link href="/auth/forgot-password" className="text-xs text-[#dc2626] hover:text-red-400 transition-colors duration-300">
                 Quên mật khẩu?
               </Link>
             </div>
@@ -78,11 +78,11 @@ function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red focus:border-transparent pr-10 transition-shadow"
+                className="sblt-input-bordered pr-10"
                 placeholder="••••••••"
                 required
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sblt-muted hover:text-white">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888] hover:text-[#f5f5f5] transition-colors duration-300">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
@@ -92,9 +92,9 @@ function LoginForm() {
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </Button>
 
-          <p className="text-center text-sblt-muted text-sm mt-4">
+          <p className="text-center text-[#888] text-sm mt-5">
             Chưa có tài khoản?{" "}
-            <Link href="/auth/register" className="text-sblt-red hover:text-red-400 transition-colors">
+            <Link href="/auth/register" className="text-[#dc2626] hover:text-red-400 transition-colors duration-300 font-medium">
               Đăng ký ngay
             </Link>
           </p>
@@ -107,7 +107,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <Suspense fallback={<div className="text-sblt-muted">Đang tải...</div>}>
+      <Suspense fallback={<div className="text-[#888]">Đang tải...</div>}>
         <LoginForm />
       </Suspense>
     </div>

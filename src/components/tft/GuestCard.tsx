@@ -42,8 +42,8 @@ export default function GuestCard({
         relative rounded-2xl group cursor-pointer
         transition-all duration-300
         ${isHost
-          ? "bg-gradient-to-b from-[#1a1208] to-sblt-card border border-[#c89b3c]/30 hover:border-[#c89b3c]/70 hover:shadow-neon-gold"
-          : "bg-sblt-card/80 backdrop-blur-md border border-sblt-border hover:border-[#0bc4e3]/40 hover:shadow-neon-blue"
+          ? "bg-gradient-to-b from-[#1a1208] to-[#111] border border-[#c89b3c]/30 hover:border-[#c89b3c]/70 hover:shadow-neon-gold"
+          : "bg-[#111]/80 backdrop-blur-md border border-[#222] hover:border-[#0bc4e3]/40 hover:shadow-neon-blue"
         }
       `}>
 
@@ -95,7 +95,7 @@ export default function GuestCard({
                 <div className={`absolute inset-0 flex items-center justify-center ${
                   isHost
                     ? "bg-gradient-to-b from-[#2a1f08] to-[#1a1208]"
-                    : "bg-gradient-to-b from-[#0d1f2a] to-sblt-dark"
+                    : "bg-gradient-to-b from-[#0d1f2a] to-[#111]"
                 }`}>
                   <span className={`text-4xl font-black sblt-heading ${
                     isHost ? "text-gradient-gold" : "text-gradient-hextech"
@@ -106,7 +106,7 @@ export default function GuestCard({
               )}
 
               {/* Gradient overlay bottom */}
-              <div className="absolute inset-0 bg-gradient-to-t from-sblt-black/70 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/70 via-transparent to-transparent" />
 
               {/* Host crown badge */}
               {isHost && (
@@ -123,13 +123,13 @@ export default function GuestCard({
           {/* Name & info */}
           <div className="text-center">
             <h4 className={`font-bold text-sm leading-tight mb-1 ${
-              isHost ? "text-gradient-gold" : "text-white"
+              isHost ? "text-gradient-gold" : "text-[#f5f5f5]"
             }`}>
               {name}
             </h4>
 
             {rank && (
-              <p className="text-xs text-sblt-muted mb-1.5">{rank}</p>
+              <p className="text-xs text-[#888] mb-1.5">{rank}</p>
             )}
 
             {/* Confirmed status */}

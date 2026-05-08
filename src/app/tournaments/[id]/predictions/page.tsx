@@ -68,9 +68,9 @@ export default function PredictionsPage() {
     return (
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <div className="text-center">
-          <Target className="h-16 w-16 text-sblt-red mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-white mb-4">Dự đoán kết quả</h1>
-          <p className="text-sblt-muted mb-6">
+          <Target className="h-16 w-16 text-[#dc2626] mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-[#f5f5f5] mb-4">Dự đoán kết quả</h1>
+          <p className="text-[#888] mb-6">
             Đăng nhập để dự đoán top 4 mỗi bảng đấu và nhận giải thưởng từ Riot!
           </p>
           <Link href="/auth/login">
@@ -85,21 +85,21 @@ export default function PredictionsPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-          <Target className="h-8 w-8 text-sblt-red" />
+        <h1 className="text-3xl font-bold text-[#f5f5f5] flex items-center gap-3 mb-2">
+          <Target className="h-8 w-8 text-[#dc2626]" />
           Dự đoán kết quả
         </h1>
-        <p className="text-sblt-muted">
+        <p className="text-[#888]">
           Dự đoán top 1, 2, 3, 4 của mỗi bảng đấu. Đúng mỗi vị trí = 10đ. Chung kết x2!
         </p>
       </div>
 
       {/* Info banner */}
-      <div className="bg-sblt-red/5 border border-sblt-red/20 rounded-xl p-4 mb-6">
+      <div className="bg-[#dc2626]/[0.04] border border-[#dc2626]/20 rounded-xl p-4 mb-6">
         <div className="flex items-start gap-3">
-          <Trophy className="h-5 w-5 text-sblt-red mt-0.5 shrink-0" />
-          <div className="text-sm text-sblt-muted">
-            <p className="text-white font-medium mb-1">Cách tính điểm dự đoán</p>
+          <Trophy className="h-5 w-5 text-[#dc2626] mt-0.5 shrink-0" />
+          <div className="text-sm text-[#888]">
+            <p className="text-[#f5f5f5] font-medium mb-1">Cách tính điểm dự đoán</p>
             <p>Dự đoán đúng mỗi vị trí Top 1-4 = <strong className="text-yellow-400">10 điểm</strong>. Riêng vòng <strong className="text-red-400">Chung Kết</strong> điểm x2 (20đ/rank). Người có tổng điểm cao nhất sau Chung Kết sẽ nhận giải thưởng từ Riot!</p>
           </div>
         </div>
@@ -109,10 +109,10 @@ export default function PredictionsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 text-sblt-red animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />
         </div>
       ) : stages.length === 0 ? (
-        <div className="text-center py-12 text-sblt-muted">
+        <div className="text-center py-12 text-[#888]">
           Chưa có vòng đấu nào hỗ trợ dự đoán.
         </div>
       ) : (
@@ -130,13 +130,13 @@ export default function PredictionsPage() {
                       <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                     </CardTitle>
                     {stage.hasSubmitted && stage.userScore !== null && (
-                      <span className="text-lg font-bold text-sblt-red">{stage.userScore}đ</span>
+                      <span className="text-lg font-bold text-[#dc2626]">{stage.userScore}đ</span>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-sblt-muted">
+                    <div className="text-sm text-[#888]">
                       {stage.groups.length} bảng đấu &middot; {totalPlayers} tuyển thủ
                       {stage.hasSubmitted && (
                         <span className="ml-2 text-green-400">
@@ -161,13 +161,13 @@ export default function PredictionsPage() {
                     )}
 
                     {stage.predictionStatus === "LOCKED" && (
-                      <span className="text-sm text-sblt-muted flex items-center gap-1">
+                      <span className="text-sm text-[#888] flex items-center gap-1">
                         <Lock className="h-3 w-3" /> Đã khóa
                       </span>
                     )}
 
                     {stage.predictionStatus === "NOT_READY" && (
-                      <span className="text-sm text-sblt-muted flex items-center gap-1">
+                      <span className="text-sm text-[#888] flex items-center gap-1">
                         <Clock className="h-3 w-3" /> Chờ bốc thăm
                       </span>
                     )}

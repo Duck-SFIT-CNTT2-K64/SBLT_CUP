@@ -27,8 +27,8 @@ export default function StandingsPage() {
       .finally(() => setLoading(false));
   }, [params.id]);
 
-  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
-  if (!tournament) return <div className="text-center py-20 text-sblt-muted">Không tìm thấy giải đấu</div>;
+  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
+  if (!tournament) return <div className="text-center py-20 text-[#888]">Không tìm thấy giải đấu</div>;
 
   const stage = tournament.stages.find((s) => s.id === selectedStageId);
 
@@ -59,31 +59,31 @@ export default function StandingsPage() {
   const gameNumbers = Array.from({ length: maxGames }, (_, i) => i + 1);
 
   const getPointColor = (points: number) => {
-    if (points >= 7) return "text-sblt-red font-bold";
-    if (points >= 5) return "text-white font-semibold";
-    if (points >= 3) return "text-sblt-white";
-    return "text-sblt-muted";
+    if (points >= 7) return "text-[#dc2626] font-bold";
+    if (points >= 5) return "text-[#f5f5f5] font-semibold";
+    if (points >= 3) return "text-[#f5f5f5]";
+    return "text-[#888]";
   };
 
   const getRankBadge = (idx: number) => {
     if (idx === 0) return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30";
     if (idx === 1) return "bg-gray-400/20 text-gray-300 border border-gray-400/30";
     if (idx === 2) return "bg-orange-500/20 text-orange-400 border border-orange-500/30";
-    return "bg-sblt-border/50 text-sblt-muted";
+    return "bg-[#222]/50 text-[#888]";
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/tournaments/${params.id}`} className="text-sblt-muted hover:text-white transition-colors">
+        <Link href={`/tournaments/${params.id}`} className="text-[#888] hover:text-[#f5f5f5] transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-sblt-red" />
+            <Trophy className="h-6 w-6 text-[#dc2626]" />
             Bảng xếp hạng
           </h1>
-          <p className="text-sblt-muted text-sm">{tournament.name} — Mùa {tournament.season}</p>
+          <p className="text-[#888] text-sm">{tournament.name} — Mùa {tournament.season}</p>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export default function StandingsPage() {
             key={s.id}
             onClick={() => setSelectedStageId(s.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              selectedStageId === s.id ? "bg-sblt-red text-white" : "bg-sblt-dark text-sblt-muted hover:text-white border border-sblt-border"
+              selectedStageId === s.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
             }`}
           >
             {s.name}
@@ -107,37 +107,37 @@ export default function StandingsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-sblt-dark border-b-2 border-sblt-red">
-                  <th className="text-left py-3 px-4 text-sblt-muted font-semibold text-xs uppercase tracking-wider w-12">#</th>
-                  <th className="text-left py-3 px-4 text-sblt-muted font-semibold text-xs uppercase tracking-wider min-w-[140px]">Tên</th>
+                <tr className="bg-[#111] border-b-2 border-[#dc2626]">
+                  <th className="text-left py-3 px-4 text-[#888] font-semibold text-xs uppercase tracking-wider w-12">#</th>
+                  <th className="text-left py-3 px-4 text-[#888] font-semibold text-xs uppercase tracking-wider min-w-[140px]">Tên</th>
                   {gameNumbers.map((n) => (
-                    <th key={n} className="text-center py-3 px-3 text-sblt-muted font-semibold text-xs uppercase tracking-wider w-14">M{n}</th>
+                    <th key={n} className="text-center py-3 px-3 text-[#888] font-semibold text-xs uppercase tracking-wider w-14">M{n}</th>
                   ))}
-                  <th className="text-center py-3 px-3 text-sblt-muted font-semibold text-xs uppercase tracking-wider w-16">Tổng</th>
-                  <th className="text-center py-3 px-3 text-sblt-muted font-semibold text-xs uppercase tracking-wider w-14">Top1</th>
-                  <th className="text-center py-3 px-3 text-sblt-muted font-semibold text-xs uppercase tracking-wider w-14">Top4</th>
+                  <th className="text-center py-3 px-3 text-[#888] font-semibold text-xs uppercase tracking-wider w-16">Tổng</th>
+                  <th className="text-center py-3 px-3 text-[#888] font-semibold text-xs uppercase tracking-wider w-14">Top1</th>
+                  <th className="text-center py-3 px-3 text-[#888] font-semibold text-xs uppercase tracking-wider w-14">Top4</th>
                 </tr>
               </thead>
               <tbody>
                 {standings.map((player, idx) => (
-                  <tr key={player.id} className={`border-b border-sblt-border transition-colors ${idx === 0 ? "bg-sblt-red/5" : idx < 4 ? "hover:bg-sblt-red/3" : "hover:bg-sblt-dark/30"}`}>
+                  <tr key={player.id} className={`border-b border-[#222] transition-colors ${idx === 0 ? "bg-[#dc2626]/[0.04]" : idx < 4 ? "hover:bg-[#dc2626]/3" : "hover:bg-[#111]/30"}`}>
                     <td className="py-3 px-4">
                       <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${getRankBadge(idx)}`}>
                         {idx + 1}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-medium text-white">{player.ign}</td>
+                    <td className="py-3 px-4 font-medium text-[#f5f5f5]">{player.ign}</td>
                     {gameNumbers.map((n) => {
                       const gr = player.gameResults.find((r) => r.gameNumber === n);
                       return (
                         <td key={n} className="py-3 px-3 text-center">
-                          {gr ? <span className={getPointColor(gr.points)}>{gr.points}</span> : <span className="text-sblt-border">—</span>}
+                          {gr ? <span className={getPointColor(gr.points)}>{gr.points}</span> : <span className="text-[#555]">—</span>}
                         </td>
                       );
                     })}
-                    <td className="py-3 px-3 text-center"><span className="text-sblt-red font-bold text-base">{player.totalPoints}</span></td>
-                    <td className="py-3 px-3 text-center text-sblt-white">{player.top1Count}</td>
-                    <td className="py-3 px-3 text-center text-sblt-white">{player.top4Count}</td>
+                    <td className="py-3 px-3 text-center"><span className="text-[#dc2626] font-bold text-base">{player.totalPoints}</span></td>
+                    <td className="py-3 px-3 text-center text-[#f5f5f5]">{player.top1Count}</td>
+                    <td className="py-3 px-3 text-center text-[#f5f5f5]">{player.top4Count}</td>
                   </tr>
                 ))}
               </tbody>
@@ -145,7 +145,7 @@ export default function StandingsPage() {
           </div>
         </Card>
       ) : (
-        <div className="text-center py-20 text-sblt-muted">
+        <div className="text-center py-20 text-[#888]">
           <Trophy className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p>Chưa có kết quả cho vòng này</p>
         </div>

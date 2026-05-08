@@ -83,9 +83,9 @@ export default function PredictionGroupForm({
   const isComplete = Object.values(selections).every(Boolean);
 
   return (
-    <div className={cn("bg-sblt-card border border-sblt-border rounded-xl p-5", isComplete && "border-green-800/50")}>
+    <div className={cn("bg-[#111] border border-[#222] rounded-xl p-5", isComplete && "border-green-800/50")}>
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-white font-bold text-lg">{group.name}</h4>
+        <h4 className="text-[#f5f5f5] font-bold text-lg">{group.name}</h4>
         {isComplete && (
           <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded-full">
             Hoàn thành
@@ -109,25 +109,25 @@ export default function PredictionGroupForm({
               className={cn(
                 "relative flex flex-col items-center justify-center p-3 rounded-lg border-2 border-dashed transition-all min-h-[80px]",
                 isSelecting
-                  ? "border-sblt-red bg-sblt-red/10 animate-pulse"
+                  ? "border-[#dc2626] bg-[#dc2626]/10 animate-pulse"
                   : selectedPlayer
                     ? bg
-                    : "border-sblt-border hover:border-sblt-muted",
+                    : "border-[#222] hover:border-[#888]",
                 locked && "opacity-60 cursor-not-allowed"
               )}
             >
               <Icon className={cn("h-5 w-5 mb-1", color)} />
-              <span className="text-xs text-sblt-muted">{label}</span>
-              <span className="text-xs text-sblt-muted">({points}đ)</span>
+              <span className="text-xs text-[#888]">{label}</span>
+              <span className="text-xs text-[#888]">({points}đ)</span>
               {selectedPlayer ? (
                 <div className="mt-1 flex items-center gap-1">
-                  <span className="text-sm text-white font-medium truncate max-w-[80px]">
+                  <span className="text-sm text-[#f5f5f5] font-medium truncate max-w-[80px]">
                     {selectedPlayer.ign}
                   </span>
-                  {!locked && <X className="h-3 w-3 text-sblt-muted" />}
+                  {!locked && <X className="h-3 w-3 text-[#888]" />}
                 </div>
               ) : isSelecting ? (
-                <span className="text-xs text-sblt-red mt-1">Chọn bên dưới</span>
+                <span className="text-xs text-[#dc2626] mt-1">Chọn bên dưới</span>
               ) : null}
             </button>
           );
@@ -136,7 +136,7 @@ export default function PredictionGroupForm({
 
       {/* Player list */}
       <div className="space-y-1">
-        <p className="text-xs text-sblt-muted mb-2">
+        <p className="text-xs text-[#888] mb-2">
           {selectingSlot ? "Nhấn vào tuyển thủ để chọn:" : "Nhấn vào ô Top 1-4 ở trên, rồi chọn tuyển thủ:"}
         </p>
         {group.players.map((player) => {
@@ -152,21 +152,21 @@ export default function PredictionGroupForm({
               className={cn(
                 "w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2",
                 isSelected
-                  ? "bg-sblt-red/10 text-white border border-sblt-red/30"
+                  ? "bg-[#dc2626]/10 text-[#f5f5f5] border border-[#dc2626]/30"
                   : isSelectable
-                    ? "bg-sblt-dark hover:bg-sblt-border text-white cursor-pointer"
-                    : "bg-sblt-dark text-sblt-muted",
+                    ? "bg-[#111] hover:bg-[#222] text-[#f5f5f5] cursor-pointer"
+                    : "bg-[#111] text-[#888]",
                 locked && "opacity-60"
               )}
             >
               <span className="flex-1">{player.ign}</span>
               {player.isGuest && (
-                <span className="text-xs bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
+                <span className="text-xs bg-[#dc2626]/10 text-red-400 px-1.5 py-0.5 rounded">
                   Khách mời
                 </span>
               )}
               {isSelected && (
-                <span className="text-xs text-sblt-red">Đã chọn</span>
+                <span className="text-xs text-[#dc2626]">Đã chọn</span>
               )}
             </button>
           );

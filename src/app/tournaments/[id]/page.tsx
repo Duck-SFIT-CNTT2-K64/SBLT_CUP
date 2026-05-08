@@ -106,14 +106,14 @@ export default function TournamentDetailPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" />
+        <div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!tournament) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-sblt-muted">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-[#888]">
         Không tìm thấy giải đấu
       </div>
     );
@@ -130,16 +130,16 @@ export default function TournamentDetailPage() {
       {actionError && <Alert variant="error" message={actionError} onDismiss={() => setActionError(null)} className="mb-6" />}
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-sblt-card border border-sblt-border mb-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-sblt-red/10 via-transparent to-transparent" />
+      <div className="relative overflow-hidden rounded-2xl bg-[#111] border border-[#222] mb-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#dc2626]/10 via-transparent to-transparent" />
         <div className="relative p-8 md:p-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <Badge variant={statusCfg.variant} className="mb-3">{statusCfg.label}</Badge>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">{tournament.name}</h1>
-              <p className="text-sblt-muted">Mùa {tournament.season}</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-[#f5f5f5] mb-1">{tournament.name}</h1>
+              <p className="text-[#888]">Mùa {tournament.season}</p>
               {tournament.description && (
-                <p className="text-sblt-muted mt-3 max-w-xl leading-relaxed">{tournament.description}</p>
+                <p className="text-[#888] mt-3 max-w-xl leading-relaxed">{tournament.description}</p>
               )}
             </div>
 
@@ -151,7 +151,7 @@ export default function TournamentDetailPage() {
                       <CheckCircle className="h-5 w-5" />
                       Đã đăng ký
                     </div>
-                    <button onClick={handleWithdraw} className="text-xs text-sblt-muted hover:text-red-400 border border-sblt-border hover:border-red-800 px-3 py-1.5 rounded-lg transition-colors">
+                    <button onClick={handleWithdraw} className="text-xs text-[#888] hover:text-red-400 border border-[#222] hover:border-red-800 px-3 py-1.5 rounded-lg transition-colors">
                       Rút lui
                     </button>
                   </div>
@@ -165,7 +165,7 @@ export default function TournamentDetailPage() {
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-sblt-border">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-[#222]">
             {[
               { icon: Users, label: "Tuyển thủ", value: `${tournament._count.registrations}/${tournament.maxPlayers}` },
               { icon: Calendar, label: "Thi đấu", value: `${new Date(tournament.startDate).toLocaleDateString("vi-VN")} — ${new Date(tournament.endDate).toLocaleDateString("vi-VN")}` },
@@ -173,10 +173,10 @@ export default function TournamentDetailPage() {
               { icon: Calendar, label: "Đăng ký", value: `${new Date(tournament.regStart).toLocaleDateString("vi-VN")} — ${new Date(tournament.regEnd).toLocaleDateString("vi-VN")}` },
             ].map((stat) => (
               <div key={stat.label} className="flex items-start gap-3">
-                <stat.icon className="h-5 w-5 text-sblt-red mt-0.5 shrink-0" />
+                <stat.icon className="h-5 w-5 text-[#dc2626] mt-0.5 shrink-0" />
                 <div>
-                  <div className="text-xs text-sblt-muted">{stat.label}</div>
-                  <div className="text-sm font-semibold text-white">{stat.value}</div>
+                  <div className="text-xs text-[#888]">{stat.label}</div>
+                  <div className="text-sm font-semibold text-[#f5f5f5]">{stat.value}</div>
                 </div>
               </div>
             ))}
@@ -186,8 +186,8 @@ export default function TournamentDetailPage() {
 
       {/* Quick Links - Full width, prominent */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <Swords className="h-7 w-7 text-sblt-red" />
+        <h2 className="text-2xl font-bold text-[#f5f5f5] mb-6 flex items-center gap-3">
+          <Swords className="h-7 w-7 text-[#dc2626]" />
           Tra cứu giải đấu
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -197,8 +197,8 @@ export default function TournamentDetailPage() {
               label: "Bảng đấu",
               desc: "Xem sơ đồ bảng đấu và kết quả bốc thăm",
               icon: Swords,
-              color: "from-sblt-red/20 to-transparent",
-              iconColor: "text-sblt-red",
+              color: "from-[#dc2626]/20 to-transparent",
+              iconColor: "text-[#dc2626]",
             },
             {
               href: `/tournaments/${tournament.id}/results`,
@@ -238,20 +238,20 @@ export default function TournamentDetailPage() {
               key={link.href}
               href={link.href}
               download={link.download}
-              className="group relative overflow-hidden bg-sblt-card border border-sblt-border rounded-2xl p-6 hover:border-sblt-red/50 transition-all duration-300 hover:shadow-lg hover:shadow-sblt-red/10"
+              className="group relative overflow-hidden bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#dc2626]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[#dc2626]/10"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${link.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
               <div className="relative">
-                <div className={`w-14 h-14 rounded-xl bg-sblt-dark border border-sblt-border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-14 h-14 rounded-xl bg-[#111] border border-[#222] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <link.icon className={`h-7 w-7 ${link.iconColor}`} />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-sblt-red transition-colors">
+                <h3 className="text-lg font-bold text-[#f5f5f5] mb-2 group-hover:text-[#dc2626] transition-colors">
                   {link.label}
                 </h3>
-                <p className="text-sblt-muted text-sm leading-relaxed">
+                <p className="text-[#888] text-sm leading-relaxed">
                   {link.desc}
                 </p>
-                <div className="flex items-center gap-2 mt-4 text-sblt-muted group-hover:text-sblt-red transition-colors">
+                <div className="flex items-center gap-2 mt-4 text-[#888] group-hover:text-[#dc2626] transition-colors">
                   <span className="text-sm font-medium">Xem ngay</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -267,17 +267,17 @@ export default function TournamentDetailPage() {
           {/* Stages */}
           <Card hover={false} className="p-6">
             <h2 className="text-xl font-bold mb-5 flex items-center gap-3">
-              <Calendar className="h-6 w-6 text-sblt-red" />
+              <Calendar className="h-6 w-6 text-[#dc2626]" />
               Các vòng đấu
             </h2>
             <div className="space-y-3">
               {tournament.stages.map((stage) => {
                 const stageCfg = STAGE_STATUS[stage.status] || STAGE_STATUS.UPCOMING;
                 return (
-                  <div key={stage.id} className="flex items-center justify-between p-5 bg-sblt-dark rounded-xl border border-sblt-border">
+                  <div key={stage.id} className="flex items-center justify-between p-5 bg-[#111] rounded-xl border border-[#222]">
                     <div>
-                      <h3 className="font-semibold text-white text-base">{stage.name}</h3>
-                      <p className="text-sblt-muted mt-1">{new Date(stage.date).toLocaleDateString("vi-VN")}</p>
+                      <h3 className="font-semibold text-[#f5f5f5] text-base">{stage.name}</h3>
+                      <p className="text-[#888] mt-1">{new Date(stage.date).toLocaleDateString("vi-VN")}</p>
                     </div>
                     <Badge variant={stageCfg.variant}>{stageCfg.label}</Badge>
                   </div>
@@ -289,15 +289,15 @@ export default function TournamentDetailPage() {
           {/* Players */}
           <Card hover={false} className="p-6">
             <h2 className="text-xl font-bold mb-5 flex items-center gap-3">
-              <Users className="h-6 w-6 text-sblt-red" />
+              <Users className="h-6 w-6 text-[#dc2626]" />
               Tuyển thủ đã đăng ký
             </h2>
 
             {/* Khách mời — dùng GuestCard */}
             {guestPlayers.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-xs uppercase tracking-widest text-sblt-muted mb-4 font-semibold flex items-center gap-2">
-                  <span className="w-4 h-px bg-sblt-border" />
+                <h3 className="text-xs uppercase tracking-widest text-[#888] mb-4 font-semibold flex items-center gap-2">
+                  <span className="w-4 h-px bg-[#222]" />
                   Khách mời ({guestPlayers.length})
                 </h3>
                 {/* pt-10 để chừa chỗ cho mascot break-out */}
@@ -319,17 +319,17 @@ export default function TournamentDetailPage() {
             {/* Tuyển thủ thường — list đơn giản */}
             {regularPlayers.length > 0 && (
               <div>
-                <h3 className="text-xs uppercase tracking-widest text-sblt-muted mb-4 font-semibold flex items-center gap-2">
-                  <span className="w-4 h-px bg-sblt-border" />
+                <h3 className="text-xs uppercase tracking-widest text-[#888] mb-4 font-semibold flex items-center gap-2">
+                  <span className="w-4 h-px bg-[#222]" />
                   Tuyển thủ ({regularPlayers.length})
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {regularPlayers.map((r) => (
                     <div
                       key={r.id}
-                      className="bg-sblt-dark rounded-lg px-3 py-2.5 border border-sblt-border hover:border-sblt-red/30 transition-colors"
+                      className="bg-[#111] rounded-lg px-3 py-2.5 border border-[#222] hover:border-[#dc2626]/30 transition-colors"
                     >
-                      <span className="text-white text-sm font-medium truncate block">{r.player.ign}</span>
+                      <span className="text-[#f5f5f5] text-sm font-medium truncate block">{r.player.ign}</span>
                     </div>
                   ))}
                 </div>
@@ -337,7 +337,7 @@ export default function TournamentDetailPage() {
             )}
 
             {approvedPlayers.length === 0 && (
-              <p className="text-sblt-muted text-center py-6">Chưa có tuyển thủ nào</p>
+              <p className="text-[#888] text-center py-6">Chưa có tuyển thủ nào</p>
             )}
           </Card>
         </div>
@@ -346,14 +346,14 @@ export default function TournamentDetailPage() {
         <div className="space-y-6">
           <Card hover={false} className="p-6">
             <h3 className="text-lg font-bold mb-5 flex items-center gap-3">
-              <Gift className="h-6 w-6 text-sblt-red" />
+              <Gift className="h-6 w-6 text-[#dc2626]" />
               Giải thưởng
             </h3>
             <div className="space-y-3">
               {tournament.prizes.map((prize) => (
                 <div key={prize.id} className="flex justify-between">
-                  <span className="text-sblt-muted">{prize.description}</span>
-                  <span className="font-bold text-white">{formatCurrency(prize.amount)}</span>
+                  <span className="text-[#888]">{prize.description}</span>
+                  <span className="font-bold text-[#f5f5f5]">{formatCurrency(prize.amount)}</span>
                 </div>
               ))}
             </div>

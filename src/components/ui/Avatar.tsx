@@ -14,9 +14,9 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: "bg-gradient-to-br from-sblt-border to-sblt-dark text-sblt-muted",
-  host: "bg-gradient-to-br from-sblt-red to-sblt-red-dark text-white",
-  commentator: "bg-gradient-to-br from-sblt-red/60 to-sblt-red-dark/60 text-white",
+  default: "bg-gradient-to-br from-[#222] to-[#111] text-[#888] border-2 border-[#222]",
+  host: "bg-gradient-to-br from-[#dc2626] to-[#991b1b] text-white border-2 border-[#dc2626]/30",
+  commentator: "bg-gradient-to-br from-[#dc2626]/60 to-[#991b1b]/60 text-white border-2 border-[#dc2626]/20",
 };
 
 function getInitials(name: string): string {

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 interface Announcement {
   id: string;
@@ -36,48 +37,52 @@ export default function AnnouncementsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
+  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <SectionHeading title="Thông báo" subtitle="Các thông báo mới nhất từ Ban Tổ Chức" />
+      <RevealOnScroll>
+        <SectionHeading title="Thông báo" subtitle="Các thông báo mới nhất từ Ban Tổ Chức" />
+      </RevealOnScroll>
 
       {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
 
       <div className="space-y-4">
-        {announcements.map((a) => {
+        {announcements.map((a, i) => {
           const cfg = TYPE_CONFIG[a.type] || TYPE_CONFIG.GENERAL;
           const Icon = cfg.icon;
           return (
-            <Card key={a.id} hover={false} className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-sblt-dark border border-sblt-border flex items-center justify-center shrink-0">
-                  <Icon className="h-5 w-5 text-sblt-muted" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                    {a.tournament && (
-                      <span className="text-xs text-sblt-red">{a.tournament.name}</span>
-                    )}
+            <RevealOnScroll key={a.id} delay={i * 0.06}>
+              <Card hover={false} className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-[#111] border border-[#222] flex items-center justify-center shrink-0">
+                    <Icon className="h-5 w-5 text-[#888]" />
                   </div>
-                  <h2 className="text-lg font-bold text-white mb-2">{a.title}</h2>
-                  <p className="text-sblt-muted text-sm whitespace-pre-wrap leading-relaxed">{a.content}</p>
-                  <div className="mt-3 text-xs text-sblt-border">
-                    {new Date(a.createdAt).toLocaleString("vi-VN")}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                      {a.tournament && (
+                        <span className="text-xs text-[#dc2626]">{a.tournament.name}</span>
+                      )}
+                    </div>
+                    <h2 className="text-lg font-bold text-[#f5f5f5] mb-2">{a.title}</h2>
+                    <p className="text-[#888] text-sm whitespace-pre-wrap leading-relaxed">{a.content}</p>
+                    <div className="mt-3 text-xs text-[#555]">
+                      {new Date(a.createdAt).toLocaleString("vi-VN")}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </RevealOnScroll>
           );
         })}
       </div>
 
       {announcements.length === 0 && (
         <div className="text-center py-20">
-          <Bell className="h-16 w-16 text-sblt-border mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-sblt-muted mb-2">Chưa có thông báo</h2>
-          <p className="text-sblt-muted text-sm">Các thông báo sẽ được cập nhật tại đây</p>
+          <Bell className="h-16 w-16 text-[#222] mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-[#888] mb-2">Chưa có thông báo</h2>
+          <p className="text-[#555] text-sm">Các thông báo sẽ được cập nhật tại đây</p>
         </div>
       )}
     </div>

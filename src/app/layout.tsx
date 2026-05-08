@@ -61,7 +61,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="min-h-full flex flex-col bg-sblt-black text-sblt-white font-sans" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-[#0a0a0a] text-[#f5f5f5] font-sans antialiased" suppressHydrationWarning>
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>

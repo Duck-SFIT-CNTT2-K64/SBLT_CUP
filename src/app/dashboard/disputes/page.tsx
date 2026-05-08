@@ -50,16 +50,16 @@ export default function DisputesPage() {
     setSubmitting(false);
   };
 
-  const inputClass = "w-full px-3 py-2 bg-sblt-dark border border-sblt-border rounded-xl text-white text-sm placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red";
+  const inputClass = "w-full px-3 py-2 bg-[#111] border border-[#222] rounded-xl text-[#f5f5f5] text-sm placeholder:text-[#555] focus:outline-none focus:ring-2 focus:ring-[#dc2626]";
 
-  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
+  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2 text-white"><AlertTriangle className="h-6 w-6 text-sblt-red" /> Kháng nghị</h1>
-          <p className="text-sblt-muted text-sm mt-1">Gửi kháng nghị về kết quả sai, bug, hoặc tranh chấp</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2 text-[#f5f5f5]"><AlertTriangle className="h-6 w-6 text-[#dc2626]" /> Kháng nghị</h1>
+          <p className="text-[#888] text-sm mt-1">Gửi kháng nghị về kết quả sai, bug, hoặc tranh chấp</p>
         </div>
         <Button size="sm" onClick={() => setShowForm(!showForm)}><Plus className="h-4 w-4" /> Gửi kháng nghị</Button>
       </div>
@@ -69,17 +69,17 @@ export default function DisputesPage() {
       {showForm && (
         <Card hover={false} className="p-5 mb-6">
           <form onSubmit={handleSubmit}>
-            <h3 className="font-semibold mb-4 text-white">Gửi kháng nghị mới</h3>
+            <h3 className="font-semibold mb-4 text-[#f5f5f5]">Gửi kháng nghị mới</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-sblt-muted mb-1">Giải đấu *</label>
+                <label className="block text-xs text-[#888] mb-1">Giải đấu *</label>
                 <select value={form.tournamentId} onChange={(e) => setForm((p) => ({ ...p, tournamentId: e.target.value }))} className={inputClass} required>
                   <option value="">Chọn giải đấu</option>
                   {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name} (Mùa {t.season})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-sblt-muted mb-1">Lý do *</label>
+                <label className="block text-xs text-[#888] mb-1">Lý do *</label>
                 <select value={form.reason} onChange={(e) => setForm((p) => ({ ...p, reason: e.target.value }))} className={inputClass} required>
                   <option value="">Chọn lý do</option>
                   <option value="WRONG_RESULT">Kết quả sai (placement)</option>
@@ -90,13 +90,13 @@ export default function DisputesPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-sblt-muted mb-1">Mô tả chi tiết *</label>
+                <label className="block text-xs text-[#888] mb-1">Mô tả chi tiết *</label>
                 <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={`${inputClass} resize-none`} rows={4} placeholder="Mô tả chi tiết vấn đề, game nào, thời điểm nào..." required />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
               <Button type="submit" size="sm" disabled={submitting}>{submitting ? "Đang gửi..." : "Gửi kháng nghị"}</Button>
-              <button type="button" onClick={() => setShowForm(false)} className="text-sblt-muted hover:text-white text-sm px-4 py-2">Hủy</button>
+              <button type="button" onClick={() => setShowForm(false)} className="text-[#888] hover:text-[#f5f5f5] text-sm px-4 py-2">Hủy</button>
             </div>
           </form>
         </Card>
@@ -104,7 +104,7 @@ export default function DisputesPage() {
 
       <div className="space-y-3">
         {disputes.length === 0 ? (
-          <div className="text-center py-12 text-sblt-muted">
+          <div className="text-center py-12 text-[#888]">
             <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-30" />
             <p>Chưa có kháng nghị nào</p>
           </div>
@@ -114,19 +114,19 @@ export default function DisputesPage() {
             <Card key={d.id} hover={false} className="p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <span className="font-medium text-sm text-white">{d.tournament.name}</span>
-                  {d.game && <span className="text-xs text-sblt-muted ml-2">— {d.game.group.name}, Game {d.game.gameNumber}</span>}
+                  <span className="font-medium text-sm text-[#f5f5f5]">{d.tournament.name}</span>
+                  {d.game && <span className="text-xs text-[#888] ml-2">— {d.game.group.name}, Game {d.game.gameNumber}</span>}
                 </div>
                 <Badge variant={cfg.variant}>{cfg.label}</Badge>
               </div>
-              <p className="text-xs text-sblt-muted mb-1">Lý do: {d.reason}</p>
-              <p className="text-sm text-sblt-white">{d.description}</p>
+              <p className="text-xs text-[#888] mb-1">Lý do: {d.reason}</p>
+              <p className="text-sm text-[#f5f5f5]">{d.description}</p>
               {d.adminNote && (
-                <div className="mt-3 bg-sblt-dark rounded-xl px-3 py-2 text-xs text-sblt-white border-l-2 border-sblt-red">
-                  <span className="text-sblt-muted">Phản hồi từ BTC: </span>{d.adminNote}
+                <div className="mt-3 bg-[#111] rounded-xl px-3 py-2 text-xs text-[#f5f5f5] border-l-2 border-[#dc2626]">
+                  <span className="text-[#888]">Phản hồi từ BTC: </span>{d.adminNote}
                 </div>
               )}
-              <p className="text-xs text-sblt-border mt-2">{new Date(d.createdAt).toLocaleString("vi-VN")}</p>
+              <p className="text-xs text-[#555] mt-2">{new Date(d.createdAt).toLocaleString("vi-VN")}</p>
             </Card>
           );
         })}

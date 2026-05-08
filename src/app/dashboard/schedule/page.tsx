@@ -32,14 +32,14 @@ export default function SchedulePage() {
     } catch { setError("Không thể tải lịch thi đấu."); } finally { setLoading(false); }
   };
 
-  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
+  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-3 text-white"><Calendar className="h-7 w-7 text-sblt-red" /> Lịch thi đấu</h1>
-        <p className="text-sblt-muted mt-2">Lịch thi đấu cá nhân của bạn</p>
+        <h1 className="text-2xl font-bold flex items-center gap-3 text-[#f5f5f5]"><Calendar className="h-7 w-7 text-[#dc2626]" /> Lịch thi đấu</h1>
+        <p className="text-[#888] mt-2">Lịch thi đấu cá nhân của bạn</p>
         <div className="sblt-divider w-16 mt-4" />
       </div>
 
@@ -51,12 +51,12 @@ export default function SchedulePage() {
               <Card key={game.id} hover={false} className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-semibold text-white">{game.group.stage.name} — {game.group.name}</h3>
-                    <p className="text-sblt-muted text-sm">Game {game.gameNumber}</p>
+                    <h3 className="font-semibold text-[#f5f5f5]">{game.group.stage.name} — {game.group.name}</h3>
+                    <p className="text-[#888] text-sm">Game {game.gameNumber}</p>
                   </div>
                   <Badge variant={cfg.variant}>{cfg.label}</Badge>
                 </div>
-                <div className="flex items-center gap-6 text-sm text-sblt-muted">
+                <div className="flex items-center gap-6 text-sm text-[#888]">
                   <span className="flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(game.group.stage.date).toLocaleDateString("vi-VN")}</span>
                   <span className="flex items-center gap-2"><Clock className="h-4 w-4" />{game.group.stage.startTime}</span>
                 </div>
@@ -66,9 +66,9 @@ export default function SchedulePage() {
         </div>
       ) : (
         <div className="text-center py-20">
-          <Calendar className="h-16 w-16 text-sblt-border mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-sblt-muted mb-2">Chưa có lịch thi đấu</h2>
-          <p className="text-sblt-muted text-sm">Lịch thi đấu sẽ được cập nhật khi bạn được phân bổ vào bảng đấu</p>
+          <Calendar className="h-16 w-16 text-[#555] mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-[#888] mb-2">Chưa có lịch thi đấu</h2>
+          <p className="text-[#888] text-sm">Lịch thi đấu sẽ được cập nhật khi bạn được phân bổ vào bảng đấu</p>
         </div>
       )}
     </div>

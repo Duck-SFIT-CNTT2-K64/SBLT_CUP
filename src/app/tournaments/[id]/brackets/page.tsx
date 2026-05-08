@@ -29,8 +29,8 @@ export default function BracketsPage() {
       .finally(() => setLoading(false));
   }, [params.id]);
 
-  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-sblt-red/30 border-t-sblt-red rounded-full animate-spin" /></div>;
-  if (!tournament) return <div className="text-center py-20 text-sblt-muted">Không tìm thấy giải đấu</div>;
+  if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
+  if (!tournament) return <div className="text-center py-20 text-[#888]">Không tìm thấy giải đấu</div>;
 
   const stage = tournament.stages.find((s) => s.id === selectedStageId);
   const maxGames = stage ? Math.max(...stage.groups.map((g) => g.games.length), 1) : 1;
@@ -43,15 +43,15 @@ export default function BracketsPage() {
   };
 
   const getPointColor = (points: number) => {
-    if (points >= 7) return "text-sblt-red font-bold";
-    if (points >= 5) return "text-white font-semibold";
-    if (points >= 3) return "text-sblt-white";
-    return "text-sblt-muted";
+    if (points >= 7) return "text-[#dc2626] font-bold";
+    if (points >= 5) return "text-[#f5f5f5] font-semibold";
+    if (points >= 3) return "text-[#f5f5f5]";
+    return "text-[#888]";
   };
 
   const getPlacementBg = (placement: number) => {
-    if (placement === 1) return "bg-sblt-red/10 border-l-2 border-sblt-red";
-    if (placement <= 4) return "bg-sblt-dark/80";
+    if (placement === 1) return "bg-[#dc2626]/10 border-l-2 border-[#dc2626]";
+    if (placement <= 4) return "bg-[#111]/80";
     return "";
   };
 
@@ -59,15 +59,15 @@ export default function BracketsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/tournaments/${params.id}`} className="text-sblt-muted hover:text-white transition-colors">
+        <Link href={`/tournaments/${params.id}`} className="text-[#888] hover:text-[#f5f5f5] transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-sblt-red" />
+            <Trophy className="h-6 w-6 text-[#dc2626]" />
             Bảng đấu theo Round
           </h1>
-          <p className="text-sblt-muted text-sm">{tournament.name} — Mùa {tournament.season}</p>
+          <p className="text-[#888] text-sm">{tournament.name} — Mùa {tournament.season}</p>
         </div>
       </div>
 
@@ -75,14 +75,14 @@ export default function BracketsPage() {
       <Card hover={false} className="p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div>
-            <p className="text-xs text-sblt-muted mb-2 uppercase tracking-wider">Vòng đấu</p>
+            <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Vòng đấu</p>
             <div className="flex gap-2 flex-wrap">
               {tournament.stages.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => { setSelectedStageId(s.id); setSelectedGameNumber(1); }}
                   className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    selectedStageId === s.id ? "bg-sblt-red text-white" : "bg-sblt-dark text-sblt-muted hover:text-white border border-sblt-border"
+                    selectedStageId === s.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
                   }`}
                 >
                   {s.name}
@@ -92,14 +92,14 @@ export default function BracketsPage() {
           </div>
           {stage && maxGames > 0 && (
             <div>
-              <p className="text-xs text-sblt-muted mb-2 uppercase tracking-wider">Game</p>
+              <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Game</p>
               <div className="flex gap-2">
                 {gameNumbers.map((n) => (
                   <button
                     key={n}
                     onClick={() => setSelectedGameNumber(n)}
                     className={`w-10 h-8 rounded-lg text-sm font-bold transition-colors ${
-                      selectedGameNumber === n ? "bg-white text-black" : "bg-sblt-dark text-sblt-muted hover:text-white border border-sblt-border"
+                      selectedGameNumber === n ? "bg-white text-black" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
                     }`}
                   >
                     R{n}
@@ -113,10 +113,10 @@ export default function BracketsPage() {
 
       {/* Stage info */}
       {stage && (
-        <div className="flex items-center gap-4 mb-4 text-sm text-sblt-muted">
+        <div className="flex items-center gap-4 mb-4 text-sm text-[#888]">
           <span className="flex items-center gap-1"><Users className="h-4 w-4" />{stage.groups.reduce((sum, g) => sum + g.players.length, 0)} người</span>
           <span>{stage.groups.length} bảng</span>
-          <span className="ml-auto text-sblt-red font-medium">Round {selectedGameNumber} / {maxGames}</span>
+          <span className="ml-auto text-[#dc2626] font-medium">Round {selectedGameNumber} / {maxGames}</span>
         </div>
       )}
 
@@ -133,33 +133,33 @@ export default function BracketsPage() {
                 href={`/tournaments/${params.id}/brackets/${group.id}`}
                 className="block group"
               >
-                <Card hover={false} className="overflow-hidden group-hover:border-sblt-red/50 group-hover:shadow-lg group-hover:shadow-sblt-red/10 transition-all duration-200">
-                  <div className="flex items-center justify-between px-4 py-2.5 bg-sblt-dark border-b border-sblt-border">
-                    <span className="text-sm font-semibold text-white">Bảng {idx + 1}</span>
+                <Card hover={false} className="overflow-hidden group-hover:border-[#dc2626]/50 group-hover:shadow-lg group-hover:shadow-[#dc2626]/10 transition-all duration-200">
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-[#111] border-b border-[#222]">
+                    <span className="text-sm font-semibold text-[#f5f5f5]">Bảng {idx + 1}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-sblt-muted">{group.name}</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-sblt-muted group-hover:text-sblt-red transition-colors" />
+                      <span className="text-xs text-[#888]">{group.name}</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-[#888] group-hover:text-[#dc2626] transition-colors" />
                     </div>
                   </div>
                 <div className="p-2 space-y-0.5">
                   {results ? results.map((r) => (
                     <div key={r.id} className={`flex items-center justify-between px-3 py-1.5 rounded text-sm ${getPlacementBg(r.placement)}`}>
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sblt-muted w-4 text-xs shrink-0">{r.placement}</span>
-                        <span className="text-white truncate">{r.player.ign}</span>
+                        <span className="text-[#888] w-4 text-xs shrink-0">{r.placement}</span>
+                        <span className="text-[#f5f5f5] truncate">{r.player.ign}</span>
                       </div>
                       <span className={`shrink-0 ml-2 ${getPointColor(r.points)}`}>{r.points}pts</span>
                     </div>
                   )) : sortedPlayers.length > 0 ? sortedPlayers.map((gp, i) => (
                     <div key={gp.id} className="flex items-center justify-between px-3 py-1.5 rounded text-sm">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sblt-border w-4 text-xs shrink-0">{i + 1}</span>
-                        <span className="text-sblt-muted truncate">{gp.player.ign}</span>
+                        <span className="text-[#555] w-4 text-xs shrink-0">{i + 1}</span>
+                        <span className="text-[#888] truncate">{gp.player.ign}</span>
                       </div>
-                      <span className="text-sblt-border shrink-0 ml-2 text-xs">{gp.totalPoints > 0 ? `${gp.totalPoints}pts` : "—"}</span>
+                      <span className="text-[#555] shrink-0 ml-2 text-xs">{gp.totalPoints > 0 ? `${gp.totalPoints}pts` : "—"}</span>
                     </div>
                   )) : (
-                    <div className="text-center py-4 text-sblt-border text-xs">Chưa phân bổ</div>
+                    <div className="text-center py-4 text-[#555] text-xs">Chưa phân bổ</div>
                   )}
                 </div>
                 </Card>
@@ -168,7 +168,7 @@ export default function BracketsPage() {
           })}
         </div>
       ) : (
-        <div className="text-center py-20 text-sblt-muted">
+        <div className="text-center py-20 text-[#888]">
           <Trophy className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p>Chưa có bảng đấu cho vòng này</p>
         </div>

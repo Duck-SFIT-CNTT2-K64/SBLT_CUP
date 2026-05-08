@@ -9,7 +9,7 @@ interface AlertProps {
   variant: AlertVariant;
   message: string;
   dismissible?: boolean;
-  autoDismiss?: number; // ms, 0 = no auto-dismiss
+  autoDismiss?: number;
   onDismiss?: () => void;
   className?: string;
 }
@@ -26,31 +26,31 @@ const VARIANT_CONFIG: Record<
 > = {
   error: {
     icon: XCircle,
-    borderColor: "border-l-sblt-red",
-    bgColor: "bg-sblt-red/5",
-    iconColor: "text-sblt-red",
-    textColor: "text-sblt-white",
+    borderColor: "border-l-[#dc2626]",
+    bgColor: "bg-[#dc2626]/5",
+    iconColor: "text-[#dc2626]",
+    textColor: "text-[#f5f5f5]",
   },
   success: {
     icon: CheckCircle,
     borderColor: "border-l-emerald-500",
     bgColor: "bg-emerald-500/5",
     iconColor: "text-emerald-400",
-    textColor: "text-sblt-white",
+    textColor: "text-[#f5f5f5]",
   },
   warning: {
     icon: AlertTriangle,
     borderColor: "border-l-amber-500",
     bgColor: "bg-amber-500/5",
     iconColor: "text-amber-400",
-    textColor: "text-sblt-white",
+    textColor: "text-[#f5f5f5]",
   },
   info: {
     icon: Info,
     borderColor: "border-l-sky-500",
     bgColor: "bg-sky-500/5",
     iconColor: "text-sky-400",
-    textColor: "text-sblt-white",
+    textColor: "text-[#f5f5f5]",
   },
 };
 
@@ -83,8 +83,8 @@ export function Alert({
   return (
     <div
       className={`
-        flex items-start gap-3 px-4 py-3 rounded-xl text-sm
-        border border-sblt-border border-l-[3px] ${config.borderColor}
+        flex items-start gap-3 px-4 py-3 rounded-lg text-sm
+        border border-[#222] border-l-[3px] ${config.borderColor}
         ${config.bgColor} ${config.textColor}
         animate-fade-in
         ${className}
@@ -96,7 +96,7 @@ export function Alert({
       {dismissible && (
         <button
           onClick={handleDismiss}
-          className="shrink-0 p-0.5 rounded-lg text-sblt-muted hover:text-sblt-white hover:bg-sblt-border transition-colors"
+          className="shrink-0 p-0.5 rounded text-[#888] hover:text-[#f5f5f5] hover:bg-[#222] transition-colors"
           aria-label="Đóng"
         >
           <X className="h-4 w-4" />

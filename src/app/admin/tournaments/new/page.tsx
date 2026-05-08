@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 export default function NewTournamentPage() {
   const router = useRouter();
@@ -37,67 +38,71 @@ export default function NewTournamentPage() {
     } catch { setError("Đã xảy ra lỗi khi tạo giải đấu"); } finally { setLoading(false); }
   };
 
-  const inputClass = "w-full px-4 py-2.5 bg-sblt-dark border border-sblt-border rounded-xl text-white placeholder:text-sblt-border focus:outline-none focus:ring-2 focus:ring-sblt-red";
+  const inputClass = "w-full px-4 py-2.5 bg-[#0d0d0d] border border-[#222] rounded-xl text-[#f5f5f5] placeholder:text-[#222] focus:outline-none focus:ring-2 focus:ring-[#dc2626]";
 
   return (
-    <div className="p-6 lg:p-8 max-w-2xl">
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/tournaments" className="text-sblt-muted hover:text-white"><ArrowLeft className="h-6 w-6" /></Link>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Tạo giải đấu mới</h1>
-          <p className="text-sblt-muted mt-1">Tạo mùa giải đấu mới</p>
+    <div className="py-12 px-6 lg:px-8 max-w-[1280px] max-w-2xl">
+      <RevealOnScroll>
+        <div className="flex items-center gap-4 mb-8">
+          <Link href="/admin/tournaments" className="text-[#888] hover:text-white"><ArrowLeft className="h-6 w-6" /></Link>
+          <div>
+            <h1 className="text-2xl font-bold text-[#f5f5f5] sblt-heading">Tạo giải đấu mới</h1>
+            <p className="text-[#888] mt-1">Tạo mùa giải đấu mới</p>
+          </div>
         </div>
-      </div>
+      </RevealOnScroll>
 
-      <Card hover={false} className="p-6">
-        <form onSubmit={handleSubmit}>
-          {error && <Alert variant="error" message={error} onDismiss={() => setError("")} className="mb-6" />}
+      <RevealOnScroll>
+        <Card hover={false} className="p-6 hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
+          <form onSubmit={handleSubmit}>
+            {error && <Alert variant="error" message={error} onDismiss={() => setError("")} className="mb-6" />}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Tên giải đấu *</label>
-              <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputClass} placeholder="SBLT CUP Mùa 1" required />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Tên giải đấu *</label>
+                <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputClass} placeholder="SBLT CUP Mùa 1" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Mùa giải *</label>
+                <input type="number" name="season" value={formData.season} onChange={handleChange} className={inputClass} placeholder="1" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Số lượng tối đa</label>
+                <input type="number" name="maxPlayers" value={formData.maxPlayers} onChange={handleChange} className={inputClass} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Mô tả</label>
+                <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className={`${inputClass} resize-none`} placeholder="Mô tả về giải đấu..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Ngày bắt đầu đăng ký *</label>
+                <input type="date" name="regStart" value={formData.regStart} onChange={handleChange} className={inputClass} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Ngày kết thúc đăng ký *</label>
+                <input type="date" name="regEnd" value={formData.regEnd} onChange={handleChange} className={inputClass} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Ngày bắt đầu thi đấu *</label>
+                <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputClass} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Ngày kết thúc thi đấu *</label>
+                <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className={inputClass} required />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-[#888] mb-1.5">Tổng giải thưởng (VNĐ)</label>
+                <input type="number" name="prizePool" value={formData.prizePool} onChange={handleChange} className={inputClass} />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Mùa giải *</label>
-              <input type="number" name="season" value={formData.season} onChange={handleChange} className={inputClass} placeholder="1" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Số lượng tối đa</label>
-              <input type="number" name="maxPlayers" value={formData.maxPlayers} onChange={handleChange} className={inputClass} />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Mô tả</label>
-              <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className={`${inputClass} resize-none`} placeholder="Mô tả về giải đấu..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Ngày bắt đầu đăng ký *</label>
-              <input type="date" name="regStart" value={formData.regStart} onChange={handleChange} className={inputClass} required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Ngày kết thúc đăng ký *</label>
-              <input type="date" name="regEnd" value={formData.regEnd} onChange={handleChange} className={inputClass} required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Ngày bắt đầu thi đấu *</label>
-              <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputClass} required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Ngày kết thúc thi đấu *</label>
-              <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className={inputClass} required />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-sblt-muted mb-1.5">Tổng giải thưởng (VNĐ)</label>
-              <input type="number" name="prizePool" value={formData.prizePool} onChange={handleChange} className={inputClass} />
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <Link href="/admin/tournaments" className="px-6 py-2.5 text-sblt-muted hover:text-white transition-colors">Hủy</Link>
-            <Button type="submit" disabled={loading}><Trophy className="h-4 w-4" />{loading ? "Đang tạo..." : "Tạo giải đấu"}</Button>
-          </div>
-        </form>
-      </Card>
+            <div className="flex justify-end gap-3 mt-6">
+              <Link href="/admin/tournaments" className="px-6 py-2.5 text-[#888] hover:text-white transition-colors">Hủy</Link>
+              <Button type="submit" disabled={loading}><Trophy className="h-4 w-4" />{loading ? "Đang tạo..." : "Tạo giải đấu"}</Button>
+            </div>
+          </form>
+        </Card>
+      </RevealOnScroll>
     </div>
   );
 }

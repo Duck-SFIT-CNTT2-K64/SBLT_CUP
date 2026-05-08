@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Trophy, Users, User, Bell, AlertTriangle, ClipboardList, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
+import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 export const dynamic = "force-dynamic";
 
@@ -33,42 +34,48 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-        <p className="text-sblt-muted mt-1">Quản lý giải đấu SBLT CUP</p>
-        <div className="sblt-divider w-16 mt-4" />
-      </div>
+    <div className="py-12 px-6 lg:px-8 max-w-[1280px]">
+      <RevealOnScroll>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-[#f5f5f5] sblt-heading">Admin Dashboard</h1>
+          <p className="text-[#888] mt-1">Quản lý giải đấu SBLT CUP</p>
+          <div className="sblt-divider w-16 mt-4" />
+        </div>
+      </RevealOnScroll>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        {stats.map((stat) => (
-          <Link key={stat.label} href={stat.href}>
-            <Card hover={false} className={`p-4 text-center ${stat.highlight ? "border-sblt-red/50" : ""}`}>
-              <stat.icon className={`h-6 w-6 mx-auto mb-2 ${stat.highlight ? "text-sblt-red" : "text-sblt-muted"}`} />
-              <div className={`text-2xl font-bold ${stat.highlight ? "text-sblt-red" : "text-white"}`}>{stat.value}</div>
-              <div className="text-xs text-sblt-muted mt-1">{stat.label}</div>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <RevealOnScroll>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {stats.map((stat) => (
+            <Link key={stat.label} href={stat.href}>
+              <Card hover={false} className={`p-4 text-center ${stat.highlight ? "border-[#dc2626]/50" : ""}`}>
+                <stat.icon className={`h-6 w-6 mx-auto mb-2 ${stat.highlight ? "text-[#dc2626]" : "text-[#888]"}`} />
+                <div className={`text-2xl font-bold ${stat.highlight ? "text-[#dc2626]" : "text-[#f5f5f5]"}`}>{stat.value}</div>
+                <div className="text-xs text-[#888] mt-1">{stat.label}</div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </RevealOnScroll>
 
       {/* Quick Links */}
-      <h2 className="text-lg font-semibold text-white mb-4">Truy cập nhanh</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {quickLinks.map((link) => (
-          <Link key={link.href} href={link.href}>
-            <Card className="p-5 h-full group">
-              <link.icon className="h-6 w-6 text-sblt-red mb-3" />
-              <h3 className="font-semibold text-white mb-1 group-hover:text-sblt-red transition-colors">{link.label}</h3>
-              <p className="text-sblt-muted text-sm">{link.desc}</p>
-              <div className="flex items-center gap-1 text-sblt-red text-sm mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                Mở <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <RevealOnScroll>
+        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">Truy cập nhanh</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {quickLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              <Card className="p-5 h-full group hover:border-[#dc2626]/60 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(220,38,38,0.15)]">
+                <link.icon className="h-6 w-6 text-[#dc2626] mb-3" />
+                <h3 className="font-semibold text-[#f5f5f5] mb-1 group-hover:text-[#dc2626] transition-colors">{link.label}</h3>
+                <p className="text-[#888] text-sm">{link.desc}</p>
+                <div className="flex items-center gap-1 text-[#dc2626] text-sm mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Mở <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </RevealOnScroll>
     </div>
   );
 }
