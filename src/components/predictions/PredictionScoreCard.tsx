@@ -36,7 +36,7 @@ export default function PredictionScoreCard({
         <div className="flex items-center gap-2">
           <span className="text-white font-bold">{userName}</span>
           {isCurrentUser && (
-            <span className="text-[10px] bg-sblt-red/10 text-red-400 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-sblt-red/10 text-red-400 px-2 py-0.5 rounded-full">
               Bạn
             </span>
           )}

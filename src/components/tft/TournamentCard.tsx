@@ -28,6 +28,7 @@ const STATUS_CONFIG = {
   REGISTRATION_CLOSED:  { label: "Đã đóng đăng ký",  dot: "bg-yellow-400",text: "text-yellow-400" },
   IN_PROGRESS:          { label: "Đang diễn ra",      dot: "bg-red-500",   text: "text-red-400" },
   COMPLETED:            { label: "Đã kết thúc",       dot: "bg-zinc-500",  text: "text-zinc-500" },
+  CANCELLED:            { label: "Đã hủy",            dot: "bg-zinc-600",  text: "text-zinc-600" },
 };
 
 const ACCENT_CONFIG = {
@@ -121,7 +122,7 @@ export default function TournamentCard({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 pr-24">
                 {/* Season badge */}
-                <span className={`inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border mb-2 ${accentCfg.badge}`}>
+                <span className={`inline-block text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border mb-2 ${accentCfg.badge}`}>
                   Mùa {season}
                 </span>
                 {/* Title */}

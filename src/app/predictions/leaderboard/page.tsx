@@ -105,7 +105,7 @@ export default function GlobalPredictionLeaderboardPage() {
                             {entry.name}
                           </span>
                           {isCurrentUser && (
-                            <span className="ml-2 text-[10px] bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
+                            <span className="ml-2 text-xs bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
                               Bạn
                             </span>
                           )}

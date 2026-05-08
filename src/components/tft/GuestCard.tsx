@@ -113,7 +113,7 @@ export default function GuestCard({
                 <div className="absolute top-2 left-2 z-10">
                   <div className="flex items-center gap-1 bg-[#c89b3c]/20 border border-[#c89b3c]/40 rounded-full px-2 py-0.5">
                     <Crown className="h-3 w-3 text-[#c89b3c]" />
-                    <span className="text-[10px] font-bold text-[#c89b3c] uppercase tracking-wider">Host</span>
+                    <span className="text-xs font-bold text-[#c89b3c] uppercase tracking-wider">Host</span>
                   </div>
                 </div>
               )}
@@ -129,18 +129,18 @@ export default function GuestCard({
             </h4>
 
             {rank && (
-              <p className="text-[10px] text-sblt-muted mb-1.5">{rank}</p>
+              <p className="text-xs text-sblt-muted mb-1.5">{rank}</p>
             )}
 
             {/* Confirmed status */}
             <div className="flex items-center justify-center gap-1">
               {confirmed ? (
-                <span className="flex items-center gap-1 text-[10px] text-green-400">
+                <span className="flex items-center gap-1 text-xs text-green-400">
                   <CheckCircle className="h-3 w-3" />
                   Đã xác nhận
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[10px] text-yellow-500">
+                <span className="flex items-center gap-1 text-xs text-yellow-500">
                   <Clock className="h-3 w-3" />
                   Chờ xác nhận
                 </span>

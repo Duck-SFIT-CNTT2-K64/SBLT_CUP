@@ -131,7 +131,7 @@ export default function PlayerProfileCard({
               </div>
               {/* Global rank badge */}
               {rankBadge && (
-                <div className={`absolute -bottom-1.5 -right-1.5 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-bold border bg-sblt-black ${rankBadge.border} ${rankBadge.color}`}>
+                <div className={`absolute -bottom-1.5 -right-1.5 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-xs font-bold border bg-sblt-black ${rankBadge.border} ${rankBadge.color}`}>
                   {rankBadge.icon}
                 </div>
               )}
@@ -142,13 +142,13 @@ export default function PlayerProfileCard({
               <div className="flex items-center gap-1.5 mb-0.5">
                 <h4 className="font-bold text-white text-sm truncate">{ign}</h4>
                 {isGuest && (
-                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-[#c89b3c]/15 text-[#c89b3c] border border-[#c89b3c]/30 px-1.5 py-0.5 rounded-full">
+                  <span className="shrink-0 text-xs font-bold uppercase tracking-wider bg-[#c89b3c]/15 text-[#c89b3c] border border-[#c89b3c]/30 px-1.5 py-0.5 rounded-full">
                     Khách
                   </span>
                 )}
               </div>
               {rank && (
-                <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${rankStyle.bg} ${rankStyle.text}`}>
+                <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${rankStyle.bg} ${rankStyle.text}`}>
                   {rank}
                 </span>
               )}
@@ -169,7 +169,7 @@ export default function PlayerProfileCard({
               <div key={label} className="bg-sblt-dark/60 rounded-xl p-2.5 text-center">
                 <Icon className={`h-3.5 w-3.5 mx-auto mb-1 ${color}`} />
                 <div className={`text-base font-bold ${color}`}>{value}</div>
-                <div className="text-[10px] text-sblt-muted">{label}</div>
+                <div className="text-xs text-sblt-muted">{label}</div>
               </div>
             ))}
           </div>

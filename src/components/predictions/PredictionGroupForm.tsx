@@ -161,7 +161,7 @@ export default function PredictionGroupForm({
             >
               <span className="flex-1">{player.ign}</span>
               {player.isGuest && (
-                <span className="text-[10px] bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
+                <span className="text-xs bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
                   Khách mời
                 </span>
               )}
