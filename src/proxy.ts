@@ -162,10 +162,10 @@ function csrfForbiddenResponse(): NextResponse {
 }
 
 // =============================================================
-// MIDDLEWARE CHÍNH
+// PROXY CHÍNH (Next.js 16 — renamed from middleware)
 // =============================================================
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIp = getClientIp(request);
   const requestStart = Date.now();

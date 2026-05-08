@@ -169,13 +169,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: HIGH-03
   - **Completed**: 2026-05-08 [Loop Iteration #16]
 
-- [ ] **MEDIUM-05** | 🟡 P2 | `TODO` | **Architecture** | Bot
+- [x] **MEDIUM-05** | 🟡 P2 | `DONE` | **Architecture** | Bot
   - **Title**: Migrate middleware.ts to new Next.js proxy pattern
   - **Description**: middleware.ts file convention deprecated. Should use proxy instead.
   - **Acceptance**: Middleware logic moved to new pattern, no deprecation warning
-  - **Files**: `src/middleware.ts` (refactor) or `next.config.ts` (add proxy)
+  - **Files**: `src/proxy.ts` (renamed from middleware.ts)
   - **Effort**: 1.5h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #17]
 
 - [ ] **MEDIUM-06** | 🟡 P2 | `TODO` | **Database** | Bot
   - **Title**: Add database migration validation in health check
