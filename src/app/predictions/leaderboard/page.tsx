@@ -121,7 +121,8 @@ export default function GlobalPredictionLeaderboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[#222]">
@@ -184,88 +185,232 @@ export default function GlobalPredictionLeaderboardPage() {
                     })}
                   </tbody>
                 </table>
+              </div>
 
-                {expandedUserId && (
-                  <div className="border-t border-[#222] bg-[#0d0d0d] p-5">
-                    {loadingDetail === expandedUserId ? (
-                      <div className="flex justify-center py-6">
-                        <Loader2 className="h-6 w-6 text-[#dc2626] animate-spin" />
-                      </div>
-                    ) : userDetails[expandedUserId] ? (
-                      <div className="space-y-4">
-                        <p className="text-xs text-[#888] uppercase tracking-wider font-medium">
-                          Chi tiết dự đoán
-                        </p>
-                        {userDetails[expandedUserId].map((stage) => (
-                          <div key={stage.stageId} className="bg-[#111] rounded-lg p-4 border border-[#222]">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="text-[#f5f5f5] font-medium">{stage.stageName}</span>
-                              <span className="text-[#dc2626] font-bold">{stage.totalScore}đ</span>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {leaderboard.map((entry, idx) => {
+                  const rank = idx + 1;
+                  const isCurrentUser = session?.user?.id === entry.id;
+                  const isExpanded = expandedUserId === entry.id;
+
+                  return (
+                    <div key={entry.id}>
+                      <div
+                        className={cn(
+                          "p-4 rounded-lg border transition-all cursor-pointer",
+                          isCurrentUser ? "bg-[#dc2626]/[0.08] border-[#dc2626]/30" : "bg-[#111] border-[#222]",
+                          rank <= 3 && !isCurrentUser && "bg-[#dc2626]/[0.04] border-[#dc2626]/20",
+                          isExpanded && "bg-[#0d0d0d] border-[#dc2626]/40"
+                        )}
+                        onClick={() => toggleExpand(entry.id)}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              {rankBadge(rank)}
+                              <span className={cn("font-bold truncate", isCurrentUser ? "text-[#dc2626]" : "text-[#f5f5f5]")}>
+                                {entry.name}
+                              </span>
+                              {isCurrentUser && (
+                                <span className="text-xs bg-[#dc2626]/20 text-red-400 px-1.5 py-0.5 rounded whitespace-nowrap">
+                                  Bạn
+                                </span>
+                              )}
                             </div>
+                            <div className="grid grid-cols-3 gap-2 text-xs text-[#888]">
+                              <div>
+                                <p className="text-[#666] text-[10px] uppercase tracking-wider mb-0.5">Vòng dự đoán</p>
+                                <p className="text-[#f5f5f5] font-semibold">{entry.stagesPredicted}</p>
+                              </div>
+                              <div>
+                                <p className="text-[#666] text-[10px] uppercase tracking-wider mb-0.5">Vòng điểm</p>
+                                <p className="text-[#f5f5f5] font-semibold">{entry.stagesWithPoints}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[#666] text-[10px] uppercase tracking-wider mb-0.5">Tổng điểm</p>
+                                <p className={cn("font-bold text-lg", rank <= 3 ? "text-[#dc2626]" : "text-[#f5f5f5]")}>
+                                  {entry.totalPredictionPoints}đ
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 mt-1">
+                            {isExpanded ? (
+                              <ChevronUp className="h-5 w-5 text-[#dc2626]" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-[#888]" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="mt-3 border-t border-[#222] pt-3">
+                          {loadingDetail === entry.id ? (
+                            <div className="flex justify-center py-4">
+                              <Loader2 className="h-5 w-5 text-[#dc2626] animate-spin" />
+                            </div>
+                          ) : userDetails[entry.id] ? (
                             <div className="space-y-3">
-                              {stage.entries.map((e, i) => (
-                                <div key={i} className="bg-[#0d0d0d] rounded-lg p-3">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[#888] text-sm">{e.groupName}</span>
-                                    <span className="text-[#888] text-sm">{e.points}đ</span>
+                              <p className="text-xs text-[#888] uppercase tracking-wider font-medium">
+                                Chi tiết dự đoán
+                              </p>
+                              {userDetails[entry.id].map((stage) => (
+                                <div key={stage.stageId} className="bg-[#0d0d0d] rounded-lg p-3 border border-[#222]">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[#f5f5f5] font-medium text-sm">{stage.stageName}</span>
+                                    <span className="text-[#dc2626] font-bold text-sm">{stage.totalScore}đ</span>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                      <p className="text-[#888] text-xs mb-1.5">Dự đoán</p>
-                                      {e.predictedPlayers.map((ign, pi) => {
-                                        const correct = pi === 0 ? e.rank1Correct
-                                          : pi === 1 ? e.rank2Correct
-                                          : pi === 2 ? e.rank3Correct
-                                          : e.rank4Correct;
-                                        return (
-                                          <div key={pi} className="flex items-center gap-1.5 mb-1">
-                                            <span className="text-[#888] text-xs w-4">#{pi + 1}</span>
-                                            <span className={correct ? "text-emerald-400" : "text-[#888]"}>
-                                              {ign}
-                                            </span>
-                                            {correct ? (
-                                              <CheckCircle className="h-3 w-3 text-emerald-400 ml-auto" />
-                                            ) : (
-                                              <XCircle className="h-3 w-3 text-red-400/50 ml-auto" />
+                                  <div className="space-y-2">
+                                    {stage.entries.map((e, i) => (
+                                      <div key={i} className="bg-[#111] rounded-lg p-2.5 border border-[#222]/50">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className="text-[#888] text-xs font-medium">{e.groupName}</span>
+                                          <span className="text-[#dc2626] text-xs font-semibold">{e.points}đ</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <div>
+                                            <p className="text-[#666] text-[10px] uppercase tracking-wider font-medium mb-1">Dự đoán</p>
+                                            {e.predictedPlayers.map((ign, pi) => {
+                                              const correct = pi === 0 ? e.rank1Correct
+                                                : pi === 1 ? e.rank2Correct
+                                                : pi === 2 ? e.rank3Correct
+                                                : e.rank4Correct;
+                                              return (
+                                                <div key={pi} className="flex items-center gap-1 mb-1">
+                                                  <span className="text-[#888] text-xs w-5 font-medium">#{pi + 1}</span>
+                                                  <span className={cn("text-xs truncate flex-1", correct ? "text-emerald-400 font-medium" : "text-[#888]")}>
+                                                    {ign}
+                                                  </span>
+                                                  {correct ? (
+                                                    <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />
+                                                  ) : (
+                                                    <XCircle className="h-3 w-3 text-red-400/50 flex-shrink-0" />
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                          <div className="border-t border-[#222]/30 pt-2">
+                                            <p className="text-[#666] text-[10px] uppercase tracking-wider font-medium mb-1">Thực tế</p>
+                                            {e.actualResults.map((r, ri) => (
+                                              <div key={ri} className="flex items-center gap-1 mb-1">
+                                                <span className="text-[#888] text-xs w-5 font-medium">
+                                                  {r.finalRank ? `#${r.finalRank}` : `#${ri + 1}`}
+                                                </span>
+                                                <span className="text-[#f5f5f5] text-xs truncate flex-1">{r.ign}</span>
+                                              </div>
+                                            ))}
+                                            {e.actualResults.length === 0 && (
+                                              <span className="text-[#888] text-xs italic">Chưa có kết quả</span>
                                             )}
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                    <div>
-                                      <p className="text-[#888] text-xs mb-1.5">Thực tế</p>
-                                      {e.actualResults.map((r, ri) => (
-                                        <div key={ri} className="flex items-center gap-1.5 mb-1">
-                                          <span className="text-[#888] text-xs w-4">
-                                            {r.finalRank ? `#${r.finalRank}` : `#${ri + 1}`}
-                                          </span>
-                                          <span className="text-[#f5f5f5]">{r.ign}</span>
                                         </div>
-                                      ))}
-                                      {e.actualResults.length === 0 && (
-                                        <span className="text-[#888] text-xs italic">Chưa có kết quả</span>
-                                      )}
-                                    </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               ))}
+                              {userDetails[entry.id].length === 0 && (
+                                <p className="text-[#888] text-xs text-center py-2">
+                                  Chưa có kết quả dự đoán nào.
+                                </p>
+                              )}
                             </div>
-                          </div>
-                        ))}
-                        {userDetails[expandedUserId].length === 0 && (
-                          <p className="text-[#888] text-sm text-center py-4">
-                            Chưa có kết quả dự đoán nào.
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-[#888] text-sm text-center py-4">
-                        Không thể tải chi tiết.
-                      </p>
-                    )}
-                  </div>
-                )}
+                          ) : (
+                            <p className="text-[#888] text-xs text-center py-2">
+                              Không thể tải chi tiết.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Desktop Expansion Details */}
+              {expandedUserId && (
+                <div className="hidden md:block border-t border-[#222] bg-[#0d0d0d] p-5 mt-0">
+                  {loadingDetail === expandedUserId ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="h-6 w-6 text-[#dc2626] animate-spin" />
+                    </div>
+                  ) : userDetails[expandedUserId] ? (
+                    <div className="space-y-4">
+                      <p className="text-xs text-[#888] uppercase tracking-wider font-medium">
+                        Chi tiết dự đoán
+                      </p>
+                      {userDetails[expandedUserId].map((stage) => (
+                        <div key={stage.stageId} className="bg-[#111] rounded-lg p-4 border border-[#222]">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[#f5f5f5] font-medium">{stage.stageName}</span>
+                            <span className="text-[#dc2626] font-bold">{stage.totalScore}đ</span>
+                          </div>
+                          <div className="space-y-3">
+                            {stage.entries.map((e, i) => (
+                              <div key={i} className="bg-[#0d0d0d] rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[#888] text-sm">{e.groupName}</span>
+                                  <span className="text-[#888] text-sm">{e.points}đ</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                  <div>
+                                    <p className="text-[#888] text-xs mb-1.5">Dự đoán</p>
+                                    {e.predictedPlayers.map((ign, pi) => {
+                                      const correct = pi === 0 ? e.rank1Correct
+                                        : pi === 1 ? e.rank2Correct
+                                        : pi === 2 ? e.rank3Correct
+                                        : e.rank4Correct;
+                                      return (
+                                        <div key={pi} className="flex items-center gap-1.5 mb-1">
+                                          <span className="text-[#888] text-xs w-4">#{pi + 1}</span>
+                                          <span className={correct ? "text-emerald-400" : "text-[#888]"}>
+                                            {ign}
+                                          </span>
+                                          {correct ? (
+                                            <CheckCircle className="h-3 w-3 text-emerald-400 ml-auto" />
+                                          ) : (
+                                            <XCircle className="h-3 w-3 text-red-400/50 ml-auto" />
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div>
+                                    <p className="text-[#888] text-xs mb-1.5">Thực tế</p>
+                                    {e.actualResults.map((r, ri) => (
+                                      <div key={ri} className="flex items-center gap-1.5 mb-1">
+                                        <span className="text-[#888] text-xs w-4">
+                                          {r.finalRank ? `#${r.finalRank}` : `#${ri + 1}`}
+                                        </span>
+                                        <span className="text-[#f5f5f5]">{r.ign}</span>
+                                      </div>
+                                    ))}
+                                    {e.actualResults.length === 0 && (
+                                      <span className="text-[#888] text-xs italic">Chưa có kết quả</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {userDetails[expandedUserId].length === 0 && (
+                        <p className="text-[#888] text-sm text-center py-4">
+                          Chưa có kết quả dự đoán nào.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[#888] text-sm text-center py-4">
+                      Không thể tải chi tiết.
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </RevealOnScroll>
