@@ -1,5 +1,18 @@
 /** @type {import('jest').Config} */
 const config = {
+  collectCoverageFrom: [
+    "src/lib/**/*.ts",
+    "src/app/api/**/*.ts",
+    "!src/lib/env.ts",
+    "!src/**/*.d.ts",
+  ],
+  coverageThreshold: {
+    global: {
+      lines: 70,
+      functions: 70,
+      branches: 65,
+    },
+  },
   projects: [
     {
       displayName: "unit",

@@ -151,13 +151,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: None
   - **Completed**: 2026-05-08 [Loop Iteration #14]
 
-- [ ] **MEDIUM-03** | 🟡 P2 | `TODO` | **Quality** | Bot
+- [x] **MEDIUM-03** | 🟡 P2 | `DONE` | **Quality** | Bot
   - **Title**: Add test coverage thresholds to jest.config.js
   - **Description**: No coverage requirements. Should enforce minimum thresholds.
   - **Acceptance**: jest config has coverageThreshold: lines 70%, functions 70%, branches 65%
   - **Files**: `jest.config.js`
   - **Effort**: 0.5h
   - **Blocked by**: MEDIUM-01
+  - **Completed**: 2026-05-08 [Loop Iteration #15]
 
 - [ ] **MEDIUM-04** | 🟡 P2 | `TODO` | **Deployment** | Bot
   - **Title**: Add rollback strategy to deploy pipeline
