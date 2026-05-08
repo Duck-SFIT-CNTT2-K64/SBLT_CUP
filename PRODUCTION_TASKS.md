@@ -83,13 +83,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: CRITICAL-01
   - **Completed**: 2026-05-08 [Loop Iteration #7]
 
-- [ ] **HIGH-03** | 🟠 P1 | `TODO` | **Deployment** | Bot
+- [x] **HIGH-03** | 🟠 P1 | `DONE` | **Deployment** | Bot
   - **Title**: Fix deploy.sh hardcoded paths to use environment variables
   - **Description**: Paths like `/path/to/sblt-cup` and app name `sblt-cup` should come from env
   - **Acceptance**: deploy.sh reads DEPLOY_PATH and PM2_APP_NAME from env with fallbacks
   - **Files**: `deploy.sh`
   - **Effort**: 0.5h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #8]
 
 - [ ] **HIGH-04** | 🟠 P1 | `TODO` | **Security** | Bot
   - **Title**: Implement Redis rate limiter (replace in-memory)
