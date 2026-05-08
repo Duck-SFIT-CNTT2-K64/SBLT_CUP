@@ -120,13 +120,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: None
   - **Completed**: 2026-05-08 [Loop Iteration #11]
 
-- [ ] **HIGH-07** | 🟠 P1 | `TODO` | **Monitoring** | Bot
+- [x] **HIGH-07** | 🟠 P1 | `DONE` | **Monitoring** | Bot
   - **Title**: Tune Sentry configuration for production
   - **Description**: Trace sampling too low (0.1). Session replay sampling should be higher.
   - **Acceptance**: Production config: tracesSampleRate 0.2, replaysSessionSampleRate 0.3
   - **Files**: `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`
   - **Effort**: 0.5h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #12]
 
 ---
 
