@@ -32,6 +32,7 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
+  REDIS_URL: z.string().optional(),
 });
 
 export function validateEnv() {

@@ -30,6 +30,17 @@ jest.mock("@/lib/prisma", () => ({
 // Mock env validation
 jest.mock("@/lib/env", () => ({}));
 
+// Mock rate limiter — always allow in tests
+jest.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 99 }),
+  RATE_LIMITS: {
+    AUTH: { limit: 3, windowSeconds: 900 },
+    API: { limit: 60, windowSeconds: 60 },
+    PUBLIC: { limit: 100, windowSeconds: 60 },
+    ADMIN: { limit: 30, windowSeconds: 60 },
+  },
+}));
+
 import { POST } from "@/app/api/auth/register/route";
 import { NextRequest } from "next/server";
 

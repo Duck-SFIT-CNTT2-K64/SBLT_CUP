@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -19,6 +20,22 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.tr
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 3 registrations per 15 minutes per IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateLimit = await checkRateLimit({
+      key: `register:${ip}`,
+      ...RATE_LIMITS.AUTH,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Quá nhiều yêu cầu. Vui lòng thử lại sau." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        }
+      );
+    }
+
     const body = await req.json();
     const { email, password, name, ign } = registerSchema.parse(body);
 

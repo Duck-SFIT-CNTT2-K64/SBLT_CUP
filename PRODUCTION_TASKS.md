@@ -92,14 +92,15 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: None
   - **Completed**: 2026-05-08 [Loop Iteration #8]
 
-- [ ] **HIGH-04** | 🟠 P1 | `TODO` | **Security** | Bot
+- [x] **HIGH-04** | 🟠 P1 | `DONE` | **Security** | Bot
   - **Title**: Implement Redis rate limiter (replace in-memory)
   - **Description**: In-memory rate limit resets on deploy. Need persistent store.
   - **Acceptance**: Rate limit state survives app restart, uses Redis with TTL
-  - **Files**: `src/middleware.ts`, add redis dependency
+  - **Files**: `src/lib/rate-limit.ts` (new), `src/app/api/auth/register/route.ts`, `src/lib/env.ts`
   - **Effort**: 2h
   - **Blocked by**: None
   - **Note**: Can fallback to in-memory with warning if Redis unavailable
+  - **Completed**: 2026-05-08 [Loop Iteration #9]
 
 - [ ] **HIGH-05** | 🟠 P1 | `TODO` | **Security** | Bot
   - **Title**: Implement per-route rate limits
