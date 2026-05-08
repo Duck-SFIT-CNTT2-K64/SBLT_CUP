@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Bebas_Neue } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
@@ -7,7 +7,6 @@ import Footer from "@/components/layout/Footer";
 import AnnouncementPopup from "@/components/layout/AnnouncementPopup";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
-const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin", "latin-ext"], variable: "--font-bebas" });
 
 const BASE_URL = process.env.NEXTAUTH_URL || "https://sbltcup.com";
 
@@ -56,7 +55,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} ${bebasNeue.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+      </head>
       <body className="min-h-full flex flex-col bg-sblt-black text-sblt-white font-sans" suppressHydrationWarning>
         <Providers>
           <Navbar />
