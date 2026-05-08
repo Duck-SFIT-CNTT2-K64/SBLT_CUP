@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { tournamentId, gameId, reason, description } = body;
+  const { tournamentId, gameId, reason, description, attachments } = body;
 
   // S-12: Validate required fields with length limits
   if (!tournamentId || !reason || !description) {
@@ -62,6 +62,20 @@ export async function POST(req: NextRequest) {
     return map[c] || c;
   });
 
+  // Validate attachments if provided
+  let safeAttachments: string[] | undefined = undefined;
+  if (attachments && Array.isArray(attachments)) {
+    if (attachments.length > 3) {
+      return NextResponse.json({ error: "Tối đa 3 hình ảnh bằng chứng" }, { status: 400 });
+    }
+    const filtered = attachments.filter(
+      (url: unknown) => typeof url === "string" && url.startsWith("/uploads/")
+    );
+    if (filtered.length > 0) {
+      safeAttachments = filtered;
+    }
+  }
+
   const dispute = await prisma.dispute.create({
     data: {
       tournamentId,
@@ -69,6 +83,7 @@ export async function POST(req: NextRequest) {
       submittedBy: player.id,
       reason,
       description: sanitizedDescription,
+      attachments: safeAttachments ?? undefined,
     },
     include: { player: true, tournament: { select: { name: true } } },
   });

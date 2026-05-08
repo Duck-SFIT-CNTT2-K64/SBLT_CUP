@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -120,6 +121,9 @@ export async function POST(req: NextRequest) {
         prizePool: parseInt(prizePool) || 10000000,
       },
     });
+
+    revalidatePath("/tournaments");
+    revalidatePath("/admin/tournaments");
 
     return NextResponse.json(tournament, { status: 201 });
   } catch (error: unknown) {

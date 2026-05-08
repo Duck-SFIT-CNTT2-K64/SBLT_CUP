@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Menu, X, User, LogOut, Shield, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const navLinks = [
   { href: "/", label: "Trang chủ" },
@@ -55,7 +56,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#222] sticky top-0 z-50">
+    <nav className="bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#222] sticky top-0 z-50" aria-label="Điều hướng chính">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -98,18 +99,7 @@ export default function Navbar() {
             {session ? (
               <>
                 {/* Notification Bell */}
-                <button
-                  onClick={openPopup}
-                  className="relative p-2 text-[#888] hover:text-white hover:bg-white/5 rounded transition-colors duration-300"
-                  title="Thông báo"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unseenCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-[#dc2626] text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
-                      {unseenCount > 9 ? "9+" : unseenCount}
-                    </span>
-                  )}
-                </button>
+                <NotificationBell />
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -205,20 +195,16 @@ export default function Navbar() {
             ))}
             <div className="border-t border-[#222] pt-3 mt-3 space-y-1">
               {session && (
-                <button
-                  onClick={() => { openPopup(); setMobileMenuOpen(false); }}
+                <Link
+                  href="/dashboard/notifications"
                   className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-[#888] hover:text-white rounded hover:bg-white/5"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <span className="flex items-center gap-2">
                     <Bell className="h-4 w-4" />
                     Thông báo
                   </span>
-                  {unseenCount > 0 && (
-                    <span className="bg-[#dc2626] text-white text-xs font-bold rounded px-1.5 py-0.5 min-w-[20px] text-center">
-                      {unseenCount}
-                    </span>
-                  )}
-                </button>
+                </Link>
               )}
               {session ? (
                 <>

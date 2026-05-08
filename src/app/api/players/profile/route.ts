@@ -18,7 +18,7 @@ export async function GET() {
       phone: true,
       isGuest: true,
       createdAt: true,
-      // Exclude userId (S-02)
+      user: { select: { avatar: true, name: true } },
     },
   });
 

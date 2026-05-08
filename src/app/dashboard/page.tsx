@@ -2,12 +2,13 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Trophy, Calendar, User, FileText, AlertTriangle, ArrowRight } from "lucide-react";
+import { Trophy, Calendar, User, FileText, AlertTriangle, ArrowRight, Bell } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 const DASHBOARD_LINKS = [
   { href: "/dashboard/profile", label: "Hồ sơ cá nhân", desc: "Cập nhật thông tin ingame, Discord, số điện thoại", icon: User },
+  { href: "/dashboard/notifications", label: "Thông báo", desc: "Quản lý thông báo và cài đặt nhận thông báo", icon: Bell },
   { href: "/tournaments", label: "Giải đấu", desc: "Xem và đăng ký tham gia giải đấu", icon: Trophy },
   { href: "/dashboard/schedule", label: "Lịch thi đấu", desc: "Xem lịch thi đấu cá nhân", icon: Calendar },
   { href: "/dashboard/results", label: "Kết quả", desc: "Xem kết quả các trận đã tham gia", icon: FileText },

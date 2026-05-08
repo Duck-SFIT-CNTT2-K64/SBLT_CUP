@@ -2,26 +2,32 @@
 
 echo "🚀 Bắt đầu cập nhật SBLT CUP..."
 
-# Báo cho hệ thống biết dừng lại nếu có lỗi
+# Dừng lại ngay nếu có lỗi
 set -e
 
-# 1. Tải code mới nhất từ nhánh main trên GitHub
+# Kiểm tra env vars quan trọng
+if [ -z "$DATABASE_URL" ]; then
+  echo "❌ DATABASE_URL chưa được thiết lập!"
+  exit 1
+fi
+
+# 1. Tải code mới nhất từ nhánh main
 git pull origin main
 
-# 2. Cài đặt thư viện từ lockfile (reproducible, không tự ý nâng version)
+# 2. Cài đặt thư viện từ lockfile
 npm ci
 
-# 3. Cập nhật Database (migrate deploy an toàn hơn db push cho production)
+# 3. Cập nhật Database (migrate deploy an toàn cho production)
 npx prisma generate
-npx prisma db push --accept-data-loss
+npx prisma migrate deploy
 
-# 4. Build lại giao diện Next.js
+# 4. Build lại Next.js
 npm run build
 
-# 5. Khởi động lại PM2 để áp dụng thay đổi
+# 5. Khởi động lại PM2
 pm2 restart sblt-cup
 
-# 6. Health check — đợi app khởi động xong
+# 6. Health check
 echo "⏳ Đợi app khởi động..."
 sleep 3
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health || echo "000")

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SCORING } from "@/lib/constants";
 import { auditLog } from "@/lib/audit";
+import { sseManager, SSE_EVENTS } from "@/lib/sse";
 
 export async function GET(
   req: NextRequest,
@@ -130,6 +131,13 @@ export async function POST(
       before: before.map((r) => ({ ign: (r.player as { ign: string }).ign, placement: r.placement, points: r.points })),
       after: results.map((r: { playerId: string; placement: number }) => ({ playerId: r.playerId, placement: r.placement, points: SCORING[r.placement] || 0 })),
       ip: req.headers.get("x-forwarded-for") || undefined,
+    });
+
+    // Broadcast SSE event for real-time updates
+    sseManager.broadcastToTournament(tournamentId, SSE_EVENTS.GAME_RESULT, {
+      gameId,
+      results: created,
+      timestamp: new Date().toISOString(),
     });
 
     return NextResponse.json(created, { status: 201 });

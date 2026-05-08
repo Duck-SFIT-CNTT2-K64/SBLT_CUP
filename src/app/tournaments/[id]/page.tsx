@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Trophy, Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChart3, Medal, Download, Target } from "lucide-react";
+import { Trophy, Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChart3, Medal, Download, Target, Wifi, WifiOff, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { GuestCard } from "@/components/tft";
 import { formatCurrency } from "@/lib/utils";
+import { useSSE } from "@/lib/hooks/useSSE";
+import { CommentSection } from "@/components/social/CommentSection";
+import { ReactionBar } from "@/components/social/ReactionBar";
+import { ShareButton } from "@/components/social/ShareButton";
 
 interface Tournament {
   id: string;
@@ -57,12 +61,9 @@ export default function TournamentDetailPage() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  useEffect(() => {
-    fetchTournament();
-  }, [params.id, session?.user?.id]);
-
-  const fetchTournament = async () => {
+  const fetchTournament = useCallback(async () => {
     try {
       const res = await fetch(`/api/tournaments/${params.id}`);
       if (res.ok) {
@@ -79,7 +80,20 @@ export default function TournamentDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, session?.user?.id]);
+
+  // SSE for real-time updates
+  const { isConnected } = useSSE({
+    tournamentId: params.id as string,
+    onEvent: useCallback(() => {
+      fetchTournament();
+      setLastUpdate(new Date());
+    }, [fetchTournament]),
+  });
+
+  useEffect(() => {
+    fetchTournament();
+  }, [fetchTournament]);
 
   const handleRegister = async () => {
     if (!session) { window.location.href = "/auth/login"; return; }
@@ -128,6 +142,28 @@ export default function TournamentDetailPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
       {actionError && <Alert variant="error" message={actionError} onDismiss={() => setActionError(null)} className="mb-6" />}
+
+      {/* Real-time status indicator */}
+      <div className="flex items-center justify-end gap-2 mb-4">
+        <div className={`flex items-center gap-1.5 text-xs ${isConnected ? "text-green-400" : "text-[#555]"}`}>
+          {isConnected ? (
+            <>
+              <Wifi className="h-3 w-3" />
+              <span>Đang cập nhật实时</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-3 w-3" />
+              <span>Đang kết nối...</span>
+            </>
+          )}
+        </div>
+        {lastUpdate && (
+          <span className="text-xs text-[#555]">
+            Cập nhật: {lastUpdate.toLocaleTimeString("vi-VN")}
+          </span>
+        )}
+      </div>
 
       {/* Hero Header */}
       <div className="relative overflow-hidden rounded-2xl bg-[#111] border border-[#222] mb-8">
@@ -232,6 +268,14 @@ export default function TournamentDetailPage() {
               icon: Target,
               color: "from-purple-500/20 to-transparent",
               iconColor: "text-purple-400",
+            },
+            {
+              href: `/analytics/tournaments/${tournament.id}`,
+              label: "Thống kê",
+              desc: "Xem thống kê chi tiết về hiệu suất tuyển thủ",
+              icon: BarChart3,
+              color: "from-orange-500/20 to-transparent",
+              iconColor: "text-orange-400",
             },
           ].map((link) => (
             <Link
@@ -358,7 +402,33 @@ export default function TournamentDetailPage() {
               ))}
             </div>
           </Card>
+
+          {/* Share */}
+          <Card hover={false} className="p-6">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-3">
+              <Share2 className="h-5 w-5 text-[#dc2626]" />
+              Chia sẻ
+            </h3>
+            <ShareButton
+              title={tournament.name}
+              text={`Xem giải đấu ${tournament.name} - Mùa ${tournament.season} trên SBLT CUP!`}
+            />
+          </Card>
         </div>
+      </div>
+
+      {/* Reactions */}
+      <div className="mt-8">
+        <Card hover={false} className="p-6">
+          <ReactionBar type="TOURNAMENT" entityId={tournament.id} />
+        </Card>
+      </div>
+
+      {/* Comments */}
+      <div className="mt-8">
+        <Card hover={false} className="p-6">
+          <CommentSection type="TOURNAMENT" entityId={tournament.id} />
+        </Card>
       </div>
 
     </div>

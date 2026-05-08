@@ -5,6 +5,7 @@ import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AnnouncementPopup from "@/components/layout/AnnouncementPopup";
+import JsonLd from "@/components/JsonLd";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
 
@@ -60,11 +61,24 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#dc2626" />
       </head>
       <body className="min-h-full flex flex-col bg-[#0a0a0a] text-[#f5f5f5] font-sans antialiased" suppressHydrationWarning>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#dc2626] focus:text-white focus:rounded">
+          Chuyển đến nội dung chính
+        </a>
+        <JsonLd data={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "SBLT CUP",
+          "url": BASE_URL,
+          "logo": `${BASE_URL}/logo.png`,
+          "description": "Giải đấu Đấu Trường Chân Lý (TFT) SBLT CUP",
+        }} />
         <Providers>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" role="main" className="flex-1">{children}</main>
           <Footer />
           <AnnouncementPopup />
         </Providers>

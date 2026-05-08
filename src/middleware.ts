@@ -6,13 +6,11 @@ import type { NextRequest } from "next/server";
 // =============================================================
 
 interface RateLimitEntry {
-  timestamps: number[]; // Mảng thời gian các request gần đây
+  timestamps: number[];
 }
 
 const store = new Map<string, RateLimitEntry>();
 
-// Dọn dẹp entries cũ mỗi 60 giây để tránh rò rỉ bộ nhớ
-// Chạy dưới dạng interval đơn giản — mỗi request có xác suất dọn dẹp
 const CLEANUP_INTERVAL_MS = 60_000;
 let lastCleanup = Date.now();
 
@@ -20,19 +18,11 @@ function cleanupStore(now: number) {
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
   lastCleanup = now;
   store.forEach((entry, key) => {
-    // Xóa entry nếu không còn timestamp nào trong 60s gần nhất
     entry.timestamps = entry.timestamps.filter((t) => now - t < CLEANUP_INTERVAL_MS);
     if (entry.timestamps.length === 0) store.delete(key);
   });
 }
 
-/**
- * Kiểm tra rate limit cho một IP cụ thể.
- * @param key    — Khóa định danh (thường là IP)
- * @param limit  — Số request tối đa trong cửa sổ thời gian
- * @param windowMs — Cửa sổ thời gian (milliseconds)
- * @returns true nếu request được phép, false nếu bị chặn
- */
 function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
   cleanupStore(now);
@@ -43,21 +33,92 @@ function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
     store.set(key, entry);
   }
 
-  // Chỉ giữ lại các timestamp trong cửa sổ thời gian
   entry.timestamps = entry.timestamps.filter((t) => now - t < windowMs);
 
   if (entry.timestamps.length >= limit) {
-    return false; // Vượt quá giới hạn
+    return false;
   }
 
   entry.timestamps.push(now);
   return true;
 }
 
-/**
- * Lấy IP của client từ request headers.
- * Ưu tiên header từ reverse proxy (X-Forwarded-For) rồi mới đến các header khác.
- */
+// =============================================================
+// LOGIN BRUTE FORCE PROTECTION — Per-email lockout
+// =============================================================
+
+interface LoginAttemptEntry {
+  count: number;
+  lockedUntil: number;
+}
+
+const loginAttempts = new Map<string, LoginAttemptEntry>();
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkLoginBruteForce(email: string): { blocked: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const key = `login:${email.toLowerCase()}`;
+  const entry = loginAttempts.get(key);
+
+  if (entry) {
+    // Check if lockout has expired
+    if (entry.lockedUntil > now) {
+      return { blocked: true, retryAfter: Math.ceil((entry.lockedUntil - now) / 1000) };
+    }
+    // Reset if lockout expired
+    if (entry.lockedUntil > 0 && entry.lockedUntil <= now) {
+      entry.count = 0;
+      entry.lockedUntil = 0;
+    }
+  }
+
+  return { blocked: false };
+}
+
+function recordLoginFailure(email: string) {
+  const key = `login:${email.toLowerCase()}`;
+  let entry = loginAttempts.get(key);
+  if (!entry) {
+    entry = { count: 0, lockedUntil: 0 };
+    loginAttempts.set(key, entry);
+  }
+  entry.count++;
+  if (entry.count >= MAX_LOGIN_ATTEMPTS) {
+    entry.lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
+  }
+}
+
+function clearLoginAttempts(email: string) {
+  loginAttempts.delete(`login:${email.toLowerCase()}`);
+}
+
+// =============================================================
+// CSRF PROTECTION — Origin/Referer validation
+// =============================================================
+
+function validateCsrfOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+
+  // Get the expected origin from NEXTAUTH_URL or construct from request
+  const expectedOrigin = process.env.NEXTAUTH_URL || process.env.AUTH_URL;
+
+  if (expectedOrigin) {
+    if (origin) {
+      return origin === expectedOrigin;
+    }
+    if (referer) {
+      return referer.startsWith(expectedOrigin);
+    }
+  }
+
+  // If no expected origin configured, allow (dev mode)
+  // If no Origin/Referer header, allow (same-origin form submissions)
+  return true;
+}
+
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
@@ -65,13 +126,9 @@ function getClientIp(request: NextRequest): string {
   const realIp = request.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
 
-  // Fallback: dùng một giá trị cố định cho môi trường local/dev
   return "127.0.0.1";
 }
 
-/**
- * Tạo response 429 Too Many Requests kèm header Retry-After.
- */
 function rateLimitResponse(retryAfterSeconds: number): NextResponse {
   return new NextResponse(
     JSON.stringify({
@@ -90,6 +147,19 @@ function rateLimitResponse(retryAfterSeconds: number): NextResponse {
   );
 }
 
+function csrfForbiddenResponse(): NextResponse {
+  return new NextResponse(
+    JSON.stringify({
+      error: "Forbidden",
+      message: "Request origin không được phép",
+    }),
+    {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+}
+
 // =============================================================
 // MIDDLEWARE CHÍNH
 // =============================================================
@@ -98,7 +168,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIp = getClientIp(request);
 
-  // --- BỎ QUA các route tĩnh, không cần rate limit ---
+  // --- BỎ QUA các route tĩnh ---
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
@@ -107,8 +177,31 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // --- RATE LIMIT: Auth routes (register, login) — chống brute-force ---
-  // Giới hạn: 1 request / 3 giây cho mỗi IP
+  // --- CSRF PROTECTION: Chặn state-changing requests từ origin lạ ---
+  if (
+    request.method === "POST" ||
+    request.method === "PUT" ||
+    request.method === "DELETE" ||
+    request.method === "PATCH"
+  ) {
+    if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/")) {
+      if (!validateCsrfOrigin(request)) {
+        return csrfForbiddenResponse();
+      }
+    }
+  }
+
+  // --- LOGIN BRUTE FORCE: Kiểm tra trước khi vào route ---
+  if (pathname.startsWith("/api/auth/callback/credentials")) {
+    // Extract email from form data will be done in the route handler
+    // Here we do IP-based rate limiting for the callback endpoint
+    const loginKey = `login-ip:${clientIp}`;
+    if (!checkRateLimit(loginKey, 5, 60_000)) {
+      return rateLimitResponse(60);
+    }
+  }
+
+  // --- RATE LIMIT: Auth routes ---
   if (
     pathname.startsWith("/api/auth/register") ||
     pathname.startsWith("/api/auth/callback")
@@ -119,7 +212,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // --- RATE LIMIT: Tất cả API routes — 5 request / giây cho mỗi IP ---
+  // --- RATE LIMIT: Tất cả API routes ---
   if (pathname.startsWith("/api")) {
     const apiKey = `api:${clientIp}`;
     if (!checkRateLimit(apiKey, 5, 1_000)) {
@@ -127,7 +220,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // --- AUTH: Các route tĩnh/public — cho phép truy cập tự do ---
+  // --- AUTH: Các route public ---
   if (
     pathname === "/" ||
     pathname.startsWith("/auth") ||
@@ -149,7 +242,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // --- AUTH: Kiểm tra session cookie cho các route được bảo vệ ---
+  // --- AUTH: Kiểm tra session cookie ---
   const sessionCookie =
     request.cookies.get("authjs.session-token") ||
     request.cookies.get("next-auth.session-token") ||
@@ -168,3 +261,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
+
+// Export helpers for use in API routes
+export { checkLoginBruteForce, recordLoginFailure, clearLoginAttempts };

@@ -15,6 +15,7 @@ interface Dispute {
   status: string;
   adminNote: string | null;
   createdAt: string;
+  attachments?: string[] | null;
   player: { ign: string };
   tournament: { name: string; season: number };
   game: { gameNumber: number; group: { name: string } } | null;
@@ -102,6 +103,15 @@ export default function AdminDisputesPage() {
                   <p className="text-sm text-[#f5f5f5]">{d.description}</p>
                 </div>
 
+                {d.attachments && d.attachments.length > 0 && (
+                  <div className="flex gap-2 mb-3">
+                    {d.attachments.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="w-16 h-16 rounded-lg overflow-hidden border border-[#222] hover:border-[#dc2626] transition-colors">
+                        <img src={url} alt={`Bằng chứng ${i + 1}`} className="w-full h-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {d.adminNote && (
                   <div className="bg-[#0d0d0d] rounded-xl px-3 py-2 text-xs text-[#f5f5f5] border-l-2 border-[#dc2626] mb-3">
                     <span className="text-[#888]">Phản hồi: </span>{d.adminNote}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { createBulkNotifications } from "@/lib/notifications";
 
 const VALID_TYPES = ["GENERAL", "SCHEDULE_CHANGE", "RULE_UPDATE", "RESULT"];
 
@@ -76,6 +77,19 @@ export async function POST(req: NextRequest) {
       entityId: announcement.id,
       after: { title: announcement.title, type: announcementType },
       ip: req.headers.get("x-forwarded-for") || undefined,
+    });
+
+    // Send notifications to all users
+    const users = await prisma.user.findMany({
+      select: { id: true },
+    });
+    const userIds = users.map((u) => u.id);
+
+    await createBulkNotifications(userIds, {
+      type: "ANNOUNCEMENT",
+      title: announcement.title,
+      message: announcement.content.substring(0, 200) + (announcement.content.length > 200 ? "..." : ""),
+      link: `/announcements`,
     });
 
     return NextResponse.json(announcement, { status: 201 });

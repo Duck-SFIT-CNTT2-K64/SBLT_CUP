@@ -4,6 +4,7 @@ import { Trophy, Users, User, Bell, AlertTriangle, ClipboardList, ArrowRight } f
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
+import { AnalyticsCharts } from "@/components/admin/AnalyticsCharts";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,13 @@ export default async function AdminPage() {
               </Card>
             </Link>
           ))}
+        </div>
+      </RevealOnScroll>
+
+      {/* Analytics Charts */}
+      <RevealOnScroll>
+        <div className="mt-8">
+          <AnalyticsCharts />
         </div>
       </RevealOnScroll>
     </div>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PREDICTION_SCORING } from "@/lib/constants";
+import { createNotification } from "@/lib/notifications";
 
 /**
  * Chấm điểm dự đoán cho một stage đã hoàn thành.
@@ -83,6 +84,23 @@ export async function scorePredictionsForStage(
       scored++;
     }
   });
+
+  // Send notifications to users about their prediction scores
+  for (const prediction of predictions) {
+    const totalScore = prediction.entries.reduce((sum, entry) => {
+      return sum + entry.rank1Points + entry.rank2Points + entry.rank3Points + entry.rank4Points;
+    }, 0);
+
+    if (totalScore > 0) {
+      await createNotification({
+        userId: prediction.userId,
+        type: "PREDICTION_SCORED",
+        title: "Dự đoán đã được chấm điểm!",
+        message: `Bạn đã nhận được ${totalScore} điểm dự đoán. Xem bảng xếp hạng để biết chi tiết.`,
+        link: `/predictions/leaderboard`,
+      });
+    }
+  }
 
   return { scored, totalPredictions: predictions.length };
 }

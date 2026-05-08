@@ -1,8 +1,11 @@
-import { type HTMLAttributes, forwardRef } from "react";
+"use client";
+
+import { type HTMLAttributes, forwardRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   name: string;
+  src?: string;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "host" | "commentator";
 }
@@ -26,20 +29,32 @@ function getInitials(name: string): string {
 }
 
 const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
-  ({ className, name, size = "md", variant = "default", ...props }, ref) => {
+  ({ className, name, src, size = "md", variant = "default", ...props }, ref) => {
+    const [imgError, setImgError] = useState(false);
+    const showImage = src && !imgError;
+
     return (
       <div
         ref={ref}
         className={cn(
-          "rounded-full flex items-center justify-center font-bold shrink-0 select-none",
+          "rounded-full flex items-center justify-center font-bold shrink-0 select-none overflow-hidden",
           sizeClasses[size],
-          variantClasses[variant],
+          !showImage && variantClasses[variant],
           className
         )}
         title={name}
         {...props}
       >
-        {getInitials(name)}
+        {showImage ? (
+          <img
+            src={src}
+            alt={name}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          getInitials(name)
+        )}
       </div>
     );
   }

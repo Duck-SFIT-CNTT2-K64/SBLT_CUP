@@ -1,20 +1,31 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { User, Save, CheckCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { User, Save, CheckCircle, Camera } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { Avatar } from "@/components/ui/Avatar";
 
-interface PlayerProfile { ign: string; rank: string; discord: string; phone: string; }
+interface PlayerProfile {
+  ign: string;
+  rank: string;
+  discord: string;
+  phone: string;
+  avatar?: string;
+  name?: string;
+}
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const [profile, setProfile] = useState<PlayerProfile>({ ign: "", rank: "", discord: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -23,7 +34,14 @@ export default function ProfilePage() {
       const res = await fetch("/api/players/profile");
       if (res.ok) {
         const data = await res.json();
-        setProfile({ ign: data.ign || "", rank: data.rank || "", discord: data.discord || "", phone: data.phone || "" });
+        setProfile({
+          ign: data.ign || "",
+          rank: data.rank || "",
+          discord: data.discord || "",
+          phone: data.phone || "",
+          avatar: data.user?.avatar || undefined,
+          name: data.user?.name || session?.user?.name || "",
+        });
       }
     } catch { setError("Không thể tải thông tin hồ sơ."); }
   };
@@ -36,6 +54,43 @@ export default function ProfilePage() {
       const res = await fetch("/api/players/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
       if (res.ok) { setSuccess(true); setTimeout(() => setSuccess(false), 3000); }
     } catch { /* empty */ } finally { setLoading(false); }
+  };
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarUpload = async () => {
+    const fileInput = fileInputRef.current;
+    if (!fileInput?.files?.[0]) return;
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const res = await fetch("/api/upload/avatar", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setProfile((p) => ({ ...p, avatar: data.avatarUrl }));
+        setAvatarPreview(null);
+        if (fileInput) fileInput.value = "";
+        // Update session to reflect new avatar
+        await updateSession({ avatar: data.avatarUrl });
+      } else {
+        const data = await res.json();
+        setError(data.error || "Không thể tải ảnh lên");
+      }
+    } catch {
+      setError("Đã xảy ra lỗi khi tải ảnh lên");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const inputClass = "w-full px-4 py-2.5 bg-[#111] border border-[#222] rounded-xl text-[#f5f5f5] placeholder:text-[#555] focus:outline-none focus:ring-2 focus:ring-[#dc2626] focus:border-transparent transition-shadow";
@@ -51,6 +106,49 @@ export default function ProfilePage() {
       </div>
 
       {error && <Alert variant="error" message={error} onDismiss={() => setError(null)} className="mb-6" />}
+
+      {/* Avatar Section */}
+      <Card hover={false} className="p-6 mb-6">
+        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">Ảnh đại diện</h2>
+        <div className="flex items-center gap-6">
+          <Avatar
+            name={profile.name || session?.user?.name || "U"}
+            src={avatarPreview || profile.avatar}
+            size="lg"
+          />
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleAvatarSelect}
+              className="hidden"
+            />
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="h-4 w-4" />
+                Chọn ảnh
+              </Button>
+              {avatarPreview && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                >
+                  {uploadingAvatar ? "Đang tải lên..." : "Lưu ảnh"}
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-[#555] mt-2">JPEG, PNG hoặc WebP. Tối đa 5MB.</p>
+          </div>
+        </div>
+      </Card>
 
       <Card hover={false} className="p-6">
         <form onSubmit={handleSubmit}>

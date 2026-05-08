@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Trophy, Target } from "lucide-react";
+import { Trophy, Target, BarChart3 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
@@ -87,7 +87,21 @@ export default function LeaderboardPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-semibold text-[#f5f5f5]">{p.ign}</div>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/analytics/players/${p.id}`}
+                            className="font-semibold text-[#f5f5f5] hover:text-[#dc2626] transition-colors"
+                          >
+                            {p.ign}
+                          </Link>
+                          <Link
+                            href={`/analytics/players/${p.id}`}
+                            className="text-[#555] hover:text-[#dc2626] transition-colors"
+                            title="Xem thống kê chi tiết"
+                          >
+                            <BarChart3 className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
                         {p.rank && <div className="text-xs text-[#888]">{p.rank}</div>}
                       </td>
                       <td className="py-3 px-3 text-center text-[#f5f5f5]">{p.tournamentsPlayed}</td>

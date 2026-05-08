@@ -35,6 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role,
+          passwordChangedAt: user.passwordChangedAt?.getTime() ?? 0,
         };
       },
     }),
@@ -44,7 +45,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.passwordChangedAt = (user as any).passwordChangedAt ?? 0;
       }
+
+      // Invalidate session if password was changed after token was issued
+      if (token.id && typeof token.passwordChangedAt === "number") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { passwordChangedAt: true },
+        });
+        if (dbUser?.passwordChangedAt) {
+          const changedAt = dbUser.passwordChangedAt.getTime();
+          if (changedAt > (token.passwordChangedAt as number)) {
+            return null; // Force re-login
+          }
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

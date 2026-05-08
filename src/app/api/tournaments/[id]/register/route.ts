@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: NextRequest,
@@ -79,6 +80,15 @@ export async function POST(
   if (!registration) {
     return NextResponse.json({ error: "Giải đấu đã đủ số lượng tuyển thủ" }, { status: 400 });
   }
+
+  // Send notification to user
+  await createNotification({
+    userId: session.user.id,
+    type: "REGISTRATION_STATUS",
+    title: "Đăng ký thành công!",
+    message: `Bạn đã đăng ký thành công giải đấu "${tournament.name}". Vui lòng chờ ban tổ chức duyệt.`,
+    link: `/tournaments/${tournamentId}`,
+  });
 
   return NextResponse.json(registration, { status: 201 });
 }

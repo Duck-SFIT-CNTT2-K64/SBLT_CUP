@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { scorePredictionsForStage } from "@/lib/predictions";
+import { sseManager, SSE_EVENTS } from "@/lib/sse";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/status
@@ -99,6 +100,13 @@ export async function POST(
     IN_PROGRESS: "Đang diễn ra",
     COMPLETED: "Đã hoàn thành",
   };
+
+  // Broadcast SSE event for real-time updates
+  sseManager.broadcastToTournament(tournamentId, SSE_EVENTS.STAGE_UPDATE, {
+    stageId,
+    status: newStatus,
+    timestamp: new Date().toISOString(),
+  });
 
   return NextResponse.json({
     message: `Vòng đấu chuyển sang "${labels[newStatus]}"${predictionScored > 0 ? `. ${predictionScored} dự đoán đã được chấm điểm.` : ""}`,

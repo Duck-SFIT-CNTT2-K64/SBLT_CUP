@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Trophy, ArrowLeft } from "lucide-react";
+import { Trophy, ArrowLeft, Wifi, WifiOff } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { useSSE } from "@/lib/hooks/useSSE";
 
 interface GameResult { gameNumber: number; placement: number; points: number }
 interface PlayerRow { id: string; ign: string; totalPoints: number; gameResults: GameResult[]; top4Count: number; top1Count: number }
@@ -18,14 +19,37 @@ export default function StandingsPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  const fetchTournament = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/tournaments/${params.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTournament(data);
+        if (!selectedStageId && data.stages?.length > 0) {
+          setSelectedStageId(data.stages[0].id);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch tournament:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [params.id, selectedStageId]);
+
+  // SSE for real-time updates
+  const { isConnected } = useSSE({
+    tournamentId: params.id as string,
+    onEvent: useCallback((event: string, data: unknown) => {
+      fetchTournament();
+      setLastUpdate(new Date());
+    }, [fetchTournament]),
+  });
 
   useEffect(() => {
-    fetch(`/api/tournaments/${params.id}`)
-      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((data) => { setTournament(data); if (data.stages?.length > 0) setSelectedStageId(data.stages[0].id); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [params.id]);
+    fetchTournament();
+  }, [fetchTournament]);
 
   if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
   if (!tournament) return <div className="text-center py-20 text-[#888]">Không tìm thấy giải đấu</div>;
@@ -74,16 +98,38 @@ export default function StandingsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href={`/tournaments/${params.id}`} className="text-[#888] hover:text-[#f5f5f5] transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-[#dc2626]" />
-            Bảng xếp hạng
-          </h1>
-          <p className="text-[#888] text-sm">{tournament.name} — Mùa {tournament.season}</p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Link href={`/tournaments/${params.id}`} className="text-[#888] hover:text-[#f5f5f5] transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-[#dc2626]" />
+              Bảng xếp hạng
+            </h1>
+            <p className="text-[#888] text-sm">{tournament.name} — Mùa {tournament.season}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-1.5 text-xs ${isConnected ? "text-green-400" : "text-[#555]"}`}>
+            {isConnected ? (
+              <>
+                <Wifi className="h-3 w-3" />
+                <span>实时</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3 w-3" />
+                <span>Đang kết nối...</span>
+              </>
+            )}
+          </div>
+          {lastUpdate && (
+            <span className="text-xs text-[#555]">
+              {lastUpdate.toLocaleTimeString("vi-VN")}
+            </span>
+          )}
         </div>
       </div>
 
