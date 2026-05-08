@@ -2,32 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/tournaments/[id]/predictions/[stageId]/leaderboard
- * Bảng xếp hạng dự đoán cho một stage (public, sau khi đã chấm điểm).
+ * GET /api/predictions/leaderboard/[userId]
+ * Chi tiết dự đoán của một user qua tất cả các stage đã chấm điểm.
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; stageId: string }> }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { id: tournamentId, stageId } = await params;
-
-  const stage = await prisma.stage.findUnique({
-    where: { id: stageId },
-    select: { id: true, name: true, tournamentId: true, status: true },
-  });
-
-  if (!stage || stage.tournamentId !== tournamentId) {
-    return NextResponse.json({ error: "Không tìm thấy vòng đấu" }, { status: 404 });
-  }
-
-  const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 50, 200);
+  const { userId } = await params;
 
   const predictions = await prisma.prediction.findMany({
-    where: { stageId, status: "SCORED" },
-    orderBy: { totalScore: "desc" },
-    take: top,
+    where: { userId, status: "SCORED" },
+    orderBy: { stage: { stageOrder: "asc" } },
     include: {
-      user: { select: { id: true, name: true } },
+      stage: { select: { id: true, name: true, stageType: true } },
       entries: {
         include: {
           group: {
@@ -50,18 +38,13 @@ export async function GET(
     },
   });
 
-  const leaderboard = predictions.map((pred, idx) => ({
-    rank: idx + 1,
-    userId: pred.user.id,
-    userName: pred.user.name || "Ẩn danh",
+  const stages = predictions.map((pred) => ({
+    stageId: pred.stage.id,
+    stageName: pred.stage.name,
+    stageType: pred.stage.stageType,
     totalScore: pred.totalScore,
     entries: pred.entries.map((e) => ({
       groupName: e.group.name,
-      rank1Correct: e.rank1Points > 0,
-      rank2Correct: e.rank2Points > 0,
-      rank3Correct: e.rank3Points > 0,
-      rank4Correct: e.rank4Points > 0,
-      points: e.rank1Points + e.rank2Points + e.rank3Points + e.rank4Points,
       predictedPlayers: [
         e.rank1Player.ign,
         e.rank2Player.ign,
@@ -72,11 +55,16 @@ export async function GET(
         ign: gp.player.ign,
         finalRank: gp.finalRank,
       })),
+      rank1Correct: e.rank1Points > 0,
+      rank2Correct: e.rank2Points > 0,
+      rank3Correct: e.rank3Points > 0,
+      rank4Correct: e.rank4Points > 0,
+      points: e.rank1Points + e.rank2Points + e.rank3Points + e.rank4Points,
     })),
   }));
 
   return NextResponse.json(
-    { stageId, stageName: stage.name, leaderboard },
+    { userId, stages },
     { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate" } }
   );
 }

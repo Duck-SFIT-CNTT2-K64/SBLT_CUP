@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Trophy, Target, Loader2 } from "lucide-react";
+import { Trophy, Target, Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
 
@@ -16,11 +16,31 @@ interface PredictionLeaderboardEntry {
   stagesWithPoints: number;
 }
 
+interface StageDetail {
+  stageId: string;
+  stageName: string;
+  stageType: string;
+  totalScore: number;
+  entries: {
+    groupName: string;
+    predictedPlayers: string[];
+    actualResults: { ign: string; finalRank: number | null }[];
+    rank1Correct: boolean;
+    rank2Correct: boolean;
+    rank3Correct: boolean;
+    rank4Correct: boolean;
+    points: number;
+  }[];
+}
+
 export default function GlobalPredictionLeaderboardPage() {
   const { data: session } = useSession();
   const [leaderboard, setLeaderboard] = useState<PredictionLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [userDetails, setUserDetails] = useState<Record<string, StageDetail[]>>({});
+  const [loadingDetail, setLoadingDetail] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/predictions/leaderboard")
@@ -35,6 +55,29 @@ export default function GlobalPredictionLeaderboardPage() {
       .catch(() => setError("Lỗi kết nối. Vui lòng thử lại."))
       .finally(() => setLoading(false));
   }, []);
+
+  const toggleExpand = async (userId: string) => {
+    if (expandedUserId === userId) {
+      setExpandedUserId(null);
+      return;
+    }
+    setExpandedUserId(userId);
+
+    if (userDetails[userId]) return;
+
+    setLoadingDetail(userId);
+    try {
+      const r = await fetch(`/api/predictions/leaderboard/${userId}`);
+      const data = await r.json();
+      if (r.ok) {
+        setUserDetails((prev) => ({ ...prev, [userId]: data.stages || [] }));
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingDetail(null);
+    }
+  };
 
   const rankBadge = (rank: number) => {
     if (rank === 1) return <Badge variant="red">Hạng 1</Badge>;
@@ -83,21 +126,25 @@ export default function GlobalPredictionLeaderboardPage() {
                     <th className="text-center py-3 px-4 text-sblt-muted font-medium">Vòng đã dự đoán</th>
                     <th className="text-center py-3 px-4 text-sblt-muted font-medium">Vòng có điểm</th>
                     <th className="text-right py-3 px-4 text-sblt-muted font-medium">Tổng điểm</th>
+                    <th className="w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {leaderboard.map((entry, idx) => {
                     const rank = idx + 1;
                     const isCurrentUser = session?.user?.id === entry.id;
+                    const isExpanded = expandedUserId === entry.id;
 
                     return (
                       <tr
                         key={entry.id}
                         className={cn(
-                          "border-b border-sblt-border/50 transition-colors",
+                          "border-b border-sblt-border/50 transition-colors cursor-pointer",
                           isCurrentUser && "bg-sblt-red/5",
-                          rank <= 3 && "bg-sblt-red/[0.02]"
+                          rank <= 3 && "bg-sblt-red/[0.02]",
+                          isExpanded && "bg-sblt-dark"
                         )}
+                        onClick={() => toggleExpand(entry.id)}
                       >
                         <td className="py-3 px-4">{rankBadge(rank)}</td>
                         <td className="py-3 px-4">
@@ -105,7 +152,7 @@ export default function GlobalPredictionLeaderboardPage() {
                             {entry.name}
                           </span>
                           {isCurrentUser && (
-                            <span className="ml-2 text-[10px] bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
+                            <span className="ml-2 text-xs bg-sblt-red/10 text-red-400 px-1.5 py-0.5 rounded">
                               Bạn
                             </span>
                           )}
@@ -121,11 +168,100 @@ export default function GlobalPredictionLeaderboardPage() {
                             {entry.totalPredictionPoints}
                           </span>
                         </td>
+                        <td className="py-3 px-4">
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-sblt-muted" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-sblt-muted" />
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+
+              {/* Expanded detail panel */}
+              {expandedUserId && (
+                <div className="border-t border-sblt-border bg-sblt-dark/50 p-5">
+                  {loadingDetail === expandedUserId ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="h-6 w-6 text-sblt-red animate-spin" />
+                    </div>
+                  ) : userDetails[expandedUserId] ? (
+                    <div className="space-y-4">
+                      <p className="text-xs text-sblt-muted uppercase tracking-wider font-medium">
+                        Chi tiết dự đoán
+                      </p>
+                      {userDetails[expandedUserId].map((stage) => (
+                        <div key={stage.stageId} className="bg-sblt-card rounded-lg p-4 border border-sblt-border">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-white font-medium">{stage.stageName}</span>
+                            <span className="text-sblt-red font-bold">{stage.totalScore}đ</span>
+                          </div>
+                          <div className="space-y-3">
+                            {stage.entries.map((e, i) => (
+                              <div key={i} className="bg-sblt-dark rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sblt-muted text-sm">{e.groupName}</span>
+                                  <span className="text-sblt-muted text-sm">{e.points}đ</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                  <div>
+                                    <p className="text-sblt-muted text-xs mb-1.5">Dự đoán</p>
+                                    {e.predictedPlayers.map((ign, pi) => {
+                                      const correct = pi === 0 ? e.rank1Correct
+                                        : pi === 1 ? e.rank2Correct
+                                        : pi === 2 ? e.rank3Correct
+                                        : e.rank4Correct;
+                                      return (
+                                        <div key={pi} className="flex items-center gap-1.5 mb-1">
+                                          <span className="text-sblt-muted text-xs w-4">#{pi + 1}</span>
+                                          <span className={correct ? "text-green-400" : "text-sblt-muted"}>
+                                            {ign}
+                                          </span>
+                                          {correct ? (
+                                            <CheckCircle className="h-3 w-3 text-green-400 ml-auto" />
+                                          ) : (
+                                            <XCircle className="h-3 w-3 text-red-400/50 ml-auto" />
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div>
+                                    <p className="text-sblt-muted text-xs mb-1.5">Thực tế</p>
+                                    {e.actualResults.map((r, ri) => (
+                                      <div key={ri} className="flex items-center gap-1.5 mb-1">
+                                        <span className="text-sblt-muted text-xs w-4">
+                                          {r.finalRank ? `#${r.finalRank}` : `#${ri + 1}`}
+                                        </span>
+                                        <span className="text-white">{r.ign}</span>
+                                      </div>
+                                    ))}
+                                    {e.actualResults.length === 0 && (
+                                      <span className="text-sblt-muted text-xs italic">Chưa có kết quả</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {userDetails[expandedUserId].length === 0 && (
+                        <p className="text-sblt-muted text-sm text-center py-4">
+                          Chưa có kết quả dự đoán nào.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sblt-muted text-sm text-center py-4">
+                      Không thể tải chi tiết.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

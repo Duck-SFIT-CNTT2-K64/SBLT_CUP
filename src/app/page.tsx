@@ -85,7 +85,7 @@ export default async function Home() {
               <div className="sblt-divider w-12" />
             </div>
 
-            <p className="text-sblt-muted max-w-xl mx-auto mb-8 leading-relaxed">
+            <p className="text-sblt-muted text-sm max-w-xl mx-auto mb-8 leading-relaxed">
               Sân chơi giao lưu vui vẻ cho cộng đồng TFT. Cơ hội cọ sát, rèn luyện kỹ năng
               và tâm lý thi đấu trước các giải đấu lớn.
             </p>
@@ -179,11 +179,11 @@ export default async function Home() {
                         i % 2 === 0 ? "bg-sblt-card" : "bg-sblt-black"
                       } ${i < 7 ? "border-b border-sblt-border" : ""}`}
                     >
-                      <div className={`py-3 border-r border-sblt-border font-medium ${isTop ? "text-white" : "text-sblt-muted"}`}>
+                      <div className={`py-3 border-r border-sblt-border text-sm font-medium ${isTop ? "text-white" : "text-sblt-muted"}`}>
                         {isTop && <Trophy className="inline h-3.5 w-3.5 text-sblt-red mr-1.5 -mt-0.5" />}
                         Top {rank}
                       </div>
-                      <div className={`py-3 font-bold ${isTop ? "text-sblt-red text-lg" : "text-sblt-muted"}`}>
+                      <div className={`py-3 text-sm font-bold ${isTop ? "text-sblt-red" : "text-sblt-muted"}`}>
                         {points}
                       </div>
                     </div>
@@ -314,14 +314,14 @@ export default async function Home() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-sblt-black via-sblt-black/10 to-transparent" />
                     {!guest.confirmed && (
-                      <div className="absolute top-1.5 right-1.5 bg-sblt-dark/90 text-sblt-muted text-[10px] px-1.5 py-0.5 rounded-full border border-sblt-border font-medium">
+                      <div className="absolute top-1.5 right-1.5 bg-sblt-dark/90 text-sblt-muted text-xs px-1.5 py-0.5 rounded-full border border-sblt-border font-medium">
                         TBC
                       </div>
                     )}
                   </div>
                   {/* Tên */}
                   <div className="absolute bottom-0 left-0 right-0 px-2 pb-2.5 pt-6">
-                    <div className="text-white font-semibold text-xs leading-tight text-center truncate">
+                    <div className="text-white font-semibold text-sm leading-tight text-center truncate">
                       {guest.name}
                     </div>
                   </div>
@@ -375,7 +375,7 @@ export default async function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-sblt-red/10 via-sblt-red/5 to-sblt-red/10" />
           <div className="max-w-3xl mx-auto px-4 text-center relative">
             <h2 className="sblt-heading text-4xl text-white mb-4">Sẵn sàng tham gia?</h2>
-            <p className="text-sblt-muted mb-8 max-w-lg mx-auto">
+            <p className="text-sblt-muted text-sm mb-8 max-w-lg mx-auto">
               Đăng ký tài khoản ngay để trở thành một phần của giải đấu SBLT CUP
             </p>
             <Link href="/auth/register">

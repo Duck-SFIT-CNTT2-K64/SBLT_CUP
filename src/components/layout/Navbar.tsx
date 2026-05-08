@@ -105,7 +105,7 @@ export default function Navbar() {
                 >
                   <Bell className="h-5 w-5" />
                   {unseenCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-sblt-red text-white text-[10px] font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
+                    <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-sblt-red text-white text-xs font-bold rounded-full flex items-center justify-center min-w-[18px] h-[18px]">
                       {unseenCount > 9 ? "9+" : unseenCount}
                     </span>
                   )}
@@ -214,7 +214,7 @@ export default function Navbar() {
                     Thông báo
                   </span>
                   {unseenCount > 0 && (
-                    <span className="bg-sblt-red text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    <span className="bg-sblt-red text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
                       {unseenCount}
                     </span>
                   )}

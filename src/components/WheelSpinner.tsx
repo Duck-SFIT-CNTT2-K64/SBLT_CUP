@@ -153,12 +153,12 @@ export default function WheelSpinner({ items, groups, onAssignmentsComplete, onC
               />
               <span className="text-sblt-white truncate flex-1">{item.label}</span>
               {item.type === "advancing" && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 shrink-0">
+                <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 shrink-0">
                   Đi tiếp{item.fromGroup ? ` ${item.fromGroup}` : ""}
                 </span>
               )}
               {item.type === "guest" && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-sblt-red/20 text-sblt-red shrink-0">
+                <span className="text-xs px-1.5 py-0.5 rounded bg-sblt-red/20 text-sblt-red shrink-0">
                   Khách
                 </span>
               )}

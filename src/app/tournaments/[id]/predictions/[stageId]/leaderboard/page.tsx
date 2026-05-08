@@ -5,10 +5,14 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import PredictionScoreCard from "@/components/predictions/PredictionScoreCard";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
+
+interface ActualResult {
+  ign: string;
+  finalRank: number | null;
+}
 
 interface LeaderboardEntry {
   rank: number;
@@ -22,6 +26,8 @@ interface LeaderboardEntry {
     rank3Correct: boolean;
     rank4Correct: boolean;
     points: number;
+    predictedPlayers: string[];
+    actualResults: ActualResult[];
   }[];
 }
 
@@ -32,6 +38,7 @@ export default function StagePredictionLeaderboardPage() {
   const [stageName, setStageName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedRank, setExpandedRank] = useState<number | null>(null);
 
   const tournamentId = params.id as string;
   const stageId = params.stageId as string;
@@ -67,7 +74,7 @@ export default function StagePredictionLeaderboardPage() {
           Bảng xếp hạng dự đoán &mdash; {stageName}
         </h1>
         <p className="text-sblt-muted">
-          Kết quả dự đoán của tất cả người tham gia cho vòng đấu này.
+          Kết quả dự đoán của tất cả người tham gia cho vòng đấu này. Nhấp vào để xem chi tiết.
         </p>
       </div>
 
@@ -84,21 +91,18 @@ export default function StagePredictionLeaderboardPage() {
       ) : (
         <div className="space-y-3">
           {leaderboard.map((entry) => (
-            <div key={entry.rank} className="relative">
-              {entry.rank <= 3 && (
-                <div className="absolute -left-2 top-1/2 -translate-y-1/2">
-                  {entry.rank === 1 && <Badge variant="red" className="text-xs">Hạng 1</Badge>}
-                  {entry.rank === 2 && <Badge variant="default" className="text-xs">Hạng 2</Badge>}
-                  {entry.rank === 3 && <Badge variant="yellow" className="text-xs">Hạng 3</Badge>}
-                </div>
-              )}
-              <PredictionScoreCard
-                userName={entry.userName}
-                totalScore={entry.totalScore}
-                entries={entry.entries}
-                isCurrentUser={session?.user?.id === entry.userId}
-              />
-            </div>
+            <PredictionScoreCard
+              key={entry.userId}
+              userName={entry.userName}
+              totalScore={entry.totalScore}
+              entries={entry.entries}
+              rank={entry.rank}
+              isCurrentUser={session?.user?.id === entry.userId}
+              expanded={expandedRank === entry.rank}
+              onToggle={() =>
+                setExpandedRank(expandedRank === entry.rank ? null : entry.rank)
+              }
+            />
           ))}
         </div>
       )}

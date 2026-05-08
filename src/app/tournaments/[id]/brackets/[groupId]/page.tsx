@@ -232,7 +232,7 @@ export default function LobbyDetailPage() {
                       {row.ign}
                     </span>
                     {row.isGuest && (
-                      <span className="ml-2 text-[10px] text-sblt-muted bg-sblt-border px-1.5 py-0.5 rounded">
+                      <span className="ml-2 text-xs text-sblt-muted bg-sblt-border px-1.5 py-0.5 rounded">
                         Khách
                       </span>
                     )}
