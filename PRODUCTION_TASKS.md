@@ -233,11 +233,11 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
 
 | Priority | Total | Done | % |
 |----------|-------|------|---|
-| 🔴 Critical | 5 | 0 | 0% |
-| 🟠 High | 7 | 0 | 0% |
-| 🟡 Medium | 6 | 0 | 0% |
-| 🟢 Low | 4 | 0 | 0% |
-| **TOTAL** | **22** | **0** | **0%** |
+| 🔴 Critical | 5 | 5 | 100% |
+| 🟠 High | 7 | 7 | 100% |
+| 🟡 Medium | 6 | 6 | 100% |
+| 🟢 Low | 4 | 4 | 100% |
+| **TOTAL** | **22** | **22** | **100%** |
 
 ---
 
