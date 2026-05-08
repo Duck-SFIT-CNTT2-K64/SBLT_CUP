@@ -74,13 +74,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: CRITICAL-01 ✅
   - **Completed**: 2026-05-09 [Loop Iteration #6]
 
-- [ ] **HIGH-02** | 🟠 P1 | `TODO` | **Testing** | Bot
+- [x] **HIGH-02** | 🟠 P1 | `DONE` | **Testing** | Bot
   - **Title**: Create E2E test for tournament booking + prediction flow
   - **Description**: Complex flow: join tournament → predict → view leaderboard
   - **Acceptance**: E2E test covers full tournament flow
-  - **Files**: `src/__tests__/e2e/tournament.e2e.test.ts` (new)
+  - **Files**: `src/__tests__/e2e/tournament.spec.ts` (new)
   - **Effort**: 4h
   - **Blocked by**: CRITICAL-01
+  - **Completed**: 2026-05-08 [Loop Iteration #7]
 
 - [ ] **HIGH-03** | 🟠 P1 | `TODO` | **Deployment** | Bot
   - **Title**: Fix deploy.sh hardcoded paths to use environment variables
