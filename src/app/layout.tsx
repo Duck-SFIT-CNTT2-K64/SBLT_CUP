@@ -7,7 +7,7 @@ import Footer from "@/components/layout/Footer";
 import AnnouncementPopup from "@/components/layout/AnnouncementPopup";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
-const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" });
+const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin", "latin-ext"], variable: "--font-bebas" });
 
 const BASE_URL = process.env.NEXTAUTH_URL || "https://sbltcup.com";
 
