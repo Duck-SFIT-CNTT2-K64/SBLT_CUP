@@ -52,9 +52,9 @@ export default async function Home() {
 
   const getGuestObjectPosition = (image: string | null) => {
     if (!image) return "object-center";
-    if (image.includes("emduatft")) return "object-[50px_center]";
-    if (image.includes("ngoc6mui")) return "object-[50px_center]";
-    if (image.includes("furyy")) return "object-[-50px_center]";
+    if (image.includes("emduatft")) return "object-[-50px_center]";
+    if (image.includes("ngoc6mui")) return "object-[-40px_center]";
+    if (image.includes("furyy")) return "object-[20px_center]";
     return "object-center";
   };
 
