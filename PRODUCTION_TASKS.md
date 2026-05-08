@@ -200,13 +200,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: HIGH-03
   - **Completed**: 2026-05-08 [Loop Iteration #19]
 
-- [ ] **LOW-02** | 🟢 P3 | `TODO` | **Quality** | Bot
+- [x] **LOW-02** | 🟢 P3 | `DONE` | **Quality** | Bot
   - **Title**: Tighten package.json dependency versions
   - **Description**: Using ^ which allows minor+patch. Should use ~ for production.
   - **Acceptance**: Critical deps pinned to ~ (patch only), package-lock.json locked
   - **Files**: `package.json`
   - **Effort**: 1h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #20]
 
 - [ ] **LOW-03** | 🟢 P3 | `TODO` | **Documentation** | Bot
   - **Title**: Create API documentation (OpenAPI/Swagger)
