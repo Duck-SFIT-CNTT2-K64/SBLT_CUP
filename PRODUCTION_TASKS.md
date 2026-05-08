@@ -191,13 +191,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
 
 ### 🟢 LOW — After production launch
 
-- [ ] **LOW-01** | 🟢 P3 | `TODO` | **Quality** | Bot
+- [x] **LOW-01** | 🟢 P3 | `DONE` | **Quality** | Bot
   - **Title**: Set up staging environment with separate database
   - **Description**: Currently no staging. Should test on staging before prod deploy.
   - **Acceptance**: Staging deployment script + separate DB configured
   - **Files**: `deploy-staging.sh` (new), `.env.staging` (new)
   - **Effort**: 2h
   - **Blocked by**: HIGH-03
+  - **Completed**: 2026-05-08 [Loop Iteration #19]
 
 - [ ] **LOW-02** | 🟢 P3 | `TODO` | **Quality** | Bot
   - **Title**: Tighten package.json dependency versions
