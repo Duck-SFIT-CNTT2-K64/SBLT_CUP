@@ -142,13 +142,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: CRITICAL-01
   - **Completed**: 2026-05-08 [Loop Iteration #13]
 
-- [ ] **MEDIUM-02** | 🟡 P2 | `TODO` | **Quality** | Bot
+- [x] **MEDIUM-02** | 🟡 P2 | `DONE` | **Quality** | Bot
   - **Title**: Complete jest.config.ts setup file
   - **Description**: setup.ts only has 1 line. Need to mock Sentry, Prisma, env.
   - **Acceptance**: setup.ts includes mocks for Sentry, prisma, process.env, fetch
   - **Files**: `src/__tests__/setup.ts`
   - **Effort**: 1h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #14]
 
 - [ ] **MEDIUM-03** | 🟡 P2 | `TODO` | **Quality** | Bot
   - **Title**: Add test coverage thresholds to jest.config.js
