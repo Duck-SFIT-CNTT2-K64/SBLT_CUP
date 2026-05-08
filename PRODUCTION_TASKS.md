@@ -218,13 +218,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: None
   - **Completed**: 2026-05-08 [Loop Iteration #21]
 
-- [ ] **LOW-04** | 🟢 P3 | `TODO` | **Performance** | Bot
+- [x] **LOW-04** | 🟢 P3 | `DONE` | **Performance** | Bot
   - **Title**: Add database query performance monitoring
   - **Description**: No visibility into slow queries.
   - **Acceptance**: Slow queries (>100ms) logged with Sentry
   - **Files**: `src/lib/prisma.ts`
   - **Effort**: 1h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #22]
 
 ---
 

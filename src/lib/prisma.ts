@@ -2,6 +2,7 @@ import "@/lib/env"; // Validate env vars at startup — crash fast if missing
 import { PrismaClient } from ".prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import * as Sentry from "@sentry/nextjs";
 
 // Singleton PrismaClient — dùng đúng 1 connection pool duy nhất trên toàn bộ app.
 // globalThis không bị reset khi Next.js hot-reload trong dev, và luôn giữ 1 instance trong production.
@@ -29,6 +30,38 @@ function createPrismaClient(): PrismaClient {
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+// Log slow queries (>100ms) to Sentry
+const SLOW_QUERY_MS = 100;
+
+prisma.$use(async (params, next) => {
+  const start = Date.now();
+  const result = await next(params);
+  const duration = Date.now() - start;
+
+  if (duration > SLOW_QUERY_MS) {
+    const message = `Slow query: ${params.model}.${params.action} (${duration}ms)`;
+    console.warn(message);
+
+    Sentry.addBreadcrumb({
+      category: "db.query",
+      message,
+      level: "warning",
+      data: {
+        model: params.model,
+        action: params.action,
+        duration,
+      },
+    });
+
+    if (duration > SLOW_QUERY_MS * 5) {
+      // >500ms: capture as exception
+      Sentry.captureMessage(message, "warning");
+    }
+  }
+
+  return result;
+});
 
 // Chỉ cache vào globalThis trong development để tránh leak khi hot-reload.
 // Trong production, instance được tạo đúng 1 lần rồi reuse.
