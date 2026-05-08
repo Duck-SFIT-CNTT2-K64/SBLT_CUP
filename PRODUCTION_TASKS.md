@@ -102,13 +102,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Note**: Can fallback to in-memory with warning if Redis unavailable
   - **Completed**: 2026-05-08 [Loop Iteration #9]
 
-- [ ] **HIGH-05** | 🟠 P1 | `TODO` | **Security** | Bot
+- [x] **HIGH-05** | 🟠 P1 | `DONE` | **Security** | Bot
   - **Title**: Implement per-route rate limits
   - **Description**: Currently all routes share same limit. /auth/login should have stricter limits.
   - **Acceptance**: Login routes: 3 attempts/15min. API routes: 60 req/min. Public routes: 100 req/min.
   - **Files**: `src/middleware.ts`
   - **Effort**: 1h
   - **Blocked by**: HIGH-04
+  - **Completed**: 2026-05-08 [Loop Iteration #10]
 
 - [ ] **HIGH-06** | 🟠 P1 | `TODO` | **Documentation** | Bot
   - **Title**: Update README with setup instructions and deployment guide

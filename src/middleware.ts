@@ -196,32 +196,40 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // --- LOGIN BRUTE FORCE: Kiểm tra trước khi vào route ---
-  if (pathname.startsWith("/api/auth/callback/credentials")) {
-    // Extract email from form data will be done in the route handler
-    // Here we do IP-based rate limiting for the callback endpoint
-    const loginKey = `login-ip:${clientIp}`;
-    if (!checkRateLimit(loginKey, 5, 60_000)) {
+  // --- RATE LIMIT: Login / Auth routes — 3 attempts per 15 min ---
+  if (
+    pathname.startsWith("/api/auth/callback") ||
+    pathname.startsWith("/api/auth/register") ||
+    pathname.startsWith("/api/auth/forgot-password") ||
+    pathname.startsWith("/api/auth/reset-password")
+  ) {
+    const authKey = `auth:${clientIp}`;
+    if (!checkRateLimit(authKey, 3, 15 * 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: Auth routes ---
-  if (
-    pathname.startsWith("/api/auth/register") ||
-    pathname.startsWith("/api/auth/callback")
-  ) {
-    const authKey = `auth:${clientIp}`;
-    if (!checkRateLimit(authKey, 1, 3_000)) {
-      return rateLimitResponse(3);
+  // --- RATE LIMIT: Admin routes — 30 per minute ---
+  if (pathname.startsWith("/api/admin")) {
+    const adminKey = `admin:${clientIp}`;
+    if (!checkRateLimit(adminKey, 30, 60_000)) {
+      return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: Tất cả API routes ---
+  // --- RATE LIMIT: General API routes — 60 per minute ---
   if (pathname.startsWith("/api")) {
     const apiKey = `api:${clientIp}`;
-    if (!checkRateLimit(apiKey, 5, 1_000)) {
-      return rateLimitResponse(1);
+    if (!checkRateLimit(apiKey, 60, 60_000)) {
+      return rateLimitResponse(60);
+    }
+  }
+
+  // --- RATE LIMIT: Public page routes — 100 per minute ---
+  if (!pathname.startsWith("/api")) {
+    const publicKey = `page:${clientIp}`;
+    if (!checkRateLimit(publicKey, 100, 60_000)) {
+      return rateLimitResponse(60);
     }
   }
 
