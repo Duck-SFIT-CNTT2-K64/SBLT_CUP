@@ -4,7 +4,22 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
   NEXTAUTH_SECRET: z.string().min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
   NEXTAUTH_URL: z.string().url("NEXTAUTH_URL must be a valid URL"),
-  ADMIN_EMAILS: z.string().min(1, "ADMIN_EMAILS is required"),
+  ADMIN_EMAILS: z
+    .string()
+    .min(1, "ADMIN_EMAILS is required")
+    .refine(
+      (val) => {
+        const emails = val.split(",").map((e) => e.trim());
+        return emails.every((e) => z.string().email().safeParse(e).success);
+      },
+      (val) => {
+        const emails = val.split(",").map((e) => e.trim());
+        const invalidEmails = emails.filter((e) => !z.string().email().safeParse(e).success);
+        return {
+          message: `Invalid email(s) in ADMIN_EMAILS: ${invalidEmails.join(", ")}`,
+        };
+      }
+    ),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   AUTH_TRUST_HOST: z.string().optional().default("true"),
 

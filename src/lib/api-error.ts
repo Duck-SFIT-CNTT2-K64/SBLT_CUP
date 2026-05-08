@@ -16,10 +16,35 @@ export function handleApiError(err: unknown) {
     const prismaErr = err as { code: string; message: string };
 
     switch (prismaErr.code) {
+      // Record not found
       case "P2025":
         return apiError("Không tìm thấy dữ liệu", 404, "NOT_FOUND");
+      
+      // Unique constraint failed
       case "P2002":
         return apiError("Dữ liệu trùng lặp", 409, "DUPLICATE");
+      
+      // Foreign key constraint failed
+      case "P2003":
+        return apiError("Tham chiếu dữ liệu không hợp lệ", 409, "FOREIGN_KEY_CONSTRAINT_FAILED");
+      
+      // Required relation violation
+      case "P2014":
+        return apiError("Vi phạm ràng buộc quan hệ", 400, "REQUIRED_RELATION_VIOLATION");
+      
+      // Invalid field value for type
+      case "P2005":
+        return apiError("Giá trị trường dữ liệu không hợp lệ", 400, "INVALID_FIELD_VALUE");
+      
+      // Database connection error
+      case "P2013":
+        return apiError("Lỗi kết nối cơ sở dữ liệu", 503, "DATABASE_CONNECTION_ERROR");
+      
+      // Transaction timeout
+      case "P2026":
+        return apiError("Giao dịch hết hạn", 408, "TRANSACTION_TIMEOUT");
+      
+      // Default database error
       default:
         console.error(`Prisma error ${prismaErr.code}:`, prismaErr.message);
         return apiError("Lỗi cơ sở dữ liệu", 500, "DATABASE_ERROR");

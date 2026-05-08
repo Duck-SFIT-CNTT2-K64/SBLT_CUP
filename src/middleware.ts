@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { addLog } from "@/lib/logging";
 
 // =============================================================
 // IN-MEMORY RATE LIMITER — Edge-compatible, không cần Redis
@@ -167,6 +168,10 @@ function csrfForbiddenResponse(): NextResponse {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIp = getClientIp(request);
+  const requestStart = Date.now();
+
+  // Extract userId from session cookie if available
+  const userId = request.headers.get("X-User-ID");
 
   // --- BỎ QUA các route tĩnh ---
   if (
@@ -250,9 +255,35 @@ export function middleware(request: NextRequest) {
     request.cookies.get("__Secure-next-auth.session-token");
 
   if (!sessionCookie) {
+    // Log unauthenticated access attempt to protected route
+    if (pathname.startsWith("/api/admin") || pathname.startsWith("/dashboard")) {
+      const duration = Date.now() - requestStart;
+      addLog({
+        timestamp: new Date().toISOString(),
+        method: request.method,
+        path: pathname,
+        status: 401,
+        duration,
+        error: "Unauthorized - No session cookie",
+      });
+    }
+
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Log successful middleware passage for protected routes
+  if (pathname.startsWith("/api/") || pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) {
+    const duration = Date.now() - requestStart;
+    addLog({
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      path: pathname,
+      status: 200,
+      duration,
+      userId,
+    });
   }
 
   return NextResponse.next();
