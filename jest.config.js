@@ -19,7 +19,7 @@ const config = {
       moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
       },
-      testMatch: ["**/__tests__/lib/**/*.test.ts", "**/__tests__/api/**/*.test.ts"],
+      testMatch: ["**/__tests__/lib/**/*.test.ts", "**/__tests__/api/**/*.test.ts", "**/__tests__/integration/**/*.test.ts"],
       moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
     },
     {

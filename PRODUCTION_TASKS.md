@@ -133,13 +133,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
 
 ### 🟡 MEDIUM — Nice to have before production
 
-- [ ] **MEDIUM-01** | 🟡 P2 | `TODO` | **Testing** | Bot
+- [x] **MEDIUM-01** | 🟡 P2 | `DONE` | **Testing** | Bot
   - **Title**: Add integration tests for API flows (register → dispute creation → resolution)
   - **Description**: Current tests are isolated unit tests. Need integration test suite.
   - **Acceptance**: Integration test suite with 3+ complete flows, passes on CI
-  - **Files**: `src/__tests__/integration/*.test.ts` (new folder)
+  - **Files**: `src/__tests__/integration/tournament-flow.test.ts` (new)
   - **Effort**: 4h
   - **Blocked by**: CRITICAL-01
+  - **Completed**: 2026-05-08 [Loop Iteration #13]
 
 - [ ] **MEDIUM-02** | 🟡 P2 | `TODO` | **Quality** | Bot
   - **Title**: Complete jest.config.ts setup file
