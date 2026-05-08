@@ -55,6 +55,7 @@ export default async function Home() {
     if (image.includes("emduatft")) return "object-[-50px_center]";
     if (image.includes("ngoc6mui")) return "object-[-40px_center]";
     if (image.includes("furyy")) return "object-[20px_center]";
+    if (image.includes("stillness") || image.includes("phuonggb")) return "object-contain object-center";
     return "object-center";
   };
 
@@ -269,7 +270,7 @@ export default async function Home() {
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#888]">Host & Tổ chức</span>
                 <div className="flex-1 h-px bg-[#222] ml-2" />
               </div>
-              <div className="grid grid-cols-2 gap-5 max-w-lg mx-auto">
+              <div className="grid grid-cols-2 gap-5 max-w-sm mx-auto">
                 {CELEBRITY_GUESTS.filter((g) => g.role === "Host").map((guest) => (
                   <div
                     key={guest.name}
@@ -323,7 +324,7 @@ export default async function Home() {
                         : "bg-[#0d0d0d] border-[#222]/50 opacity-50"
                     }`}
                   >
-                    <div className="aspect-square relative bg-gradient-to-br from-[#222]/30 to-[#111]">
+                    <div className="aspect-square relative bg-[#111]">
                       {guest.image ? (
                         <Image
                           src={guest.image}

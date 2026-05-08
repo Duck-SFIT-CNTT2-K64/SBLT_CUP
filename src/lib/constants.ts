@@ -25,7 +25,7 @@ export const PRIZES = [
 
 export const CELEBRITY_GUESTS = [
   { name: "5van",          role: "Host",      confirmed: true,  image: "/guests/5van.png" },
-  { name: "Koi",           role: "Host",      confirmed: true,  image: null },
+  { name: "Koi",           role: "Host",      confirmed: true,  image: "/guests/koi.png" },
   { name: "Stillness",     role: "Khách mời", confirmed: true,  image: "/guests/stillness.png" },
   { name: "Em Dứa TFT",   role: "Khách mời", confirmed: true,  image: "/guests/emduatft.png" },
   { name: "Ngọc 6 Múi",   role: "Khách mời", confirmed: true,  image: "/guests/ngoc6mui.png" },
