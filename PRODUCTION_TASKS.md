@@ -209,13 +209,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: None
   - **Completed**: 2026-05-08 [Loop Iteration #20]
 
-- [ ] **LOW-03** | 🟢 P3 | `TODO` | **Documentation** | Bot
+- [x] **LOW-03** | 🟢 P3 | `DONE` | **Documentation** | Bot
   - **Title**: Create API documentation (OpenAPI/Swagger)
   - **Description**: No auto-generated API docs. Useful for frontend team.
   - **Acceptance**: Swagger UI at /api-docs, all routes documented
-  - **Files**: `src/swagger.ts` (new), middleware updated
+  - **Files**: `src/app/api-docs/page.tsx` (new), `src/app/api/openapi/route.ts` (new)
   - **Effort**: 3h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #21]
 
 - [ ] **LOW-04** | 🟢 P3 | `TODO` | **Performance** | Bot
   - **Title**: Add database query performance monitoring
