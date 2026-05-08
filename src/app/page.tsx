@@ -51,12 +51,12 @@ export default async function Home() {
   const session = await auth();
 
   const getGuestObjectPosition = (image: string | null) => {
-    if (!image) return "object-center";
-    if (image.includes("emduatft")) return "object-[-50px_center]";
-    if (image.includes("ngoc6mui")) return "object-[-40px_center]";
-    if (image.includes("furyy")) return "object-[20px_center]";
+    if (!image) return "object-cover object-center";
+    if (image.includes("emduatft")) return "object-cover object-[-50px_center]";
+    if (image.includes("ngoc6mui")) return "object-cover object-[-40px_center]";
+    if (image.includes("furyy")) return "object-cover object-[20px_center]";
     if (image.includes("stillness") || image.includes("phuonggb")) return "object-contain object-center";
-    return "object-center";
+    return "object-cover object-center";
   };
 
   return (
@@ -330,7 +330,7 @@ export default async function Home() {
                           src={guest.image}
                           alt={guest.name}
                           fill
-                          className={`object-cover ${getGuestObjectPosition(guest.image)} group-hover:scale-105 transition-transform duration-500`}
+                          className={`${getGuestObjectPosition(guest.image)} group-hover:scale-105 transition-transform duration-500`}
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 160px"
                         />
                       ) : (
