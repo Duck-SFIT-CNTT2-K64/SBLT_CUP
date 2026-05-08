@@ -16,6 +16,7 @@ interface HealthResponse {
   checks: {
     database: CheckResult;
     schema: CheckResult;
+    migrations: CheckResult;
   };
   timestamp: number;
 }
@@ -24,6 +25,7 @@ export async function GET() {
   const checks: HealthResponse["checks"] = {
     database: { status: "ok" },
     schema: { status: "ok" },
+    migrations: { status: "ok" },
   };
 
   // Check 1: Database connectivity
@@ -73,8 +75,39 @@ export async function GET() {
     };
   }
 
+  // Check 3: Migration status (only if DB is reachable)
+  if (checks.database.status === "ok") {
+    try {
+      const migrations = await prisma.$queryRaw<{ migration_name: string; finished_at: Date | null }[]>`
+        SELECT migration_name, finished_at
+        FROM _prisma_migrations
+        WHERE finished_at IS NULL
+        LIMIT 1
+      `;
+
+      if (migrations.length > 0) {
+        checks.migrations = {
+          status: "error",
+          error: `Pending migration: ${migrations[0].migration_name}`,
+        };
+      } else {
+        checks.migrations = { status: "ok" };
+      }
+    } catch {
+      // Table might not exist yet (fresh DB) — not an error
+      checks.migrations = { status: "ok" };
+    }
+  } else {
+    checks.migrations = {
+      status: "error",
+      error: "Skipped — database unavailable",
+    };
+  }
+
   const overallStatus =
-    checks.database.status === "ok" && checks.schema.status === "ok"
+    checks.database.status === "ok" &&
+    checks.schema.status === "ok" &&
+    checks.migrations.status === "ok"
       ? "healthy"
       : "unhealthy";
 

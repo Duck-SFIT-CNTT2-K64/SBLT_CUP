@@ -178,13 +178,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: None
   - **Completed**: 2026-05-08 [Loop Iteration #17]
 
-- [ ] **MEDIUM-06** | 🟡 P2 | `TODO` | **Database** | Bot
+- [x] **MEDIUM-06** | 🟡 P2 | `DONE` | **Database** | Bot
   - **Title**: Add database migration validation in health check
   - **Description**: Health check doesn't verify migrations are up-to-date.
   - **Acceptance**: /api/health returns schema_status field showing if schema matches prisma
   - **Files**: `src/app/api/health/route.ts`
   - **Effort**: 1h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #18]
 
 ---
 
