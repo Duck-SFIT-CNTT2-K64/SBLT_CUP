@@ -26,6 +26,25 @@ fi
 # Navigate to deploy path
 cd "$DEPLOY_PATH"
 
+# Save current commit for rollback
+ROLLBACK_COMMIT=$(git rev-parse HEAD)
+echo "📌 Commit hiện tại: ${ROLLBACK_COMMIT:0:7}"
+
+# Rollback function
+rollback() {
+  echo ""
+  echo "⚠️  Deploy thất bại! Đang rollback về ${ROLLBACK_COMMIT:0:7}..."
+  git reset --hard "$ROLLBACK_COMMIT"
+  npm ci
+  npm run build
+  pm2 restart "$PM2_APP_NAME"
+  echo "✅ Đã rollback thành công. Ứng dụng đang chạy version cũ."
+  exit 1
+}
+
+# Trap errors to trigger rollback
+trap rollback ERR
+
 # 1. Tải code mới nhất từ nhánh main
 echo "📥 Tải code từ GitHub..."
 git pull origin main
@@ -52,8 +71,10 @@ echo "⏳ Đợi app khởi động..."
 sleep 3
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_CHECK_URL" || echo "000")
 if [ "$HTTP_STATUS" = "200" ]; then
+  # Disable trap — deploy succeeded
+  trap - ERR
   echo "✅ Đã cập nhật và lên sóng thành công! (HTTP $HTTP_STATUS)"
 else
-  echo "❌ Health check thất bại! HTTP $HTTP_STATUS — kiểm tra logs: pm2 logs $PM2_APP_NAME"
-  exit 1
+  echo "❌ Health check thất bại! HTTP $HTTP_STATUS"
+  rollback
 fi

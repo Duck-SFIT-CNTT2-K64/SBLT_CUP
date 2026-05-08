@@ -160,13 +160,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: MEDIUM-01
   - **Completed**: 2026-05-08 [Loop Iteration #15]
 
-- [ ] **MEDIUM-04** | 🟡 P2 | `TODO` | **Deployment** | Bot
+- [x] **MEDIUM-04** | 🟡 P2 | `DONE` | **Deployment** | Bot
   - **Title**: Add rollback strategy to deploy pipeline
   - **Description**: Currently no automated rollback if deploy fails.
   - **Acceptance**: deploy.sh can rollback to previous git commit on failure
   - **Files**: `deploy.sh`
   - **Effort**: 1h
   - **Blocked by**: HIGH-03
+  - **Completed**: 2026-05-08 [Loop Iteration #16]
 
 - [ ] **MEDIUM-05** | 🟡 P2 | `TODO` | **Architecture** | Bot
   - **Title**: Migrate middleware.ts to new Next.js proxy pattern
