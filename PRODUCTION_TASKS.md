@@ -111,13 +111,14 @@ Format: `[Task ID] | Priority | Status | Category | Owner`
   - **Blocked by**: HIGH-04
   - **Completed**: 2026-05-08 [Loop Iteration #10]
 
-- [ ] **HIGH-06** | 🟠 P1 | `TODO` | **Documentation** | Bot
+- [x] **HIGH-06** | 🟠 P1 | `DONE` | **Documentation** | Bot
   - **Title**: Update README with setup instructions and deployment guide
   - **Description**: README still generic template. Needs SBLT CUP specific docs.
   - **Acceptance**: README has sections: setup, env vars, running tests, deployment steps
   - **Files**: `README.md`
   - **Effort**: 1.5h
   - **Blocked by**: None
+  - **Completed**: 2026-05-08 [Loop Iteration #11]
 
 - [ ] **HIGH-07** | 🟠 P1 | `TODO` | **Monitoring** | Bot
   - **Title**: Tune Sentry configuration for production
