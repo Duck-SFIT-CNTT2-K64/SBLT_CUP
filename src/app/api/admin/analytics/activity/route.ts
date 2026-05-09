@@ -52,14 +52,12 @@ export async function GET(req: NextRequest) {
     .slice(0, 10)
     .map(([userId]) => userId);
 
-  const topUsers = topUserIds.length > 0
-    ? await prisma.user.findMany({
-        where: { id: { in: topUserIds } },
-        select: { id: true, name: true, player: { select: { ign: true } } },
-      })
-    : [];
+  const topUsers = await prisma.user.findMany({
+    where: { id: { in: topUserIds } },
+    select: { id: true, name: true, player: { select: { ign: true } } },
+  });
 
-  const topPlayers = topUsers.map((u: { id: string; name: string | null; player: { ign: string } | null }) => ({
+  const topPlayers = topUsers.map((u) => ({
     userId: u.id,
     name: u.player?.ign || u.name,
     activityCount: playerActivityMap.get(u.id) || 0,
