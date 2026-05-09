@@ -58,8 +58,9 @@ echo "🗄️ Cập nhật database..."
 npx prisma generate
 npx prisma migrate deploy
 
-# 4. Build lại Next.js
+# 4. Build lại Next.js (xóa .next cũ để tránh hash mismatch)
 echo "🔨 Build Next.js..."
+rm -rf .next
 npm run build
 
 # 5. Khởi động lại PM2

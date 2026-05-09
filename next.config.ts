@@ -43,6 +43,8 @@ const nextConfig: NextConfig = {
     localPatterns: [
       { pathname: "/uploads/**" },
       { pathname: "/guests/**" },
+      { pathname: "/logo.png" },
+      { pathname: "/og-image.png" },
     ],
     formats: ["image/avif", "image/webp"],
   },
