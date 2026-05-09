@@ -1,5 +1,5 @@
 import "@/lib/env";
-import { PrismaClient } from ".prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import * as Sentry from "@sentry/nextjs";
