@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Trophy, Users, User, Bell, AlertTriangle, ClipboardList, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";

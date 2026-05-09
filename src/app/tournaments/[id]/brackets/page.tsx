@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Trophy, ArrowLeft, Users, ChevronRight, Wifi, WifiOff } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { useSSE } from "@/lib/hooks/useSSE";
 
 interface GameResult { id: string; placement: number; points: number; playerId: string; player: { id: string; ign: string } }
@@ -43,7 +42,7 @@ export default function BracketsPage() {
   // SSE for real-time updates
   const { isConnected } = useSSE({
     tournamentId: params.id as string,
-    onEvent: useCallback((_event: string, _data: unknown) => {
+    onEvent: useCallback(() => {
       fetchTournament();
       setLastUpdate(new Date());
     }, [fetchTournament]),

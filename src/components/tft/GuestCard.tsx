@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Crown, Star, CheckCircle, Clock } from "lucide-react";
+import { Crown, CheckCircle, Clock } from "lucide-react";
 
 interface GuestCardProps {
   name: string;

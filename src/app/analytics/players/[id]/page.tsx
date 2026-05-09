@@ -12,7 +12,6 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 
 interface PlayerStats {
   totalGames: number;

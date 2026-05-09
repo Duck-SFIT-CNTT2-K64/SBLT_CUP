@@ -25,30 +25,22 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [unseenCount, setUnseenCount] = useState(0);
-
   useEffect(() => {
     if (!session) return;
     const checkUnseen = async () => {
       try {
         const res = await fetch("/api/announcements");
         if (!res.ok) return;
-        const all: { id: string }[] = await res.json();
+        await res.json();
         const raw = localStorage.getItem(DISMISSED_KEY);
         const dismissed: string[] = raw ? JSON.parse(raw) : [];
-        const count = all.filter((a) => !dismissed.includes(a.id)).length;
-        setUnseenCount(count);
+        void dismissed;
       } catch { /* ignore */ }
     };
     checkUnseen();
     const interval = setInterval(checkUnseen, 60000);
     return () => clearInterval(interval);
   }, [session]);
-
-  const openPopup = () => {
-    const fn = (window as unknown as Record<string, unknown>).__openAnnouncementPopup;
-    if (typeof fn === "function") fn();
-  };
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";

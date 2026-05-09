@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Save, Check, Trophy, Target, Megaphone, UserCheck, Clock, Mail, Smartphone } from "lucide-react";
+import { Bell, Save, Trophy, Target, Megaphone, UserCheck, Clock, Mail, Smartphone } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";

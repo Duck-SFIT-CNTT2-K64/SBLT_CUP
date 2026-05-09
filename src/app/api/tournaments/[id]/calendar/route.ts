@@ -38,8 +38,6 @@ export async function GET(
   const escapeIcal = (str: string) =>
     str.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
 
-  const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2)}@sbltcup.com`;
-
   let ical = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",

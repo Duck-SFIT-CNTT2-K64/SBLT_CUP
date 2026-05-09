@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, CheckCircle, XCircle, Clock, Check } from "lucide-react";
+import { Users, Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -99,12 +99,28 @@ export default function AdminPlayersPage() {
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const toggleSelectAll = (ids: string[]) => {
-    if (ids.every((id) => selectedIds.has(id))) setSelectedIds((prev) => { const next = new Set(prev); ids.forEach((id) => next.delete(id)); return next; });
-    else setSelectedIds((prev) => { const next = new Set(prev); ids.forEach((id) => next.add(id)); return next; });
+    if (ids.every((id) => selectedIds.has(id))) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.add(id));
+        return next;
+      });
+    }
   };
 
   const filteredRegistrations = registrations.filter((r) => {
@@ -112,8 +128,6 @@ export default function AdminPlayersPage() {
     if (filter === "guests") return r.player.isGuest;
     return r.status === filter.toUpperCase();
   });
-
-  const inputClass = "w-full px-4 py-2.5 bg-[#0d0d0d] border border-[#222] rounded-xl text-[#f5f5f5] placeholder:text-[#222] focus:outline-none focus:ring-2 focus:ring-[#dc2626]";
 
   if (loading) return <div className="p-8 text-center"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
 

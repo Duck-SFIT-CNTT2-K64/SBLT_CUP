@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Trophy, Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChart3, Medal, Download, Target, Wifi, WifiOff, Share2 } from "lucide-react";
+import { Calendar, Users, Gift, ArrowRight, CheckCircle, Swords, BarChart3, Medal, Download, Target, Wifi, WifiOff, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";

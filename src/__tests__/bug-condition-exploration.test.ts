@@ -57,7 +57,6 @@ describe("Bug 1: Middleware blocks API routes", () => {
     // On unfixed code, the only API whitelist entry is "/api/auth".
     // The fix should replace or supplement it with the broader "/api" prefix.
     // This test confirms the fix is in place by checking the broader prefix exists.
-    const hasApiAuth = source.includes('pathname.startsWith("/api/auth")');
     const hasApiBroad = source.includes('pathname.startsWith("/api")');
 
     // After fix: hasApiBroad must be true (covers all API routes including /api/auth).

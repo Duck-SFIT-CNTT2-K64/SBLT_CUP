@@ -1,6 +1,7 @@
 "use client";
 
 import { type HTMLAttributes, forwardRef, useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
@@ -37,7 +38,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-full flex items-center justify-center font-bold shrink-0 select-none overflow-hidden",
+          "relative rounded-full flex items-center justify-center font-bold shrink-0 select-none overflow-hidden",
           sizeClasses[size],
           !showImage && variantClasses[variant],
           className
@@ -46,10 +47,12 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         {...props}
       >
         {showImage ? (
-          <img
+          <Image
             src={src}
             alt={name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="48px"
+            className="object-cover"
             onError={() => setImgError(true)}
           />
         ) : (

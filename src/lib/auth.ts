@@ -3,8 +3,6 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase());
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   trustHost: true,

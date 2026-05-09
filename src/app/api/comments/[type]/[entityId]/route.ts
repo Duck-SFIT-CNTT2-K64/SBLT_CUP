@@ -152,10 +152,7 @@ export async function POST(
   return NextResponse.json(comment, { status: 201 });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ type: string; entityId: string }> }
-) {
+export async function DELETE(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

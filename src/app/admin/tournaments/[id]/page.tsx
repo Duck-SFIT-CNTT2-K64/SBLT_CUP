@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Plus, Save, Trash2, ArrowLeft, Users, X, Trophy, Pencil, Check, Shuffle, ChevronRight, UserCheck, Activity, Target } from "lucide-react";
@@ -76,14 +76,14 @@ export default function AdminTournamentDetailPage() {
   const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  const fetchTournament = async () => {
+  const fetchTournament = useCallback(async () => {
     try {
       const res = await fetch(`/api/tournaments/${params.id}`);
       if (res.ok) { const data = await res.json(); setTournament(data); if (data.stages.length > 0 && !selectedStage) setSelectedStage(data.stages[0].id); }
     } finally { setLoading(false); }
-  };
+  }, [params.id, selectedStage]);
 
-  useEffect(() => { fetchTournament(); }, [params.id]);
+  useEffect(() => { fetchTournament(); }, [fetchTournament]);
 
   const openPanel = async (panel: typeof activePanel) => {
     setActivePanel(panel); setPanelMsg(null); setPanelLoading(true); setDrawMode(null); setSemi1DrawData(null); setDrawPreview(null);

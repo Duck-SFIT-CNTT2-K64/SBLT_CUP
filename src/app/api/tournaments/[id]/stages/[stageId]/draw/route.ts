@@ -289,7 +289,7 @@ export async function POST(
   // { assignments: [{ groupId, playerIds[] }] } — QUALIFIER: lưu kết quả thủ công
   // { drawType: "random_seeded" } — SEMI_1: bốc thăm guests ngẫu nhiên
   // { drawType: "wheel_spin", guestAssignments: [{ groupId, guestIds[] }] } — SEMI_1: lưu kết quả từ wheel
-  const { confirm, assignments, drawType, guestAssignments } = body;
+  const { confirm, assignments, drawType } = body;
 
   const stage = await prisma.stage.findFirst({
     where: { id: stageId, tournamentId },

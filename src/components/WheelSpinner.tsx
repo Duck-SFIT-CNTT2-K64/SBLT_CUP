@@ -28,7 +28,6 @@ interface WheelSpinnerProps {
   groups: Group[];
   onAssignmentsComplete: (assignments: { groupId: string; playerIds: string[] }[]) => void;
   onCancel: () => void;
-  onAddItem?: (label: string) => void;
   addableItems?: { id: string; label: string }[];
 }
 
@@ -39,7 +38,7 @@ const COLORS = [
   "#9333ea", "#e11d48", "#0284c7", "#84cc16",
 ];
 
-export default function WheelSpinner({ items, groups, onAssignmentsComplete, onCancel, onAddItem, addableItems }: WheelSpinnerProps) {
+export default function WheelSpinner({ items, groups, onAssignmentsComplete, onCancel, addableItems }: WheelSpinnerProps) {
   const [remaining, setRemaining] = useState<WheelItem[]>(items);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [spinning, setSpinning] = useState(false);

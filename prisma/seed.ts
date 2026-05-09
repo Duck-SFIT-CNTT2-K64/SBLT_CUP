@@ -287,7 +287,6 @@ async function main() {
     });
   }
 
-  const allPlayers = [...regularPlayers, ...guestPlayers];
   console.log(`Players: ${regularPlayers.length} regular + ${guestPlayers.length} guests`);
 
   // ════════════════════════════════════════════════════════════════════════
@@ -610,7 +609,7 @@ async function main() {
 
   // Some early registrations for Tournament 2 (mix of statuses)
   const t2Regs = [
-    ...regularPlayers.slice(0, 8).map((p, i) => ({
+    ...regularPlayers.slice(0, 8).map((p) => ({
       tournamentId: t2.id,
       playerId: p.id,
       status: "APPROVED" as const,

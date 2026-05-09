@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Bell, X, Calendar, AlertTriangle, Trophy, ChevronLeft, ChevronRight, Megaphone } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -48,26 +48,10 @@ function clearDismissedIds() {
 export { clearDismissedIds };
 
 export default function AnnouncementPopup() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-
-  const fetchAndFilter = useCallback(async () => {
-    if (status !== "authenticated") return;
-    try {
-      const res = await fetch("/api/announcements");
-      if (!res.ok) return;
-      const all: Announcement[] = await res.json();
-      const dismissed = getDismissedIds();
-      const unseen = all.filter((a) => !dismissed.includes(a.id));
-      if (unseen.length > 0) {
-        setAnnouncements(unseen);
-        setCurrentIndex(0);
-        setIsOpen(true);
-      }
-    } catch { /* ignore */ }
-  }, [status]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -119,16 +103,6 @@ export default function AnnouncementPopup() {
   const handlePrev = () => {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   };
-
-  // Expose open function via window for Navbar bell
-  useEffect(() => {
-    (window as unknown as Record<string, unknown>).__openAnnouncementPopup = () => {
-      fetchAndFilter();
-    };
-    return () => {
-      delete (window as unknown as Record<string, unknown>).__openAnnouncementPopup;
-    };
-  }, [fetchAndFilter]);
 
   if (!isOpen || announcements.length === 0) return null;
 

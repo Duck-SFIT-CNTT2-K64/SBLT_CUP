@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { AlertTriangle, Plus, X, ImageIcon } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -181,7 +182,7 @@ export default function DisputesPage() {
                 <div className="flex flex-wrap gap-2">
                   {evidencePreviews.map((preview, i) => (
                     <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#222]">
-                      <img src={preview} alt={`Evidence ${i + 1}`} className="w-full h-full object-cover" />
+                      <Image src={preview} alt={`Evidence ${i + 1}`} width={80} height={80} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeEvidence(i)}
@@ -235,7 +236,7 @@ export default function DisputesPage() {
                 <div className="flex gap-2 mt-3">
                   {d.attachments.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="w-16 h-16 rounded-lg overflow-hidden border border-[#222] hover:border-[#dc2626] transition-colors">
-                      <img src={url} alt={`Bằng chứng ${i + 1}`} className="w-full h-full object-cover" />
+                      <Image src={url} alt={`Bằng chứng ${i + 1}`} width={64} height={64} className="w-full h-full object-cover" />
                     </a>
                   ))}
                 </div>

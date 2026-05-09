@@ -38,7 +38,7 @@ export function getLogs(limit: number = 100): RequestLog[] {
 export function createLoggingMiddleware() {
   return async (req: NextRequest) => {
     const start = Date.now();
-    const { pathname, searchParams } = new URL(req.url);
+    const { pathname } = new URL(req.url);
     const userId = req.headers.get("X-User-ID") || undefined;
 
     try {

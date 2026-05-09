@@ -41,7 +41,7 @@ export default function StandingsPage() {
   // SSE for real-time updates
   const { isConnected } = useSSE({
     tournamentId: params.id as string,
-    onEvent: useCallback((_event: string, _data: unknown) => {
+    onEvent: useCallback(() => {
       fetchTournament();
       setLastUpdate(new Date());
     }, [fetchTournament]),

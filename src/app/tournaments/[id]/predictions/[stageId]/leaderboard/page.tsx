@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import PredictionScoreCard from "@/components/predictions/PredictionScoreCard";
-import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 

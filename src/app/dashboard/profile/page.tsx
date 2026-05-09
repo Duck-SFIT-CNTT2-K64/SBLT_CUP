@@ -46,7 +46,7 @@ export default function ProfilePage() {
       } catch { if (!cancelled) setError("Không thể tải thông tin hồ sơ."); }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [session?.user?.name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

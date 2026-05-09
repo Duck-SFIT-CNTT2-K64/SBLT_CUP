@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     orderBy: { registeredAt: "asc" },
   });
 
-  const registrationsByDate = groupByDate(registrations.map((r) => r.registeredAt));
+  const registrationsByDate = groupByDate(registrations.map((registration: { registeredAt: Date }) => registration.registeredAt));
 
   // User signups over time
   const users = await prisma.user.findMany({
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "asc" },
   });
 
-  const signupsByDate = groupByDate(users.map((u) => u.createdAt));
+  const signupsByDate = groupByDate(users.map((user: { createdAt: Date }) => user.createdAt));
 
   // Match results distribution (placements)
   const results = await prisma.gameResult.groupBy({
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
   const matchDistribution = Array.from({ length: 8 }, (_, i) => ({
     placement: i + 1,
-    count: results.find((r) => r.placement === i + 1)?._count.id || 0,
+    count: results.find((result: { placement: number; _count: { id: number } }) => result.placement === i + 1)?._count.id || 0,
   }));
 
   // Tournament status distribution
@@ -49,9 +49,9 @@ export async function GET(req: NextRequest) {
     _count: { id: true },
   });
 
-  const tournamentStatusDistribution = tournamentStatus.map((t) => ({
-    status: t.status,
-    count: t._count.id,
+  const tournamentStatusDistribution = tournamentStatus.map((tournament: { status: string; _count: { id: number } }) => ({
+    status: tournament.status,
+    count: tournament._count.id,
   }));
 
   // Active players (players with at least 1 game result)
@@ -71,7 +71,9 @@ export async function GET(req: NextRequest) {
   });
 
   const gameResultsByDate = groupByDate(
-    gameResults.filter((r) => r.game.endTime).map((r) => r.game.endTime!)
+    gameResults
+      .filter((result: { game: { endTime: Date | null } }) => result.game.endTime)
+      .map((result: { game: { endTime: Date | null } }) => result.game.endTime!)
   );
 
   return NextResponse.json({

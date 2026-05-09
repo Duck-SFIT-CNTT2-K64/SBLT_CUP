@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
@@ -8,6 +8,7 @@ import AnnouncementPopup from "@/components/layout/AnnouncementPopup";
 import JsonLd from "@/components/JsonLd";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
+const oswald = Oswald({ subsets: ["latin", "vietnamese"], weight: ["400", "700"], variable: "--font-oswald" });
 
 const BASE_URL = process.env.NEXTAUTH_URL || "https://sbltcup.com";
 
@@ -56,11 +57,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} ${oswald.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#dc2626" />
       </head>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, Check, X } from "lucide-react";
+import Image from "next/image";
+import { AlertTriangle, Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -115,7 +116,7 @@ export default function AdminDisputesPage() {
                   <div className="flex gap-2 mb-3">
                     {d.attachments.map((url, i) => (
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="w-16 h-16 rounded-lg overflow-hidden border border-[#222] hover:border-[#dc2626] transition-colors">
-                        <img src={url} alt={`Bằng chứng ${i + 1}`} className="w-full h-full object-cover" />
+                        <Image src={url} alt={`Bằng chứng ${i + 1}`} width={64} height={64} className="w-full h-full object-cover" />
                       </a>
                     ))}
                   </div>
