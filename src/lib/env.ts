@@ -12,13 +12,7 @@ const envSchema = z.object({
         const emails = val.split(",").map((e) => e.trim());
         return emails.every((e) => z.string().email().safeParse(e).success);
       },
-      (val) => {
-        const emails = val.split(",").map((e) => e.trim());
-        const invalidEmails = emails.filter((e) => !z.string().email().safeParse(e).success);
-        return {
-          message: `Invalid email(s) in ADMIN_EMAILS: ${invalidEmails.join(", ")}`,
-        };
-      }
+      "ADMIN_EMAILS must contain valid comma-separated email addresses"
     ),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   AUTH_TRUST_HOST: z.string().optional().default("true"),

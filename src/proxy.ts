@@ -290,7 +290,7 @@ export function proxy(request: NextRequest) {
       path: pathname,
       status: 200,
       duration,
-      userId,
+      userId: userId ?? undefined,
     });
   }
 
