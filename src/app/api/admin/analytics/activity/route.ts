@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     select: { id: true, name: true, player: { select: { ign: true } } },
   });
 
-  const topPlayers = topUsers.map((u) => ({
+  const topPlayers = topUsers.map((u: { id: string; name: string | null; player: { ign: string } | null }) => ({
     userId: u.id,
     name: u.player?.ign || u.name,
     activityCount: playerActivityMap.get(u.id) || 0,
