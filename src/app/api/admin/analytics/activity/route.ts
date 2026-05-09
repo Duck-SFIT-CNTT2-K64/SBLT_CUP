@@ -31,9 +31,9 @@ export async function GET(req: NextRequest) {
 
   // Combine all activity dates
   const activityDates: Date[] = [
-    ...recentPredictions.map((p) => p.createdAt),
-    ...recentComments.map((c) => c.createdAt),
-    ...recentResults.filter((r) => r.game.endTime).map((r) => r.game.endTime!),
+    ...recentPredictions.map((p: { createdAt: Date }) => p.createdAt),
+    ...recentComments.map((c: { createdAt: Date }) => c.createdAt),
+    ...recentResults.filter((r: { game: { endTime: Date | null } }) => r.game.endTime).map((r: { game: { endTime: Date | null } }) => r.game.endTime!),
   ];
 
   const dailyActivity = groupByDate(activityDates);
