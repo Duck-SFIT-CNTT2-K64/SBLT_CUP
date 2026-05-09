@@ -57,11 +57,19 @@ export async function GET(req: NextRequest) {
     select: { id: true, name: true, player: { select: { ign: true } } },
   });
 
-  const topPlayers = topUsers.map((u: { id: string; name: string | null; player: { ign: string } | null }) => ({
-    userId: u.id,
-    name: u.player?.ign || u.name,
-    activityCount: playerActivityMap.get(u.id) || 0,
-  })).sort((a, b) => b.activityCount - a.activityCount);
+  type TopPlayerActivity = {
+    userId: string;
+    name: string | null;
+    activityCount: number;
+  };
+
+  const topPlayers: TopPlayerActivity[] = topUsers
+    .map((u: { id: string; name: string | null; player: { ign: string } | null }) => ({
+      userId: u.id,
+      name: u.player?.ign || u.name,
+      activityCount: playerActivityMap.get(u.id) || 0,
+    }))
+    .sort((a: TopPlayerActivity, b: TopPlayerActivity) => b.activityCount - a.activityCount);
 
   // Dispute resolution stats
   const [totalDisputes, resolvedDisputes, rejectedDisputes] = await Promise.all([
