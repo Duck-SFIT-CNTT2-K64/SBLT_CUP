@@ -34,7 +34,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "green" | "yellow"
 
 export default function PredictionsPage() {
   const params = useParams();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [stages, setStages] = useState<StageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
