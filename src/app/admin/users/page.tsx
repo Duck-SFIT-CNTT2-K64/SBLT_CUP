@@ -17,14 +17,16 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { fetchUsers(); }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/admin/users");
-      if (res.ok) setUsers(await res.json());
-    } catch { setError("Không thể tải danh sách người dùng."); } finally { setLoading(false); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/users");
+        if (res.ok && !cancelled) setUsers(await res.json());
+      } catch { if (!cancelled) setError("Không thể tải danh sách người dùng."); } finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     const res = await fetch(`/api/admin/users/${userId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole }) });

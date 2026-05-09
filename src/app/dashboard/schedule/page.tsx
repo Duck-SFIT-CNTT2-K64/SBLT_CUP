@@ -22,15 +22,17 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { fetchSchedule(); }, []);
-
-  const fetchSchedule = async () => {
-    try {
-      const res = await fetch("/api/players/schedule");
-      if (!res.ok) throw new Error();
-      setGames(await res.json());
-    } catch { setError("Không thể tải lịch thi đấu."); } finally { setLoading(false); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/players/schedule");
+        if (!res.ok) throw new Error();
+        if (!cancelled) setGames(await res.json());
+      } catch { if (!cancelled) setError("Không thể tải lịch thi đấu."); } finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
 

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Thiếu tournamentId" }, { status: 400 });
   }
 
-  const where: any = {
+  const where: { stage: { tournamentId: string }; stageId?: string } = {
     stage: { tournamentId },
   };
   if (stageId) {

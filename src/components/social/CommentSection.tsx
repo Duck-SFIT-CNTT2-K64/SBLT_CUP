@@ -37,23 +37,23 @@ export function CommentSection({ type, entityId }: CommentSectionProps) {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    fetchComments();
-  }, [type, entityId, page]);
-
-  const fetchComments = async () => {
-    try {
-      const res = await fetch(`/api/comments/${type}/${entityId}?page=${page}&limit=10`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments((prev) => (page === 1 ? data.data : [...prev, ...data.data]));
-        setHasMore(data.pagination.page < data.pagination.totalPages);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/comments/${type}/${entityId}?page=${page}&limit=10`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setComments((prev) => (page === 1 ? data.data : [...prev, ...data.data]));
+          setHasMore(data.pagination.page < data.pagination.totalPages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch comments:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch comments:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    return () => { cancelled = true; };
+  }, [type, entityId, page]);
 
   const handleSubmit = async () => {
     if (!newComment.trim() || submitting) return;

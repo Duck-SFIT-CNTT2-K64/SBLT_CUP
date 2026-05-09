@@ -43,15 +43,30 @@ export default function BracketsPage() {
   // SSE for real-time updates
   const { isConnected } = useSSE({
     tournamentId: params.id as string,
-    onEvent: useCallback((event: string, data: unknown) => {
+    onEvent: useCallback((_event: string, _data: unknown) => {
       fetchTournament();
       setLastUpdate(new Date());
     }, [fetchTournament]),
   });
 
   useEffect(() => {
-    fetchTournament();
-  }, [fetchTournament]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tournaments/${params.id}`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setTournament(data);
+          setSelectedStageId((prev) => prev ?? (data.stages?.[0]?.id ?? null));
+        }
+      } catch (error) {
+        console.error("Failed to fetch tournament:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [params.id]);
 
   if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
   if (!tournament) return <div className="text-center py-20 text-[#888]">Không tìm thấy giải đấu</div>;

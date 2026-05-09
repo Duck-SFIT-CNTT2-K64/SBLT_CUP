@@ -39,16 +39,18 @@ export default function AuditLogsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const limit = 30;
 
-  useEffect(() => { fetchLogs(); }, [page, entityTypeFilter]);
-
-  const fetchLogs = async () => {
-    setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (entityTypeFilter) params.set("entityType", entityTypeFilter);
-    const res = await fetch(`/api/admin/audit-logs?${params}`);
-    if (res.ok) { const data = await res.json(); setLogs(data.logs); setTotal(data.total); }
-    setLoading(false);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (entityTypeFilter) params.set("entityType", entityTypeFilter);
+      const res = await fetch(`/api/admin/audit-logs?${params}`);
+      if (res.ok && !cancelled) { const data = await res.json(); setLogs(data.logs); setTotal(data.total); }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [page, entityTypeFilter]);
 
   const totalPages = Math.ceil(total / limit);
 

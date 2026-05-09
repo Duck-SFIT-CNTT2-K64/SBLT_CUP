@@ -49,10 +49,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: "Mật khẩu đã được đặt lại thành công. Bạn có thể đăng nhập ngay." });
   } catch (error) {
-    if (error instanceof Error && error.name === "ZodError") {
-      const zodError = error as any;
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: zodError.issues?.[0]?.message || "Dữ liệu không hợp lệ" },
+        { error: error.issues?.[0]?.message || "Dữ liệu không hợp lệ" },
         { status: 400 }
       );
     }

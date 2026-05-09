@@ -42,6 +42,9 @@ jest.mock("@/lib/env", () => ({}));
 
 import { GET, POST } from "@/app/api/notifications/route";
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { markAsRead, markAllAsRead } from "@/lib/notifications";
 
 describe("GET /api/notifications", () => {
   beforeEach(() => {
@@ -49,8 +52,7 @@ describe("GET /api/notifications", () => {
   });
 
   it("returns 401 for unauthenticated users", async () => {
-    const { auth } = require("@/lib/auth");
-    auth.mockResolvedValue(null);
+    (auth as jest.Mock).mockResolvedValue(null);
 
     const req = new NextRequest("http://localhost:3000/api/notifications");
     const response = await GET(req);
@@ -61,10 +63,7 @@ describe("GET /api/notifications", () => {
   });
 
   it("returns paginated notifications for authenticated users", async () => {
-    const { auth } = require("@/lib/auth");
-    const { prisma } = require("@/lib/prisma");
-
-    auth.mockResolvedValue({ user: { id: "user-1" } });
+    (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
     prisma.notification.findMany.mockResolvedValue([
       { id: "n1", title: "Test", message: "Hello", read: false },
     ]);
@@ -86,11 +85,8 @@ describe("POST /api/notifications", () => {
   });
 
   it("marks single notification as read", async () => {
-    const { auth } = require("@/lib/auth");
-    const { markAsRead } = require("@/lib/notifications");
-
-    auth.mockResolvedValue({ user: { id: "user-1" } });
-    markAsRead.mockResolvedValue(undefined);
+    (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
+    (markAsRead as jest.Mock).mockResolvedValue(undefined);
 
     const req = new NextRequest("http://localhost:3000/api/notifications", {
       method: "POST",
@@ -106,11 +102,8 @@ describe("POST /api/notifications", () => {
   });
 
   it("marks all notifications as read", async () => {
-    const { auth } = require("@/lib/auth");
-    const { markAllAsRead } = require("@/lib/notifications");
-
-    auth.mockResolvedValue({ user: { id: "user-1" } });
-    markAllAsRead.mockResolvedValue(undefined);
+    (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
+    (markAllAsRead as jest.Mock).mockResolvedValue(undefined);
 
     const req = new NextRequest("http://localhost:3000/api/notifications", {
       method: "POST",

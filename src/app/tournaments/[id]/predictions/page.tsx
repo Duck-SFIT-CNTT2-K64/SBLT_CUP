@@ -42,11 +42,9 @@ export default function PredictionsPage() {
   const tournamentId = params.id as string;
 
   useEffect(() => {
-    if (!session?.user?.id) {
-      setLoading(false);
-      return;
-    }
+    if (!session?.user?.id) return;
 
+    let cancelled = false;
     fetch(`/api/tournaments/${tournamentId}/predictions`)
       .then(async (r) => {
         if (r.status === 401) {
@@ -61,8 +59,17 @@ export default function PredictionsPage() {
         setStages(data.stages || []);
       })
       .catch(() => setError("Lỗi kết nối. Vui lòng thử lại."))
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [tournamentId, session?.user?.id]);
+
+  if (sessionStatus === "loading") {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />
+      </div>
+    );
+  }
 
   if (!session?.user?.id) {
     return (

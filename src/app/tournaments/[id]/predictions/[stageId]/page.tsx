@@ -64,7 +64,7 @@ export default function PredictionFormPage() {
           setError(data.error || `Lỗi server (${r.status})`);
           return;
         }
-        setGroups((data.groups || []).map((g: any) => ({
+        setGroups((data.groups || []).map((g: { groupId: string; groupName: string; players: Player[] }) => ({
           id: g.groupId,
           name: g.groupName,
           players: g.players,

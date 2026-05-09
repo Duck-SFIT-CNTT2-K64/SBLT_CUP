@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { ThumbsUp, Flame, Trophy, HandMetal } from "lucide-react";
 
 const REACTION_CONFIG = {
@@ -18,32 +19,33 @@ interface ReactionBarProps {
 
 export function ReactionBar({ type, entityId }: ReactionBarProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [userReactions, setUserReactions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchReactions();
-  }, [type, entityId]);
-
-  const fetchReactions = async () => {
-    try {
-      const res = await fetch(`/api/reactions/${type}/${entityId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setCounts(data.counts);
-        setUserReactions(data.userReactions);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/reactions/${type}/${entityId}`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setCounts(data.counts);
+          setUserReactions(data.userReactions);
+        }
+      } catch (error) {
+        console.error("Failed to fetch reactions:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch reactions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    return () => { cancelled = true; };
+  }, [type, entityId]);
 
   const handleReaction = async (reactionType: string) => {
     if (!session) {
-      window.location.href = "/auth/login";
+      router.push("/auth/login");
       return;
     }
 

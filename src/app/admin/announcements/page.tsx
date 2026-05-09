@@ -23,14 +23,23 @@ export default function AdminAnnouncementsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ title: "", content: "", type: "GENERAL" });
 
-  useEffect(() => { fetchAnnouncements(); }, []);
-
   const fetchAnnouncements = async () => {
     try {
       const res = await fetch("/api/announcements");
       if (res.ok) setAnnouncements(await res.json());
     } catch { /* empty */ } finally { setLoading(false); }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/announcements");
+        if (res.ok && !cancelled) setAnnouncements(await res.json());
+      } catch { /* empty */ } finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

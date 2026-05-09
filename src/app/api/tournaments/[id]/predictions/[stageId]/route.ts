@@ -159,7 +159,7 @@ export async function POST(
 
   // Validate entries: phải đủ tất cả groups
   const groupIds = new Set(stage.groups.map((g) => g.id));
-  const entryGroupIds = new Set(entries.map((e: any) => e.groupId));
+  const entryGroupIds = new Set(entries.map((e: { groupId: string }) => e.groupId));
 
   if (groupIds.size !== entryGroupIds.size) {
     return NextResponse.json(
@@ -221,7 +221,7 @@ export async function POST(
       // Xóa entries cũ, tạo entries mới
       await tx.predictionEntry.deleteMany({ where: { predictionId: existing.id } });
       await tx.predictionEntry.createMany({
-        data: entries.map((e: any) => ({
+        data: entries.map((e: { groupId: string; rank1PlayerId: string; rank2PlayerId: string; rank3PlayerId: string; rank4PlayerId: string }) => ({
           predictionId: existing.id,
           groupId: e.groupId,
           rank1PlayerId: e.rank1PlayerId,
@@ -239,7 +239,7 @@ export async function POST(
         userId: session.user.id,
         stageId,
         entries: {
-          create: entries.map((e: any) => ({
+          create: entries.map((e: { groupId: string; rank1PlayerId: string; rank2PlayerId: string; rank3PlayerId: string; rank4PlayerId: string }) => ({
             groupId: e.groupId,
             rank1PlayerId: e.rank1PlayerId,
             rank2PlayerId: e.rank2PlayerId,

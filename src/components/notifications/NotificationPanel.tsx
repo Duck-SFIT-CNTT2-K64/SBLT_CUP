@@ -44,23 +44,23 @@ export function NotificationPanel({ onClose, onCountChange }: NotificationPanelP
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [page]);
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch(`/api/notifications?page=${page}&limit=10`);
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications((prev) => (page === 1 ? data.data : [...prev, ...data.data]));
-        setHasMore(data.pagination.page < data.pagination.totalPages);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/notifications?page=${page}&limit=10`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setNotifications((prev) => (page === 1 ? data.data : [...prev, ...data.data]));
+          setHasMore(data.pagination.page < data.pagination.totalPages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    return () => { cancelled = true; };
+  }, [page]);
 
   const markAsRead = async (id: string) => {
     try {

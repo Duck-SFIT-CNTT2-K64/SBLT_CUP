@@ -49,11 +49,13 @@ export default function PredictionGroupForm({
   });
   const [selectingSlot, setSelectingSlot] = useState<keyof RankSlots | null>(null);
 
-  useEffect(() => {
+  const [prevEntries, setPrevEntries] = useState(existingEntries);
+  if (existingEntries !== prevEntries) {
+    setPrevEntries(existingEntries);
     if (existingEntries) {
       setSelections(existingEntries);
     }
-  }, [existingEntries]);
+  }
 
   const selectedPlayerIds = new Set(Object.values(selections).filter(Boolean));
 

@@ -80,22 +80,22 @@ export default function NotificationsPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    fetchPreferences();
-  }, []);
-
-  const fetchPreferences = async () => {
-    try {
-      const res = await fetch("/api/notifications/preferences");
-      if (res.ok) {
-        const data = await res.json();
-        setPreferences(data);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/notifications/preferences");
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setPreferences(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch preferences:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch preferences:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);

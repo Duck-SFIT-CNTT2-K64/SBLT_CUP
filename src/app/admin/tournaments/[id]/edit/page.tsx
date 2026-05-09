@@ -21,22 +21,26 @@ export default function EditTournamentPage() {
     maxPlayers: "64", prizePool: "10000000",
   });
 
-  useEffect(() => { fetchTournament(); }, [params.id]);
-
-  const fetchTournament = async () => {
-    try {
-      const res = await fetch(`/api/tournaments/${params.id}`);
-      if (!res.ok) { setError("Không tìm thấy giải đấu"); return; }
-      const data = await res.json();
-      const toDateInput = (iso: string) => iso ? new Date(iso).toISOString().split("T")[0] : "";
-      setFormData({
-        name: data.name || "", season: String(data.season || ""), description: data.description || "",
-        regStart: toDateInput(data.regStart), regEnd: toDateInput(data.regEnd),
-        startDate: toDateInput(data.startDate), endDate: toDateInput(data.endDate),
-        maxPlayers: String(data.maxPlayers || 64), prizePool: String(data.prizePool || 10000000),
-      });
-    } catch { setError("Đã xảy ra lỗi khi tải thông tin giải đấu"); } finally { setFetching(false); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tournaments/${params.id}`);
+        if (!res.ok) { if (!cancelled) setError("Không tìm thấy giải đấu"); return; }
+        const data = await res.json();
+        const toDateInput = (iso: string) => iso ? new Date(iso).toISOString().split("T")[0] : "";
+        if (!cancelled) {
+          setFormData({
+            name: data.name || "", season: String(data.season || ""), description: data.description || "",
+            regStart: toDateInput(data.regStart), regEnd: toDateInput(data.regEnd),
+            startDate: toDateInput(data.startDate), endDate: toDateInput(data.endDate),
+            maxPlayers: String(data.maxPlayers || 64), prizePool: String(data.prizePool || 10000000),
+          });
+        }
+      } catch { if (!cancelled) setError("Đã xảy ra lỗi khi tải thông tin giải đấu"); } finally { if (!cancelled) setFetching(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [params.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

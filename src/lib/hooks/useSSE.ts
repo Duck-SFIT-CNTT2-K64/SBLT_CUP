@@ -16,16 +16,20 @@ export function useSSE(options: SSEOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const connectRef = useRef<() => void>(() => {});
 
   // Store callbacks in refs to avoid reconnect loops
   const onEventRef = useRef(options.onEvent);
   const onConnectRef = useRef(options.onConnect);
   const onDisconnectRef = useRef(options.onDisconnect);
   const onErrorRef = useRef(options.onError);
-  onEventRef.current = options.onEvent;
-  onConnectRef.current = options.onConnect;
-  onDisconnectRef.current = options.onDisconnect;
-  onErrorRef.current = options.onError;
+
+  useEffect(() => {
+    onEventRef.current = options.onEvent;
+    onConnectRef.current = options.onConnect;
+    onDisconnectRef.current = options.onDisconnect;
+    onErrorRef.current = options.onError;
+  });
 
   const connect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -77,13 +81,14 @@ export function useSSE(options: SSEOptions = {}) {
         reconnectAttemptsRef.current++;
 
         reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
+          connectRef.current();
         }, delay);
       }
     };
   }, [tournamentId]);
 
   useEffect(() => {
+    connectRef.current = connect;
     connect();
 
     return () => {

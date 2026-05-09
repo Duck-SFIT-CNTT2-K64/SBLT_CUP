@@ -45,7 +45,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role = user.role;
         token.id = user.id;
-        token.passwordChangedAt = (user as any).passwordChangedAt ?? 0;
+        token.passwordChangedAt = (user as unknown as { passwordChangedAt?: number }).passwordChangedAt ?? 0;
       }
 
       // Invalidate session if password was changed after token was issued

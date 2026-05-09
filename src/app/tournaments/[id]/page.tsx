@@ -55,6 +55,7 @@ const STAGE_STATUS: Record<string, { label: string; variant: "red" | "green" | "
 export default function TournamentDetailPage() {
   const params = useParams();
   const { data: session } = useSession();
+  const userId = session?.user?.id;
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
@@ -69,9 +70,9 @@ export default function TournamentDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setTournament(data);
-        if (session?.user?.id) {
+        if (userId) {
           setIsRegistered(data.registrations.some(
-            (r: { player: { userId: string } }) => r.player.userId === session.user.id
+            (r: { player: { userId: string } }) => r.player.userId === userId
           ));
         }
       }
@@ -80,7 +81,7 @@ export default function TournamentDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.id, session?.user?.id]);
+  }, [params.id, userId]);
 
   // SSE for real-time updates
   const { isConnected } = useSSE({
@@ -92,8 +93,27 @@ export default function TournamentDetailPage() {
   });
 
   useEffect(() => {
-    fetchTournament();
-  }, [fetchTournament]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/tournaments/${params.id}`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setTournament(data);
+          if (userId) {
+            setIsRegistered(data.registrations.some(
+              (r: { player: { userId: string } }) => r.player.userId === userId
+            ));
+          }
+        }
+      } catch {
+        if (!cancelled) setError("Không thể tải thông tin giải đấu.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [params.id, userId]);
 
   const handleRegister = async () => {
     if (!session) { window.location.href = "/auth/login"; return; }

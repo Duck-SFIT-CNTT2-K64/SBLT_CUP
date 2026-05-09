@@ -94,10 +94,9 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    if (error instanceof Error && error.name === "ZodError") {
-      const zodError = error as any;
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: zodError.issues?.[0]?.message || "Dữ liệu không hợp lệ" },
+        { error: error.issues?.[0]?.message || "Dữ liệu không hợp lệ" },
         { status: 400 }
       );
     }

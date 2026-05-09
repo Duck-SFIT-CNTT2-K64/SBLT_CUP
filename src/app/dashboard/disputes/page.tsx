@@ -36,14 +36,23 @@ export default function DisputesPage() {
   const [uploadingEvidence, setUploadingEvidence] = useState(false);
   const evidenceInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { fetchData(); }, []);
-
   const fetchData = async () => {
     const [d, t] = await Promise.all([fetch("/api/disputes"), fetch("/api/tournaments")]);
     if (d.ok) setDisputes(await d.json());
     if (t.ok) { const json = await t.json(); setTournaments(json.data); }
     setLoading(false);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [d, t] = await Promise.all([fetch("/api/disputes"), fetch("/api/tournaments")]);
+      if (d.ok && !cancelled) setDisputes(await d.json());
+      if (t.ok && !cancelled) { const json = await t.json(); setTournaments(json.data); }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleEvidenceSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);

@@ -43,6 +43,7 @@ jest.mock("@/lib/rate-limit", () => ({
 
 import { POST } from "@/app/api/auth/register/route";
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 function createRequest(body: Record<string, unknown>) {
   return new NextRequest("http://localhost:3000/api/auth/register", {
@@ -58,7 +59,6 @@ describe("POST /api/auth/register", () => {
   });
 
   it("registers a new user successfully", async () => {
-    const { prisma } = require("@/lib/prisma");
     prisma.user.findUnique.mockResolvedValue(null);
     prisma.player.findFirst.mockResolvedValue(null);
     prisma.user.create.mockResolvedValue({
@@ -85,7 +85,6 @@ describe("POST /api/auth/register", () => {
   });
 
   it("rejects duplicate email", async () => {
-    const { prisma } = require("@/lib/prisma");
     prisma.user.findUnique.mockResolvedValue({ id: "existing" });
 
     const req = createRequest({
@@ -103,7 +102,6 @@ describe("POST /api/auth/register", () => {
   });
 
   it("rejects duplicate IGN", async () => {
-    const { prisma } = require("@/lib/prisma");
     prisma.user.findUnique.mockResolvedValue(null);
     prisma.player.findFirst.mockResolvedValue({ id: "existing-player" });
 

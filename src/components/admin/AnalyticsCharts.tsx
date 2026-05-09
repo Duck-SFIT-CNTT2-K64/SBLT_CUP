@@ -37,10 +37,6 @@ export function AnalyticsCharts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [days]);
-
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -62,6 +58,32 @@ export function AnalyticsCharts() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [overviewRes, activityRes] = await Promise.all([
+          fetch(`/api/admin/analytics/overview?days=${days}`),
+          fetch(`/api/admin/analytics/activity?days=${days}`),
+        ]);
+
+        if (overviewRes.ok && !cancelled) setOverview(await overviewRes.json());
+        if (activityRes.ok && !cancelled) setActivity(await activityRes.json());
+
+        if ((!overviewRes.ok || !activityRes.ok) && !cancelled) {
+          setError("Không thể tải dữ liệu thống kê");
+        }
+      } catch {
+        if (!cancelled) setError("Đã xảy ra lỗi khi tải dữ liệu");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [days]);
 
   if (loading) {
     return (

@@ -15,15 +15,17 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { fetchResults(); }, []);
-
-  const fetchResults = async () => {
-    try {
-      const res = await fetch("/api/players/results");
-      if (!res.ok) throw new Error();
-      setResults(await res.json());
-    } catch { setError("Không thể tải kết quả thi đấu."); } finally { setLoading(false); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/players/results");
+        if (!res.ok) throw new Error();
+        if (!cancelled) setResults(await res.json());
+      } catch { if (!cancelled) setError("Không thể tải kết quả thi đấu."); } finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const getPlacementBadge = (placement: number) => {
     if (placement === 1) return <span className="flex items-center gap-1"><Medal className="h-4 w-4 text-yellow-400" /><span className="font-bold text-yellow-400">1st</span></span>;

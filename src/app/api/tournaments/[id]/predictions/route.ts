@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PREDICTABLE_STAGES } from "@/lib/constants";
+import type { StageType } from "@prisma/client";
 
 /**
  * GET /api/tournaments/[id]/predictions
@@ -23,7 +24,7 @@ export async function GET(
     where: { id: tournamentId },
     include: {
       stages: {
-        where: { stageType: { in: PREDICTABLE_STAGES as any[] } },
+        where: { stageType: { in: PREDICTABLE_STAGES as StageType[] } },
         orderBy: { stageOrder: "asc" },
         include: {
           groups: {

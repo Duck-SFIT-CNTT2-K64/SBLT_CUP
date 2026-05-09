@@ -27,24 +27,26 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { fetchProfile(); }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch("/api/players/profile");
-      if (res.ok) {
-        const data = await res.json();
-        setProfile({
-          ign: data.ign || "",
-          rank: data.rank || "",
-          discord: data.discord || "",
-          phone: data.phone || "",
-          avatar: data.user?.avatar || undefined,
-          name: data.user?.name || session?.user?.name || "",
-        });
-      }
-    } catch { setError("Không thể tải thông tin hồ sơ."); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/players/profile");
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setProfile({
+            ign: data.ign || "",
+            rank: data.rank || "",
+            discord: data.discord || "",
+            phone: data.phone || "",
+            avatar: data.user?.avatar || undefined,
+            name: data.user?.name || session?.user?.name || "",
+          });
+        }
+      } catch { if (!cancelled) setError("Không thể tải thông tin hồ sơ."); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

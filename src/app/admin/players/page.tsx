@@ -41,24 +41,6 @@ export default function AdminPlayersPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMsg, setBulkMsg] = useState<string | null>(null);
 
-  useEffect(() => { fetchTournaments(); }, []);
-
-  useEffect(() => {
-    if (selectedTournamentId) fetchRegistrations();
-  }, [selectedTournamentId]);
-
-  const fetchTournaments = async () => {
-    try {
-      const res = await fetch("/api/tournaments");
-      if (res.ok) {
-        const json = await res.json();
-        setTournaments(json.data);
-        if (json.data.length > 0) setSelectedTournamentId(json.data[0].id);
-        else setLoading(false);
-      }
-    } catch { setError("Không thể tải dữ liệu đăng ký."); setLoading(false); }
-  };
-
   const fetchRegistrations = async () => {
     if (!selectedTournamentId) return;
     setLoading(true);
@@ -67,6 +49,37 @@ export default function AdminPlayersPage() {
       if (res.ok) setRegistrations(await res.json());
     } catch { setError("Không thể tải dữ liệu đăng ký."); } finally { setLoading(false); }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/tournaments");
+        if (res.ok) {
+          const json = await res.json();
+          if (!cancelled) {
+            setTournaments(json.data);
+            if (json.data.length > 0) setSelectedTournamentId(json.data[0].id);
+            else setLoading(false);
+          }
+        }
+      } catch { if (!cancelled) { setError("Không thể tải dữ liệu đăng ký."); setLoading(false); } }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedTournamentId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/tournaments/${selectedTournamentId}/registrations`);
+        if (res.ok && !cancelled) setRegistrations(await res.json());
+      } catch { if (!cancelled) setError("Không thể tải dữ liệu đăng ký."); } finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedTournamentId]);
 
   const handleStatusChange = async (registrationId: string, newStatus: string) => {
     if (!selectedTournamentId) return;

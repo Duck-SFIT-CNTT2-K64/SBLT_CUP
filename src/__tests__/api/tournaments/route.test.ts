@@ -39,6 +39,7 @@ jest.mock("next/cache", () => ({
 
 import { GET } from "@/app/api/tournaments/route";
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 describe("GET /api/tournaments", () => {
   beforeEach(() => {
@@ -46,7 +47,6 @@ describe("GET /api/tournaments", () => {
   });
 
   it("returns paginated tournaments", async () => {
-    const { prisma } = require("@/lib/prisma");
     const mockTournaments = [
       { id: "1", name: "SBLT CUP Mua 1", season: 1, status: "COMPLETED" },
       { id: "2", name: "SBLT CUP Mua 2", season: 2, status: "REGISTRATION_OPEN" },
@@ -65,7 +65,6 @@ describe("GET /api/tournaments", () => {
   });
 
   it("handles pagination parameters", async () => {
-    const { prisma } = require("@/lib/prisma");
     prisma.tournament.findMany.mockResolvedValue([]);
     prisma.tournament.count.mockResolvedValue(0);
 
@@ -81,7 +80,6 @@ describe("GET /api/tournaments", () => {
   });
 
   it("caps limit at 100", async () => {
-    const { prisma } = require("@/lib/prisma");
     prisma.tournament.findMany.mockResolvedValue([]);
     prisma.tournament.count.mockResolvedValue(0);
 

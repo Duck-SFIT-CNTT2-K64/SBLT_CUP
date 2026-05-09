@@ -1,28 +1,28 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export function usePushNotifications() {
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported] = useState(() =>
+    typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window
+  );
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window) {
-      setIsSupported(true);
-      checkSubscription();
-    }
-  }, []);
-
-  const checkSubscription = async () => {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-    } catch {
-      // Service worker not registered yet
-    }
-  };
+    if (!isSupported) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (!cancelled) setIsSubscribed(!!subscription);
+      } catch {
+        // Service worker not registered yet
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isSupported]);
 
   const subscribe = useCallback(async () => {
     setLoading(true);

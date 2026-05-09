@@ -25,10 +25,7 @@ export default function DashboardPredictionsPage() {
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
-    if (!session?.user?.id) {
-      setLoading(false);
-      return;
-    }
+    if (!session?.user?.id) return;
 
     // Fetch all tournaments to get user's predictions
     fetch("/api/tournaments?limit=100")
@@ -74,7 +71,7 @@ export default function DashboardPredictionsPage() {
       .finally(() => setLoading(false));
   }, [session?.user?.id, sessionStatus]);
 
-  if (sessionStatus === "loading" || loading) {
+  if (sessionStatus === "loading" || (loading && session?.user?.id)) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />

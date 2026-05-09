@@ -76,14 +76,14 @@ export default function AdminTournamentDetailPage() {
   const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  useEffect(() => { fetchTournament(); }, [params.id]);
-
   const fetchTournament = async () => {
     try {
       const res = await fetch(`/api/tournaments/${params.id}`);
       if (res.ok) { const data = await res.json(); setTournament(data); if (data.stages.length > 0 && !selectedStage) setSelectedStage(data.stages[0].id); }
     } finally { setLoading(false); }
   };
+
+  useEffect(() => { fetchTournament(); }, [params.id]);
 
   const openPanel = async (panel: typeof activePanel) => {
     setActivePanel(panel); setPanelMsg(null); setPanelLoading(true); setDrawMode(null); setSemi1DrawData(null); setDrawPreview(null);

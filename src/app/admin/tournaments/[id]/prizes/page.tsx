@@ -27,8 +27,6 @@ export default function AdminPrizesPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  useEffect(() => { fetchData(); }, [params.id]);
-
   const fetchData = async () => {
     const [prizesRes, regRes] = await Promise.all([
       fetch(`/api/tournaments/${params.id}/prizes`),
@@ -38,6 +36,20 @@ export default function AdminPrizesPage() {
     if (regRes.ok) { const regs = await regRes.json(); setApprovedPlayers(regs.filter((r: { status: string }) => r.status === "APPROVED").map((r: { player: Player }) => r.player)); }
     setLoading(false);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [prizesRes, regRes] = await Promise.all([
+        fetch(`/api/tournaments/${params.id}/prizes`),
+        fetch(`/api/tournaments/${params.id}/registrations`),
+      ]);
+      if (prizesRes.ok && !cancelled) setPrizes(await prizesRes.json());
+      if (regRes.ok && !cancelled) { const regs = await regRes.json(); setApprovedPlayers(regs.filter((r: { status: string }) => r.status === "APPROVED").map((r: { player: Player }) => r.player)); }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [params.id]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

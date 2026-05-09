@@ -28,14 +28,16 @@ export default function AdminTournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { fetchTournaments(); }, []);
-
-  const fetchTournaments = async () => {
-    try {
-      const res = await fetch("/api/tournaments");
-      if (res.ok) { const json = await res.json(); setTournaments(json.data); }
-    } catch { setError("Không thể tải danh sách giải đấu."); } finally { setLoading(false); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/tournaments");
+        if (res.ok && !cancelled) { const json = await res.json(); setTournaments(json.data); }
+      } catch { if (!cancelled) setError("Không thể tải danh sách giải đấu."); } finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc chắn muốn xóa giải đấu này?")) return;

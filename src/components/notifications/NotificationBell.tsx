@@ -10,9 +10,19 @@ export function NotificationBell() {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
+    let cancelled = false;
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/notifications/unread-count");
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setUnreadCount(data.count);
+        }
+      } catch { /* */ }
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   useEffect(() => {
@@ -24,18 +34,6 @@ export function NotificationBell() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const fetchUnreadCount = async () => {
-    try {
-      const res = await fetch("/api/notifications/unread-count");
-      if (res.ok) {
-        const data = await res.json();
-        setUnreadCount(data.count);
-      }
-    } catch (error) {
-      console.error("Failed to fetch unread count:", error);
-    }
-  };
 
   return (
     <div className="relative" ref={panelRef}>

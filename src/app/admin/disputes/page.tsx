@@ -36,13 +36,21 @@ export default function AdminDisputesPage() {
   const [editForm, setEditForm] = useState({ status: "", adminNote: "" });
   const [msg, setMsg] = useState<string | null>(null);
 
-  useEffect(() => { fetchDisputes(); }, []);
-
   const fetchDisputes = async () => {
     const res = await fetch("/api/disputes");
     if (res.ok) setDisputes(await res.json());
     setLoading(false);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/disputes");
+      if (res.ok && !cancelled) setDisputes(await res.json());
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleUpdate = async (disputeId: string) => {
     const res = await fetch(`/api/disputes/${disputeId}`, {

@@ -70,8 +70,24 @@ export default function AnnouncementPopup() {
   }, [status]);
 
   useEffect(() => {
-    fetchAndFilter();
-  }, [fetchAndFilter]);
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/announcements");
+        if (!res.ok || cancelled) return;
+        const all: Announcement[] = await res.json();
+        const dismissed = getDismissedIds();
+        const unseen = all.filter((a) => !dismissed.includes(a.id));
+        if (!cancelled && unseen.length > 0) {
+          setAnnouncements(unseen);
+          setCurrentIndex(0);
+          setIsOpen(true);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [status]);
 
   const handleDismiss = () => {
     if (announcements.length === 0) return;

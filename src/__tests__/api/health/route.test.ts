@@ -25,6 +25,7 @@ jest.mock("@/lib/prisma", () => ({
 jest.mock("@/lib/env", () => ({}));
 
 import { GET } from "@/app/api/health/route";
+import { prisma } from "@/lib/prisma";
 
 describe("GET /api/health", () => {
   beforeEach(() => {
@@ -32,7 +33,6 @@ describe("GET /api/health", () => {
   });
 
   it("returns healthy status when DB is accessible", async () => {
-    const { prisma } = require("@/lib/prisma");
     // First call: SELECT 1 (db check)
     // Second call: table verification
     prisma.$queryRaw
@@ -49,7 +49,6 @@ describe("GET /api/health", () => {
   });
 
   it("returns unhealthy status when DB is down", async () => {
-    const { prisma } = require("@/lib/prisma");
     prisma.$queryRaw.mockRejectedValue(new Error("Connection refused"));
 
     const response = await GET();
