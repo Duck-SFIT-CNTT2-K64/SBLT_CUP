@@ -1,0 +1,102 @@
+docs: Chi tiết đầy đủ toàn bộ thay đổi SBLT CUP session (May 10, 2026)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TỔNG QUAN SESSION:
+Ngày 10/05/2026 thực hiện 6 phần công việc chính:
+1. Fix lỗi Notification table missing từ database
+2. Thay favicon icon tab thành logo ảnh chuyên nghiệp  
+3. Cải thiện header navbar logo
+4. Sáng hóa guest card ảnh tối
+5. Thêm nội dung thể thức vòng đấu vào trang Quy định
+6. Thêm quy tắc xét tie-break vào trang Quy định
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CHI TIẾT THAY ĐỔI THEO FILE:
+
+1. prisma/migrations/20260510055443_add_notification_tables/migration.sql
+   Số dòng: +132
+   - Tạo enum NotificationType (6 types)
+   - Tạo bảng Notification với 8 cột
+   - Tạo indexes cho (userId, read) và createdAt
+   - Tạo ForeignKey userId → User(id) onDelete CASCADE
+   - Mục đích: Sửa lỗi P2021 "table does not exist"
+
+2. src/app/favicon.ico
+   Kích thước: 25931 → 2111 bytes
+   - Tạo từ assets/Logo.png dùng sharp library
+   - Kích thước: 32x32 pixels
+   - Format: ICO image-based
+   - Mục đích: Icon tab trình duyệt rõ hơn, chuyên nghiệp
+
+3. src/components/layout/Navbar.tsx
+   Số dòng: +2 thêm, -8 sửa = net +6 (đã -8)
+   - Line 11: import brandLogo from "../../../assets/Logo.png"
+   - Line 59: src={brandLogo} thay thế /logo.png
+   - Line 60: width={112}, height={40} thay 36x36
+   - Line 62: className="h-8 w-auto object-contain" thay "rounded"
+   - Mục đích: Logo header rõ hơn, responsive sizing
+
+4. src/lib/constants.ts
+   Số dòng: +3 import, +7 sửa trong CELEBRITY_GUESTS = net +10
+   - Line 3-5: Import 3 ảnh guest
+     * linhbodoi-removebg-preview.png
+     * duong_thieu_ngu-removebg-preview.png  
+     * giay_co_dong-removebg-preview.png
+   - CELEBRITY_GUESTS update image mapping:
+     * Linhbodoi: linhbodoiImage.src
+     * Dương Thiếu Ngủ: duongThieuNguImage.src (confirmed: false)
+     * Giày Cơ Động: giayCoDongImage.src (confirmed: false)
+   - Mục đích: Guest card mapping chính xác, track unconfirmed status
+
+5. src/app/page.tsx
+   Số dòng: +22 sửa
+   - Thêm hàm isBrightUnconfirmedGuest(image): boolean
+     * Check if image = duong_thieu_ngu hoặc giay_co_dong
+   - getGuestObjectPosition() update:
+     * Thêm: brightness-110 contrast-105 saturate-125
+     * Conditional opacity-50 chỉ cho !isBrightUnconfirmedGuest
+   - Mục đích: Sáng hóa 2 guest ảnh tối, ko apply cho confirmed guests
+
+6. src/app/rules/page.tsx
+   Số dòng: +90 thêm
+   - Thêm section "Thể thức giải đấu" với 4 subsections:
+     * Vòng Loại (19/05): 64→8 bảng→16 người
+     * Vòng 2 (20/05): 16 loại + 16 khách → 16 người
+     * Vòng 3 (21/05): 16 → 8 người  
+     * Vòng Chung Kết (22/05): 8 người, 3 game, tính tổng
+   
+   - Thêm section "Quy tắc xét tie-break" với 4 tiêu chí:
+     * Tiêu chí 1: Số lần Top 1 (more wins)
+     * Tiêu chí 2: Số lần Top 4 (more wins)
+     * Tiêu chí 3: Số lần Top 8 (fewer = wins)
+     * Tiêu chí 4: Thứ hạng game cuối (higher rank = wins)
+   
+   - Mục đích: Hệ thống xếp hạng clear, công bằng, dễ hiểu
+
+═══════════════════════════════════════════════════════════════════════════════
+
+VALIDATION & BUILD STATUS:
+
+✓ npm run build: Compiled successfully in 7-8 seconds
+✓ npm run lint: 0 warnings (sạch)
+✓ SQL: SELECT COUNT(*) FROM "Notification" - Script executed successfully
+✓ Prisma: prisma migrate dev --name add-notification-tables applied
+
+PHÂN TÍCH FILES CHANGED:
+- Assets: +3 ảnh PNG (linhbodoi, duong_thieu_ngu, giay_co_dong)
+- Prisma: +1 migration SQL (132 lines)
+- Frontend: 4 files JS/TSX (navbar, constants, homepage, rules)
+- Tổng: 9 files changed, 248 insertions(+), 15 deletions(-)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+GIT HISTORY:
+- 5d3dec1 (HEAD master origin/master): Thêm thể thức vòng đấu & tie-break rules
+- c01f68a (origin/main HEAD): chore(lint): remove dead code
+- 9264329: fix: logo không hiển thị do image optimization
+- a2c489b: fix(build): type analytics activity top players
+- 7216fc7: Add explicit type for topUsers.map callback
+
+═══════════════════════════════════════════════════════════════════════════════

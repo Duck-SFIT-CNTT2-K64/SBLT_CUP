@@ -51,13 +51,19 @@ export default async function Home() {
   const session = await auth();
 
   const getGuestObjectPosition = (image: string | null) => {
-    if (!image) return "object-cover object-center";
-    if (image.includes("emduatft")) return "object-cover object-[-50px_center]";
-    if (image.includes("ngoc6mui")) return "object-cover object-[-40px_center]";
-    if (image.includes("furyy")) return "object-cover object-[20px_center]";
-    if (image.includes("stillness") || image.includes("phuonggb")) return "object-contain object-center";
-    return "object-cover object-center";
+    if (!image) return "object-cover object-center brightness-110 contrast-105";
+    if (image.includes("emduatft")) return "object-cover object-[-50px_center] brightness-110 contrast-105";
+    if (image.includes("ngoc6mui")) return "object-cover object-[-40px_center] brightness-110 contrast-105";
+    if (image.includes("furyy")) return "object-cover object-[20px_center] brightness-110 contrast-105";
+    if (image.includes("duong_thieu_ngu") || image.includes("giay_co_dong")) {
+      return "object-cover object-center brightness-140 contrast-110 saturate-110";
+    }
+    if (image.includes("stillness") || image.includes("phuonggb")) return "object-contain object-center brightness-110 contrast-105";
+    return "object-cover object-center brightness-110 contrast-105";
   };
+
+  const isBrightUnconfirmedGuest = (image: string | null) =>
+    Boolean(image && (image.includes("duong_thieu_ngu") || image.includes("giay_co_dong")));
 
   return (
     <div suppressHydrationWarning>
@@ -319,7 +325,7 @@ export default async function Home() {
                   <div
                     key={guest.name}
                     className={`group relative rounded-lg overflow-hidden border transition-all duration-300 ${
-                      guest.confirmed
+                      guest.confirmed || isBrightUnconfirmedGuest(guest.image)
                         ? "bg-[#111] border-[#222] hover:border-[#dc2626]/40 hover:shadow-[0_0_12px_rgba(220,38,38,0.1)]"
                         : "bg-[#0d0d0d] border-[#222]/50 opacity-50"
                     }`}
@@ -341,7 +347,7 @@ export default async function Home() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
-                      {!guest.confirmed && (
+                      {!guest.confirmed && !isBrightUnconfirmedGuest(guest.image) && (
                         <div className="absolute top-1.5 right-1.5 bg-[#111]/90 text-[#888] text-xs px-1.5 py-0.5 rounded border border-[#222] font-medium">
                           TBC
                         </div>
