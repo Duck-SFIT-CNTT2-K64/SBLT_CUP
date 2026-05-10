@@ -1,6 +1,10 @@
 // Số khách mời tham gia từ Vòng 2 (SEMI_1). Không tính vào slot 64 của giải.
 export const GUEST_COUNT = 16;
 
+import linhbodoiImage from "../../assets/linhbodoi-removebg-preview.png";
+import duongThieuNguImage from "../../assets/duong_thieu_ngu-removebg-preview.png";
+import giayCoDongImage from "../../assets/giay_co_dong-removebg-preview.png";
+
 export const SCORING: Record<number, number> = {
   1: 8,
   2: 7,
@@ -32,14 +36,14 @@ export const CELEBRITY_GUESTS = [
   { name: "Mai Hương Day", role: "Khách mời", confirmed: true,  image: "/guests/maihuongday.png" },
   { name: "Dizzyland",     role: "Khách mời", confirmed: true,  image: "/guests/dizzyland.png" },
   { name: "Luckyboiz",     role: "Khách mời", confirmed: true,  image: "/guests/luckyboiz.png" },
-  { name: "Linhbodoi",     role: "Khách mời", confirmed: true,  image: null },
+  { name: "Linhbodoi",     role: "Khách mời", confirmed: true,  image: linhbodoiImage.src },
   { name: "Mezino",        role: "Khách mời", confirmed: true,  image: "/guests/mezino.png" },
   { name: "Phương GB",     role: "Khách mời", confirmed: true,  image: "/guests/phuonggb.png" },
   { name: ".Furyy TFT",   role: "Khách mời", confirmed: true,  image: "/guests/furyy.png" },
   { name: "Trâu TV",       role: "Khách mời", confirmed: true,  image: "/guests/trautft.png" },
   { name: "Trần Duyên TFT",role: "Khách mời", confirmed: true,  image: "/guests/tranduyentft.png" },
-  { name: "Tiger1",        role: "Khách mời", confirmed: false, image: null },
-  { name: "Bố Già TFT",   role: "Khách mời", confirmed: false, image: null },
+  { name: "Dương Thiếu Ngủ", role: "Khách mời", confirmed: false, image: duongThieuNguImage.src },
+  { name: "Giày Cơ Động",   role: "Khách mời", confirmed: false, image: giayCoDongImage.src },
 ];
 
 export const COMMENTATORS = [

@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, User, LogOut, Shield, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import brandLogo from "../../../assets/Logo.png";
 
 const navLinks = [
   { href: "/", label: "Trang chủ" },
@@ -54,11 +55,11 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <Image
-              src="/logo.png"
+              src={brandLogo}
               alt="SBLT CUP"
-              width={36}
-              height={36}
-              className="rounded"
+              width={112}
+              height={40}
+              className="h-8 w-auto object-contain"
             />
             <span className="sblt-heading text-xl text-white tracking-widest">
               SBLT CUP

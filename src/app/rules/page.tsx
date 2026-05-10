@@ -76,6 +76,96 @@ export default function RulesPage() {
           </ul>
         </Card>
 
+        {/* Tournament Format */}
+        <Card hover={false} className="p-6">
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-[#dc2626]" />
+            Thể thức giải đấu
+          </h2>
+          <div className="space-y-4">
+            {[
+              {
+                title: "Vòng Loại (19/05)",
+                details: [
+                  "Quy mô: 64 tuyển thủ",
+                  "Phân bằng: Chia làm 8 bảng (8 người/bảng)",
+                  "Số trận: Đánh 3 game mỗi bảng",
+                  "Điều kiện đi tiếp: 2 tuyển thủ có tổng điểm cao nhất mỗi bảng sẽ tiến vào Vòng 2 (Tổng 16 người)",
+                ]
+              },
+              {
+                title: "Vòng 2 (20/05)",
+                details: [
+                  "Thành phần: 16 tuyển thủ từ Vòng Loại + 16 tuyển thủ Khách mời",
+                  "Phân bằng: Tổng 32 người chia thành 4 bảng (4 tuyển thủ Vòng Loại + 4 Khách mời/bảng)",
+                  "Số trận: Đánh 3 game mỗi bảng",
+                  "Điều kiện đi tiếp: 4 tuyển thủ cao điểm nhất mỗi bảng sẽ tiến vào Vòng 3 (Tổng 16 người)",
+                ]
+              },
+              {
+                title: "Vòng 3 (21/05)",
+                details: [
+                  "Thành phần: 16 tuyển thủ vượt qua Vòng 2",
+                  "Phân bằng: Chia làm 2 bảng theo quy tắc seeding - Lobby 1 ghép Lobby 3, Lobby 2 ghép Lobby 4 (4 người/lobby/bảng)",
+                  "Số trận: Đánh 3 game mỗi bảng",
+                  "Điều kiện đi tiếp: 4 tuyển thủ cao điểm nhất mỗi bảng sẽ tiến vào Chung kết Tổng (Tổng 8 người)",
+                ]
+              },
+              {
+                title: "Vòng Chung Kết Tổng (22/05)",
+                details: [
+                  "Thành phần: 8 tuyển thủ xuất sắc nhất",
+                  "Số trận: Đánh 3 game",
+                  "Xác định thứ hạng dựa trên tổng điểm tích lũy sau 3 trận",
+                ]
+              },
+            ].map((stage, i) => (
+              <div key={i} className="border-l-2 border-[#222] pl-4">
+                <h3 className="font-semibold text-[#f5f5f5] mb-2 text-sm">{stage.title}</h3>
+                <ul className="space-y-1">
+                  {stage.details.map((detail, j) => (
+                    <li key={j} className="text-[#888] text-sm flex items-start gap-2">
+                      <span className="text-[#dc2626] mt-0.5 shrink-0">•</span>
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Tie-break Rules */}
+        <Card hover={false} className="p-6">
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-[#dc2626]" />
+            Quy tắc xét tie-break
+          </h2>
+          <p className="text-[#888] text-sm mb-4">
+            Khi hai hoặc nhiều tuyển thủ có cùng tổng điểm tích lũy, thứ tự ưu tiên để phân định hạng sẽ là:
+          </p>
+          <div className="space-y-3">
+            {[
+              { step: "1", title: "Số lần đạt Top 1", desc: "Người có nhiều vận đạt thứ hạng #1 hơn" },
+              { step: "2", title: "Số lần Top 4", desc: "Người có nhiều vận nằm trong Top #4 hơn" },
+              { step: "3", title: "Số lần Top 8", desc: "Người có ít vận nằm ở #8 hơn" },
+              { step: "4", title: "Thứ hạng game cuối", desc: "Người có thứ hạng cao hơn (tốt hơn) trong game đấu gần nhất" },
+            ].map((rule, i) => (
+              <div key={i} className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#dc2626]">
+                    <span className="text-white text-sm font-bold">{rule.step}</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-[#f5f5f5] text-sm">{rule.title}</h4>
+                  <p className="text-[#888] text-sm">{rule.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
         {/* Scoring */}
         <Card hover={false} className="p-6">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
