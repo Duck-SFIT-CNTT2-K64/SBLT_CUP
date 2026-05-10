@@ -129,12 +129,12 @@ export async function checkRateLimit(opts: RateLimitOptions): Promise<RateLimitR
  * Pre-defined rate limit configs for common route types.
  */
 export const RATE_LIMITS = {
-  /** Auth routes: 3 attempts per 15 minutes */
-  AUTH: { limit: 3, windowSeconds: 15 * 60 },
-  /** General API: 60 requests per minute */
-  API: { limit: 60, windowSeconds: 60 },
-  /** Public routes: 100 requests per minute */
-  PUBLIC: { limit: 100, windowSeconds: 60 },
-  /** Admin routes: 30 requests per minute */
-  ADMIN: { limit: 30, windowSeconds: 60 },
+  /** Auth routes: 10 attempts per 5 minutes */
+  AUTH: { limit: 10, windowSeconds: 5 * 60 },
+  /** General API: 200 requests per minute */
+  API: { limit: 200, windowSeconds: 60 },
+  /** Public routes: 300 requests per minute */
+  PUBLIC: { limit: 300, windowSeconds: 60 },
+  /** Admin routes: 100 requests per minute */
+  ADMIN: { limit: 100, windowSeconds: 60 },
 } as const;

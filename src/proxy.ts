@@ -189,14 +189,14 @@ export function proxy(request: NextRequest) {
     request.method === "DELETE" ||
     request.method === "PATCH"
   ) {
-    if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/")) {
+    if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/") && !pathname.startsWith("/api/webhooks/")) {
       if (!validateCsrfOrigin(request)) {
         return csrfForbiddenResponse();
       }
     }
   }
 
-  // --- RATE LIMIT: Login / Auth routes — 3 attempts per 15 min ---
+  // --- RATE LIMIT: Login / Auth routes — 10 attempts per 5 min ---
   if (
     pathname.startsWith("/api/auth/callback") ||
     pathname.startsWith("/api/auth/register") ||
@@ -204,31 +204,31 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/api/auth/reset-password")
   ) {
     const authKey = `auth:${clientIp}`;
-    if (!checkRateLimit(authKey, 3, 15 * 60_000)) {
+    if (!checkRateLimit(authKey, 10, 5 * 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: Admin routes — 30 per minute ---
+  // --- RATE LIMIT: Admin routes — 100 per minute ---
   if (pathname.startsWith("/api/admin")) {
     const adminKey = `admin:${clientIp}`;
-    if (!checkRateLimit(adminKey, 30, 60_000)) {
+    if (!checkRateLimit(adminKey, 100, 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: General API routes — 60 per minute ---
+  // --- RATE LIMIT: General API routes — 200 per minute ---
   if (pathname.startsWith("/api")) {
     const apiKey = `api:${clientIp}`;
-    if (!checkRateLimit(apiKey, 60, 60_000)) {
+    if (!checkRateLimit(apiKey, 200, 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: Public page routes — 100 per minute ---
+  // --- RATE LIMIT: Public page routes — 300 per minute ---
   if (!pathname.startsWith("/api")) {
     const publicKey = `page:${clientIp}`;
-    if (!checkRateLimit(publicKey, 100, 60_000)) {
+    if (!checkRateLimit(publicKey, 300, 60_000)) {
       return rateLimitResponse(60);
     }
   }
@@ -250,7 +250,8 @@ export function proxy(request: NextRequest) {
     /^\/api\/tournaments\/[^/]+\/predictions(\/[^/]+)?$/.test(pathname) ||
     pathname === "/api/announcements" ||
     /^\/api\/announcements\/[^/]+$/.test(pathname) ||
-    pathname.startsWith("/api/auth")
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/webhooks/")
   ) {
     return NextResponse.next();
   }

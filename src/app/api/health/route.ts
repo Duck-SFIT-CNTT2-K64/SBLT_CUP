@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 const CRITICAL_TABLES = ["Prediction", "PredictionEntry"];
 
@@ -43,11 +44,12 @@ export async function GET() {
   // Check 2: Schema verification (only if DB is reachable)
   if (checks.database.status === "ok") {
     try {
+      const tableNames = CRITICAL_TABLES.map((t) => Prisma.sql`${t}`);
       const tables = await prisma.$queryRaw<{ table_name: string }[]>`
         SELECT table_name
         FROM information_schema.tables
         WHERE table_schema = 'public'
-          AND table_name IN (${CRITICAL_TABLES.join(",")})
+          AND table_name IN (${Prisma.join(tableNames)})
       `;
       const found = tables.map((t) => t.table_name);
       const missing = CRITICAL_TABLES.filter((t) => !found.includes(t));

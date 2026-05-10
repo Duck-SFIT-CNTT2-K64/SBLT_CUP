@@ -41,7 +41,7 @@ export async function GET(
 
   // Calculate statistics
   const totalGames = gameResults.length;
-  const totalPoints = gameResults.reduce((sum, r) => sum + r.points, 0);
+  const totalPoints = gameResults.reduce((sum: number, r) => sum + r.points, 0);
   const avgPoints = totalGames > 0 ? totalPoints / totalGames : 0;
 
   const top1Count = gameResults.filter((r) => r.placement === 1).length;
