@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { handleApiError } from "@/lib/api-error";
 
 // Player tự check-in
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -45,6 +47,9 @@ export async function POST(
   });
 
   return NextResponse.json({ message: "Check-in thành công", checkedIn: true, checkInTime: updated.checkInTime });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 // Admin xem danh sách check-in
@@ -52,6 +57,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -77,6 +83,9 @@ export async function GET(
   };
 
   return NextResponse.json(summary);
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 // Admin force check-in hoặc reject người không check-in
@@ -84,6 +93,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -186,4 +196,7 @@ export async function PUT(
   }
 
   return NextResponse.json({ error: "Action không hợp lệ" }, { status: 400 });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

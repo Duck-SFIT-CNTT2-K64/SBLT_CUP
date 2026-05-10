@@ -53,20 +53,12 @@ export default function Footer() {
                 <ExternalLink className="h-5 w-5" />
               </a>
               <a
-                href="#"
+                href="https://discord.gg/ps53tN8wUB"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-[#111] border border-[#222] flex items-center justify-center text-[#888] hover:text-[#f5f5f5] hover:border-[#444] transition-all duration-300"
               >
                 <MessageSquare className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-[#111] border border-[#222] flex items-center justify-center text-[#888] hover:text-[#f5f5f5] hover:border-[#444] transition-all duration-300"
-              >
-                <Globe className="h-5 w-5" />
               </a>
             </div>
             <div className="text-[#888] text-sm space-y-1">

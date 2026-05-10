@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { handleApiError } from "@/lib/api-error";
 
 /**
  * GET  — Lấy trạng thái hiện tại + gợi ý chuyển trạng thái tiếp theo
@@ -30,6 +31,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -111,12 +113,16 @@ export async function GET(
       stages: tournament.stages,
     },
   });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -158,4 +164,7 @@ export async function POST(
     message: `Đã chuyển trạng thái sang "${STATUS_LABELS[newStatus]}"`,
     status: updated.status,
   });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

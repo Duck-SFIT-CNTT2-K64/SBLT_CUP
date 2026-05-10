@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/api-error";
 
 /**
  * GET /api/leaderboard
  * 1 SQL query duy nhất — PostgreSQL tự tính aggregate + sort, không load gì về RAM.
  */
 export async function GET(req: NextRequest) {
+  try {
   const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 50, 200);
 
   // Single query: PostgreSQL tự JOIN, GROUP BY, SUM, COUNT, AVG, ORDER BY
@@ -68,4 +70,7 @@ export async function GET(req: NextRequest) {
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
     },
   });
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
