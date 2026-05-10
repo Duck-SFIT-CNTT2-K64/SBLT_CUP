@@ -36,7 +36,17 @@ export function LandingIntro() {
               rotate: [-18, 12, 360, 396],
               opacity: [0, 1, 1, 1],
             }}
-            exit={{ scale: 1.06, opacity: 0, transition: { duration: 0.35, ease: "easeOut" } }}
+            exit={{
+              scale: [1.05, 0.18],
+              y: [0, 160],
+              opacity: [1, 1, 0],
+              rotate: 360,
+              transition: {
+                duration: 1.2,
+                times: [0, 0.6, 1],
+                ease: "easeInOut",
+              },
+            }}
             transition={{
               duration: 2.7,
               times: [0, 0.45, 0.82, 1],
