@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
+import { LandingIntro } from "@/components/layout/LandingIntro";
 
 const formatVND = (amount: number) =>
   new Intl.NumberFormat("vi-VN").format(amount) + " VNĐ";
@@ -67,6 +68,8 @@ export default async function Home() {
 
   return (
     <div suppressHydrationWarning>
+      <LandingIntro />
+
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         {/* Background effects */}
