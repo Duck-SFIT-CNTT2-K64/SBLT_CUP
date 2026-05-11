@@ -53,13 +53,13 @@ export default async function Home() {
 
   const getGuestObjectPosition = (image: string | null) => {
     if (!image) return "object-cover object-center brightness-110 contrast-105";
-    if (image.includes("emduatft")) return "object-cover object-[-50px_center] brightness-110 contrast-105";
-    if (image.includes("ngoc6mui")) return "object-cover object-[-40px_center] brightness-110 contrast-105";
-    if (image.includes("furyy")) return "object-cover object-[20px_center] brightness-110 contrast-105";
+    if (image.includes("emduatft")) return "object-contain object-center brightness-110 contrast-105";
+    if (image.includes("ngoc6mui")) return "object-contain object-center brightness-110 contrast-105";
+    if (image.includes("furyy")) return "object-cover object-center brightness-110 contrast-105";
     if (image.includes("duong_thieu_ngu") || image.includes("giay_co_dong")) {
       return "object-cover object-center brightness-140 contrast-110 saturate-110";
     }
-    if (image.includes("stillness") || image.includes("phuonggb")) return "object-contain object-center brightness-110 contrast-105";
+    if (image.includes("stillness") || image.includes("phuonggb")) return "object-cover object-top brightness-110 contrast-105";
     return "object-cover object-center brightness-110 contrast-105";
   };
 
