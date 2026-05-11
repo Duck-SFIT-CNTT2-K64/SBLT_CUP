@@ -60,7 +60,7 @@ export default async function Home() {
     if (image.includes("duong_thieu_ngu") || image.includes("giay_co_dong")) {
       return "object-contain object-center brightness-140 contrast-110 saturate-110";
     }
-    if (image.includes("stillness")) return "object-contain object-center brightness-110 contrast-105";
+    if (image.includes("stillness")) return "object-contain object-center brightness-110 contrast-105 scale-[1.1] translate-y-[5%]";
     if (image.includes("phuonggb")) return "object-contain object-center brightness-110 contrast-105";
     return "object-contain object-center brightness-110 contrast-105";
   };
@@ -178,8 +178,8 @@ export default async function Home() {
             <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-[#222] -translate-y-1/2 z-0" />
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
               {STAGE_CARDS.map((stage, i) => (
-                <RevealOnScroll key={i} delay={i * 0.1}>
-                  <Card className="p-6 relative group">
+                <RevealOnScroll key={i} delay={i * 0.1} className="h-full">
+                  <Card className="h-full p-6 relative group">
                     <div className="absolute top-3 right-4 text-6xl font-black text-[#222]/50 select-none group-hover:text-[#dc2626]/10 transition-colors duration-500 sblt-heading">
                       {i + 1}
                     </div>
@@ -204,47 +204,50 @@ export default async function Home() {
       {/* ===== SCORING SYSTEM ===== */}
       <section className="py-20 md:py-28 bg-[#0d0d0d]">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Scoring Table */}
-            <RevealOnScroll>
-              <div>
+            <RevealOnScroll className="h-full">
+              <div className="h-full flex flex-col">
                 <SectionHeading title="Hệ thống tính điểm" center={false} />
-                <Card hover={false} className="overflow-hidden">
-                  <div className="grid grid-cols-2 text-center font-semibold bg-[#0e0e0e] border-b-2 border-[#dc2626]">
-                    <div className="py-3 border-r border-[#222] text-xs text-[#888] uppercase tracking-wider">Thứ hạng</div>
-                    <div className="py-3 text-xs text-[#888] uppercase tracking-wider">Điểm số</div>
+                <Card hover={false} className="h-full overflow-hidden flex flex-col">
+                  <div className="flex-1">
+                    <div className="grid grid-cols-2 text-center font-semibold bg-[#0e0e0e] border-b-2 border-[#dc2626]">
+                      <div className="py-3 border-r border-[#222] text-xs text-[#888] uppercase tracking-wider">Thứ hạng</div>
+                      <div className="py-3 text-xs text-[#888] uppercase tracking-wider">Điểm số</div>
+                    </div>
+                    {Object.entries(SCORING).map(([rank, points], i) => {
+                      const isTop = Number(rank) <= 4;
+                      return (
+                        <div
+                          key={rank}
+                          className={`grid grid-cols-2 text-center ${i % 2 === 0 ? "bg-[#111]" : "bg-[#0a0a0a]"
+                            } ${i < 7 ? "border-b border-[#222]" : ""}`}
+                        >
+                          <div className={`py-3 border-r border-[#222] text-sm font-medium ${isTop ? "text-[#f5f5f5]" : "text-[#888]"}`}>
+                            {isTop && <Trophy className="inline h-3.5 w-3.5 text-[#dc2626] mr-1.5 -mt-0.5" />}
+                            Top {rank}
+                          </div>
+                          <div className={`py-3 text-sm font-bold ${isTop ? "text-[#dc2626]" : "text-[#888]"}`}>
+                            {points}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {Object.entries(SCORING).map(([rank, points], i) => {
-                    const isTop = Number(rank) <= 4;
-                    return (
-                      <div
-                        key={rank}
-                        className={`grid grid-cols-2 text-center ${
-                          i % 2 === 0 ? "bg-[#111]" : "bg-[#0a0a0a]"
-                        } ${i < 7 ? "border-b border-[#222]" : ""}`}
-                      >
-                        <div className={`py-3 border-r border-[#222] text-sm font-medium ${isTop ? "text-[#f5f5f5]" : "text-[#888]"}`}>
-                          {isTop && <Trophy className="inline h-3.5 w-3.5 text-[#dc2626] mr-1.5 -mt-0.5" />}
-                          Top {rank}
-                        </div>
-                        <div className={`py-3 text-sm font-bold ${isTop ? "text-[#dc2626]" : "text-[#888]"}`}>
-                          {points}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="p-3 bg-[#0a0a0a] border-t border-[#222]">
+                    <p className="text-[12px] text-[#555] leading-none italic">
+                      * Khi bằng điểm, xếp hạng theo thứ hạng game đấu cuối cùng.
+                    </p>
+                  </div>
                 </Card>
-                <p className="text-xs text-[#555] mt-3">
-                  * Khi bằng điểm, xếp hạng theo thứ hạng game đấu cuối cùng.
-                </p>
               </div>
             </RevealOnScroll>
 
             {/* Prize Pool */}
-            <RevealOnScroll delay={0.15}>
-              <div>
+            <RevealOnScroll delay={0.15} className="h-full">
+              <div className="h-full flex flex-col">
                 <SectionHeading title="Cơ cấu giải thưởng" center={false} />
-                <Card hover={false} className="overflow-hidden">
+                <Card hover={false} className="h-full overflow-hidden">
                   <div className="bg-gradient-to-r from-[#dc2626]/20 to-transparent p-6 border-b border-[#222]">
                     <div className="text-xs text-[#888] mb-1 uppercase tracking-wider">Tổng giải thưởng</div>
                     <div className="sblt-heading text-4xl text-[#f5f5f5]">10,000,000 VNĐ</div>
@@ -253,12 +256,11 @@ export default async function Home() {
                     {PRIZES.filter((p) => [1, 2, 3, 4, 5].includes(p.rank)).map((prize) => (
                       <div key={prize.rank} className="flex items-center justify-between px-6 py-3.5">
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${
-                            prize.rank === 1 ? "bg-yellow-500/15 text-yellow-400" :
+                          <span className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${prize.rank === 1 ? "bg-yellow-500/15 text-yellow-400" :
                             prize.rank === 2 ? "bg-gray-400/15 text-gray-300" :
-                            prize.rank === 3 ? "bg-orange-500/15 text-orange-400" :
-                            "bg-[#222] text-[#888]"
-                          }`}>
+                              prize.rank === 3 ? "bg-orange-500/15 text-orange-400" :
+                                "bg-[#222] text-[#888]"
+                            }`}>
                             {prize.rank}
                           </span>
                           <span className="text-sm text-[#f5f5f5] font-medium">{prize.description}</span>
@@ -337,21 +339,22 @@ export default async function Home() {
                 {CELEBRITY_GUESTS.filter((g) => g.role === "Khách mời").map((guest) => (
                   <div
                     key={guest.name}
-                    className={`group relative rounded-lg overflow-hidden border transition-all duration-300 ${
-                      guest.confirmed || isBrightUnconfirmedGuest(guest.image)
-                        ? "bg-[#111] border-[#222] hover:border-[#dc2626]/40 hover:shadow-[0_0_12px_rgba(220,38,38,0.1)]"
-                        : "bg-[#0d0d0d] border-[#222]/50 opacity-50"
-                    }`}
+                    className={`group relative rounded-lg overflow-hidden border transition-all duration-300 ${guest.confirmed || isBrightUnconfirmedGuest(guest.image)
+                      ? "bg-[#111] border-[#222] hover:border-[#dc2626]/40 hover:shadow-[0_0_12px_rgba(220,38,38,0.1)]"
+                      : "bg-[#0d0d0d] border-[#222]/50 opacity-50"
+                      }`}
                   >
                     <div className={`${getGuestWrapperClass(guest.image)} bg-[#111]`}>
                       {guest.image ? (
-                        <Image
-                          src={guest.image}
-                          alt={guest.name}
-                          fill
-                          className={`${getGuestObjectPosition(guest.image)} group-hover:scale-105 transition-transform duration-500`}
-                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 160px"
-                        />
+                        <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-110">
+                          <Image
+                            src={guest.image}
+                            alt={guest.name}
+                            fill
+                            className={getGuestObjectPosition(guest.image)}
+                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 160px"
+                          />
+                        </div>
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-4xl font-black text-[#222] sblt-heading select-none">
@@ -400,8 +403,8 @@ export default async function Home() {
                 desc: "Điểm danh trước 15 phút khi trận đấu bắt đầu theo lịch đã chốt.",
               },
             ].map((rule, i) => (
-              <RevealOnScroll key={i} delay={i * 0.1}>
-                <Card className="p-5">
+              <RevealOnScroll key={i} delay={i * 0.1} className="h-full">
+                <Card className="h-full p-5">
                   <div className="text-[#dc2626] font-bold text-xs mb-2 uppercase tracking-wider">Quy định {i + 1}</div>
                   <h4 className="text-[#f5f5f5] font-semibold mb-1">{rule.title}</h4>
                   <p className="text-[#888] text-sm leading-relaxed">{rule.desc}</p>

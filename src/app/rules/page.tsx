@@ -39,12 +39,12 @@ export default function RulesPage() {
           </h2>
           <div className="space-y-4">
             {[
-              { title: "2.1 Quyền thay đổi lịch trình và thể thức", content: "BTC có toàn quyền thay đổi thời gian thi đấu, dời lịch hoặc điều chỉnh thể thức (ví dụ: từ BO3 sang BO1 nếu gặp sự cố thời gian) để đảm bảo giải đấu diễn ra suôn sẻ. Mọi thay đổi sẽ được thông báo sớm nhất đến tuyển thủ qua các kênh truyền thông chính thức của 5van Official." },
-              { title: "2.2 Quyền xử phạt và truất quyền thi đấu", content: "BTC có quyền đưa ra các hình thức kỷ luật đối với tuyển thủ vi phạm quy định, bao gồm nhưng không giới hạn ở: Cảnh cáo (nhắc nhở), trừ điểm ván đấu hoặc điểm tổng, xử thua trắng trận đấu hiện tại, tước quyền thi đấu và hủy bỏ toàn bộ kết quả/giải thưởng nếu phát hiện gian lận hoặc hành vi thiếu văn hóa nghiêm trọng." },
-              { title: "2.3 Quyền xử lý sự cố kỹ thuật và trận đấu", content: "BTC có quyền quyết định cho thi đấu lại (Remake) hoặc giữ nguyên kết quả trận đấu trong trường hợp xảy ra lỗi game (Bug), lỗi kết nối mạng diện rộng hoặc các sự cố bất khả kháng khác. Quyết định của BTC sẽ dựa trên mức độ ảnh hưởng của sự cố đến tính công bằng của trận đấu." },
-              { title: "2.4 Quyền sử dụng hình ảnh và nội dung", content: "BTC có quyền sử dụng tên tuổi, hình ảnh Ingame, video thi đấu và âm thanh của tuyển thủ tham gia giải đấu cho các mục đích: Livestream trực tiếp, làm nội dung highlight, truyền thông trên mạng xã hội, lưu trữ và quảng bá cho các mùa giải tiếp theo." },
-              { title: "2.5 Quyền từ chối đăng ký", content: "BTC có quyền từ chối sự tham gia của bất kỳ cá nhân nào nếu phát hiện thông tin đăng ký không trung thực, tuyển thủ đang trong thời gian bị cấm thi đấu từ các giải chính thức của VNG/Riot, hoặc có lịch sử gây ảnh hưởng tiêu cực đến cộng đồng." },
-              { title: "2.6 Quyền quyết định cuối cùng", content: "Trong mọi trường hợp xảy ra khiếu nại hoặc tranh chấp, sau khi xem xét các bằng chứng và tham khảo ý kiến đội ngũ trọng tài, quyết định của BTC là quyết định cuối cùng và có hiệu lực thi hành ngay lập tức. Các bên liên quan không có quyền khiếu nại thêm sau khi quyết định cuối cùng đã được đưa ra." },
+              { title: "Quyền thay đổi lịch trình và thể thức", content: "BTC có toàn quyền thay đổi thời gian thi đấu, dời lịch hoặc điều chỉnh thể thức (ví dụ: từ BO3 sang BO1 nếu gặp sự cố thời gian) để đảm bảo giải đấu diễn ra suôn sẻ. Mọi thay đổi sẽ được thông báo sớm nhất đến tuyển thủ qua các kênh truyền thông chính thức của 5van Official." },
+              { title: "Quyền xử phạt và truất quyền thi đấu", content: "BTC có quyền đưa ra các hình thức kỷ luật đối với tuyển thủ vi phạm quy định, bao gồm nhưng không giới hạn ở: Cảnh cáo (nhắc nhở), trừ điểm ván đấu hoặc điểm tổng, xử thua trắng trận đấu hiện tại, tước quyền thi đấu và hủy bỏ toàn bộ kết quả/giải thưởng nếu phát hiện gian lận hoặc hành vi thiếu văn hóa nghiêm trọng." },
+              { title: "Quyền xử lý sự cố kỹ thuật và trận đấu", content: "BTC có quyền quyết định cho thi đấu lại (Remake) hoặc giữ nguyên kết quả trận đấu trong trường hợp xảy ra lỗi game (Bug), lỗi kết nối mạng diện rộng hoặc các sự cố bất khả kháng khác. Quyết định của BTC sẽ dựa trên mức độ ảnh hưởng của sự cố đến tính công bằng của trận đấu." },
+              { title: "Quyền sử dụng hình ảnh và nội dung", content: "BTC có quyền sử dụng tên tuổi, hình ảnh Ingame, video thi đấu và âm thanh của tuyển thủ tham gia giải đấu cho các mục đích: Livestream trực tiếp, làm nội dung highlight, truyền thông trên mạng xã hội, lưu trữ và quảng bá cho các mùa giải tiếp theo." },
+              { title: "Quyền từ chối đăng ký", content: "BTC có quyền từ chối sự tham gia của bất kỳ cá nhân nào nếu phát hiện thông tin đăng ký không trung thực, tuyển thủ đang trong thời gian bị cấm thi đấu từ các giải chính thức của VNG/Riot, hoặc có lịch sử gây ảnh hưởng tiêu cực đến cộng đồng." },
+              { title: "Quyền quyết định cuối cùng", content: "Trong mọi trường hợp xảy ra khiếu nại hoặc tranh chấp, sau khi xem xét các bằng chứng và tham khảo ý kiến đội ngũ trọng tài, quyết định của BTC là quyết định cuối cùng và có hiệu lực thi hành ngay lập tức. Các bên liên quan không có quyền khiới nại thêm sau khi quyết định cuối cùng đã được đưa ra." },
             ].map((section, i) => (
               <div key={i} className="border-l-2 border-[#222] pl-4">
                 <h3 className="font-semibold text-[#f5f5f5] mb-1 text-sm">{section.title}</h3>
@@ -88,7 +88,7 @@ export default function RulesPage() {
                 title: "Vòng Loại (19/05)",
                 details: [
                   "Quy mô: 64 tuyển thủ",
-                  "Phân bằng: Chia làm 8 bảng (8 người/bảng)",
+                  "Phân bảng: Chia làm 8 bảng (8 người/bảng)",
                   "Số trận: Đánh 3 game mỗi bảng",
                   "Điều kiện đi tiếp: 2 tuyển thủ có tổng điểm cao nhất mỗi bảng sẽ tiến vào Vòng 2 (Tổng 16 người)",
                 ]
@@ -97,7 +97,7 @@ export default function RulesPage() {
                 title: "Vòng 2 (20/05)",
                 details: [
                   "Thành phần: 16 tuyển thủ từ Vòng Loại + 16 tuyển thủ Khách mời",
-                  "Phân bằng: Tổng 32 người chia thành 4 bảng (4 tuyển thủ Vòng Loại + 4 Khách mời/bảng)",
+                  "Phân bảng: Tổng 32 người chia thành 4 bảng (4 tuyển thủ Vòng Loại + 4 Khách mời/bảng)",
                   "Số trận: Đánh 3 game mỗi bảng",
                   "Điều kiện đi tiếp: 4 tuyển thủ cao điểm nhất mỗi bảng sẽ tiến vào Vòng 3 (Tổng 16 người)",
                 ]
@@ -106,7 +106,7 @@ export default function RulesPage() {
                 title: "Vòng 3 (21/05)",
                 details: [
                   "Thành phần: 16 tuyển thủ vượt qua Vòng 2",
-                  "Phân bằng: Chia làm 2 bảng theo quy tắc seeding - Lobby 1 ghép Lobby 3, Lobby 2 ghép Lobby 4 (4 người/lobby/bảng)",
+                  "Phân bảng: Chia làm 2 bảng theo quy tắc seeding - Lobby 1 ghép Lobby 3, Lobby 2 ghép Lobby 4 (4 người/lobby/bảng)",
                   "Số trận: Đánh 3 game mỗi bảng",
                   "Điều kiện đi tiếp: 4 tuyển thủ cao điểm nhất mỗi bảng sẽ tiến vào Chung kết Tổng (Tổng 8 người)",
                 ]
