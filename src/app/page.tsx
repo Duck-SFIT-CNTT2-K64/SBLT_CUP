@@ -52,15 +52,25 @@ export default async function Home() {
   const session = await auth();
 
   const getGuestObjectPosition = (image: string | null) => {
-    if (!image) return "object-cover object-center brightness-110 contrast-105";
-    if (image.includes("emduatft")) return "object-contain object-center brightness-110 contrast-105";
-    if (image.includes("ngoc6mui")) return "object-contain object-center brightness-110 contrast-105";
-    if (image.includes("furyy")) return "object-cover object-center brightness-110 contrast-105";
+    if (!image) return "object-contain object-center brightness-110 contrast-105";
+    if (image.includes("emduatft")) return "object-contain object-center brightness-110 contrast-105 scale-[1.96] -translate-x-[75px]";
+    if (image.includes("ngoc6mui")) return "object-contain object-center brightness-110 contrast-105 scale-[1.96] -translate-x-[75px]";
+    if (image.includes("furyy")) return "object-contain object-center brightness-110 contrast-105 scale-[0.96] -translate-x-[-15px]";
+    // Known bright unconfirmed guests (keep existing special bright styling)
     if (image.includes("duong_thieu_ngu") || image.includes("giay_co_dong")) {
-      return "object-cover object-center brightness-140 contrast-110 saturate-110";
+      return "object-contain object-center brightness-140 contrast-110 saturate-110";
     }
-    if (image.includes("stillness") || image.includes("phuonggb")) return "object-cover object-top brightness-110 contrast-105";
-    return "object-cover object-center brightness-110 contrast-105";
+    if (image.includes("stillness")) return "object-contain object-center brightness-110 contrast-105";
+    if (image.includes("phuonggb")) return "object-contain object-center brightness-110 contrast-105";
+    return "object-contain object-center brightness-110 contrast-105";
+  };
+
+  const getGuestWrapperClass = (image: string | null) => {
+    if (!image) return "aspect-square relative";
+    // Keep the grid consistent; only tweak the internal image positioning
+    if (image.includes("stillness") || image.includes("phuonggb")) return "aspect-square relative";
+    if (image.includes("emduatft") || image.includes("ngoc6mui")) return "aspect-square relative";
+    return "aspect-square relative";
   };
 
   const isBrightUnconfirmedGuest = (image: string | null) =>
@@ -333,7 +343,7 @@ export default async function Home() {
                         : "bg-[#0d0d0d] border-[#222]/50 opacity-50"
                     }`}
                   >
-                    <div className="aspect-square relative bg-[#111]">
+                    <div className={`${getGuestWrapperClass(guest.image)} bg-[#111]`}>
                       {guest.image ? (
                         <Image
                           src={guest.image}
