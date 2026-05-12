@@ -104,3 +104,12 @@ export const TOURNAMENT_FORMAT = {
     gamesPerGroup: 3,
   },
 };
+
+/** Cửa sổ dự đoán (giờ Việt Nam, UTC+7) */
+export const PREDICTION_WINDOW = {
+  OPEN_HOUR: 9,
+  OPEN_MINUTE: 0,
+  CLOSE_HOUR: 19,
+  CLOSE_MINUTE: 30,
+  TIMEZONE_OFFSET_HOURS: 7,
+} as const;

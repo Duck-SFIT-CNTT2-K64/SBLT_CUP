@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PREDICTABLE_STAGES } from "@/lib/constants";
+import { getPredictionWindow } from "@/lib/predictions";
 
 /**
  * GET /api/tournaments/[id]/predictions/[stageId]
@@ -40,11 +41,25 @@ export async function GET(
   }
 
   const hasPlayers = stage.groups.some((g) => g.players.length > 0);
+  const window = getPredictionWindow(stage.date);
+
   let predictionStatus: string;
-  if (stage.status === "COMPLETED") predictionStatus = "SCORED";
-  else if (stage.status === "IN_PROGRESS") predictionStatus = "LOCKED";
-  else if (hasPlayers) predictionStatus = "OPEN";
-  else predictionStatus = "NOT_READY";
+  let lockedReason: string | null = null;
+
+  if (stage.status === "COMPLETED") {
+    predictionStatus = "SCORED";
+  } else if (stage.status === "IN_PROGRESS") {
+    predictionStatus = "LOCKED";
+    lockedReason = "stage_started";
+  } else if (!window.isOpen) {
+    predictionStatus = "LOCKED";
+    const now = new Date();
+    lockedReason = now < new Date(window.windowOpensAt) ? "window_not_open" : "window_closed";
+  } else if (hasPlayers) {
+    predictionStatus = "OPEN";
+  } else {
+    predictionStatus = "NOT_READY";
+  }
 
   // Tìm prediction hiện có
   const existingPrediction = await prisma.prediction.findUnique({
@@ -67,6 +82,9 @@ export async function GET(
     stageName: stage.name,
     stageType: stage.stageType,
     predictionStatus,
+    lockedReason,
+    windowOpensAt: window.windowOpensAt,
+    windowClosesAt: window.windowClosesAt,
     groups: stage.groups.map((g) => ({
       groupId: g.id,
       groupName: g.name,
@@ -134,6 +152,16 @@ export async function POST(
       { error: "Dự đoán đã bị khóa. Vòng đấu đã bắt đầu hoặc kết thúc." },
       { status: 403 }
     );
+  }
+
+  // Kiểm tra cửa sổ thời gian dự đoán
+  const window = getPredictionWindow(stage.date);
+  if (!window.isOpen) {
+    const now = new Date();
+    const msg = now < new Date(window.windowOpensAt)
+      ? "Cửa sổ dự đoán chưa mở. Dự đoán sẽ mở lúc 9h sáng ngày thi đấu."
+      : "Cửa sổ dự đoán đã đóng. Hạn cuối dự đoán là 19h30.";
+    return NextResponse.json({ error: msg }, { status: 403 });
   }
 
   const hasPlayers = stage.groups.some((g) => g.players.length > 0);

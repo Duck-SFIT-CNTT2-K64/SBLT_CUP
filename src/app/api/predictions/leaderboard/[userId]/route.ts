@@ -53,14 +53,17 @@ export async function GET(
           e.rank3Player.ign,
           e.rank4Player.ign,
         ],
-        actualResults: e.group.players.map((gp) => ({
-          ign: gp.player.ign,
-          finalRank: gp.finalRank,
-        })),
-        rank1Correct: e.rank1Points > 0,
-        rank2Correct: e.rank2Points > 0,
-        rank3Correct: e.rank3Points > 0,
-        rank4Correct: e.rank4Points > 0,
+        actualResults: e.group.players
+          .filter((gp) => gp.finalRank !== null && gp.finalRank >= 1 && gp.finalRank <= 4)
+          .sort((a, b) => (a.finalRank ?? 0) - (b.finalRank ?? 0))
+          .map((gp) => ({
+            ign: gp.player.ign,
+            finalRank: gp.finalRank,
+          })),
+        slot1Correct: e.rank1Points > 0,
+        slot2Correct: e.rank2Points > 0,
+        slot3Correct: e.rank3Points > 0,
+        slot4Correct: e.rank4Points > 0,
         points: e.rank1Points + e.rank2Points + e.rank3Points + e.rank4Points,
       })),
     }));
