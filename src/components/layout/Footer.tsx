@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MessageSquare, Globe, ExternalLink } from "lucide-react";
+import { MessageSquare, ExternalLink } from "lucide-react";
 
 export default function Footer() {
   return (

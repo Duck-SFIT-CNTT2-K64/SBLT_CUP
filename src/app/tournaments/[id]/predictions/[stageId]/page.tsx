@@ -7,7 +7,7 @@ import Link from "next/link";
 import PredictionGroupForm from "@/components/predictions/PredictionGroupForm";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Target, ArrowLeft, Loader2, Lock, AlertTriangle, Send, CheckCircle } from "lucide-react";
+import { Target, ArrowLeft, Loader2, AlertTriangle, Send, CheckCircle } from "lucide-react";
 
 interface Player {
   id: string;

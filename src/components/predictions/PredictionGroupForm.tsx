@@ -34,27 +34,16 @@ export default function PredictionGroupForm({
   locked,
   onChange,
 }: PredictionGroupFormProps) {
-  const [selectedIds, setSelectedIds] = useState<string[]>(() => {
-    if (!existingEntries) return [];
-    return [
-      existingEntries.rank1PlayerId,
-      existingEntries.rank2PlayerId,
-      existingEntries.rank3PlayerId,
-      existingEntries.rank4PlayerId,
-    ].filter(Boolean);
-  });
+  const toIds = (e: RankSlots | null | undefined) =>
+    e
+      ? [e.rank1PlayerId, e.rank2PlayerId, e.rank3PlayerId, e.rank4PlayerId].filter(Boolean)
+      : [];
+
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => toIds(existingEntries));
 
   useEffect(() => {
-    if (!existingEntries) {
-      setSelectedIds([]);
-      return;
-    }
-    setSelectedIds([
-      existingEntries.rank1PlayerId,
-      existingEntries.rank2PlayerId,
-      existingEntries.rank3PlayerId,
-      existingEntries.rank4PlayerId,
-    ].filter(Boolean));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- legitimate prop-to-state sync
+    setSelectedIds(toIds(existingEntries));
   }, [existingEntries]);
 
   const isComplete = selectedIds.length === 4;
