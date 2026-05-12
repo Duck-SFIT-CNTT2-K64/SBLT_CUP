@@ -5,8 +5,11 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import PredictionScoreCard from "@/components/predictions/PredictionScoreCard";
+import TopWinners from "@/components/leaderboard/TopWinners";
 import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 interface ActualResult {
   ign: string;
@@ -17,6 +20,7 @@ interface LeaderboardEntry {
   rank: number;
   userId: string;
   userName: string;
+  userAvatar?: string | null;
   totalScore: number;
   entries: {
     groupName: string;
@@ -67,28 +71,14 @@ export default function StagePredictionLeaderboardPage() {
         Quay lại
       </Link>
 
-      <div className="relative mb-8">
-        <div className="hero-orb absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-        <div className="relative">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#dc2626]/10 text-[#dc2626] shadow-[0_0_20px_rgba(220,38,38,0.2)]">
-              <Trophy className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-[#dc2626] font-semibold">Bảng xếp hạng</p>
-              <h1 className="sblt-heading text-2xl text-[#f5f5f5] tracking-tight">{stageName}</h1>
-            </div>
-          </div>
-          <p className="text-sm text-[#888] mt-1 ml-15">
-            Kết quả dự đoán của tất cả người tham gia. Nhấp vào để xem chi tiết.
-          </p>
-          <div className="sblt-divider mt-4" />
-        </div>
-      </div>
+      <RevealOnScroll>
+        <SectionHeading title="Bảng xếp hạng" subtitle={stageName || "Kết quả dự đoán của tất cả người tham gia"} />
+      </RevealOnScroll>
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {!loading && leaderboard.length > 0 && (
+        <RevealOnScroll>
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { label: "Người tham gia", value: leaderboard.length, color: "text-[#f5f5f5]" },
@@ -103,6 +93,7 @@ export default function StagePredictionLeaderboardPage() {
             </div>
           ))}
         </div>
+        </RevealOnScroll>
       )}
 
       {loading ? (
@@ -114,22 +105,38 @@ export default function StagePredictionLeaderboardPage() {
           Chưa có kết quả dự đoán cho vòng đấu này.
         </div>
       ) : (
-        <div className="space-y-3">
-          {leaderboard.map((entry) => (
-            <PredictionScoreCard
-              key={entry.userId}
-              userName={entry.userName}
-              totalScore={entry.totalScore}
-              entries={entry.entries}
-              rank={entry.rank}
-              isCurrentUser={session?.user?.id === entry.userId}
-              expanded={expandedRank === entry.rank}
-              onToggle={() =>
-                setExpandedRank(expandedRank === entry.rank ? null : entry.rank)
-              }
+        <RevealOnScroll>
+        <>
+          {leaderboard.length >= 1 && (
+            <TopWinners
+              winners={leaderboard.slice(0, 4).map((e, idx) => ({
+                id: e.userId,
+                name: e.userName,
+                avatar: e.userAvatar,
+                score: e.totalScore,
+                rank: idx + 1,
+              }))}
             />
-          ))}
-        </div>
+          )}
+          <div className="space-y-3">
+            {leaderboard.map((entry) => (
+              <PredictionScoreCard
+                key={entry.userId}
+                userName={entry.userName}
+                userAvatar={entry.userAvatar}
+                totalScore={entry.totalScore}
+                entries={entry.entries}
+                rank={entry.rank}
+                isCurrentUser={session?.user?.id === entry.userId}
+                expanded={expandedRank === entry.rank}
+                onToggle={() =>
+                  setExpandedRank(expandedRank === entry.rank ? null : entry.rank)
+                }
+              />
+            ))}
+          </div>
+        </>
+        </RevealOnScroll>
       )}
     </div>
   );

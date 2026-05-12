@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { MessageCircle, Send, Trash2, Reply, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface Comment {
   id: string;
@@ -189,9 +190,7 @@ export function CommentSection({ type, entityId }: CommentSectionProps) {
           {comments.map((comment) => (
             <div key={comment.id} className="bg-[#111] rounded-lg p-4 border border-[#222]">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-sm font-bold text-[#888]">
-                  {comment.user.name.charAt(0).toUpperCase()}
-                </div>
+                <Avatar name={comment.user.name} src={comment.user.avatar ?? undefined} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-[#f5f5f5] text-sm">
@@ -276,9 +275,7 @@ export function CommentSection({ type, entityId }: CommentSectionProps) {
                     <div className="mt-3 space-y-3 pl-4 border-l-2 border-[#222]">
                       {comment.replies.map((reply) => (
                         <div key={reply.id} className="flex items-start gap-2">
-                          <div className="w-6 h-6 rounded-full bg-[#222] flex items-center justify-center text-[10px] font-bold text-[#888]">
-                            {reply.user.name.charAt(0).toUpperCase()}
-                          </div>
+                          <Avatar name={reply.user.name} src={reply.user.avatar ?? undefined} size="sm" />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-[#f5f5f5] text-xs">

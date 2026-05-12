@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       {
         id: string;
         name: string;
+        avatar: string | null;
         totalPredictionPoints: bigint;
         stagesPredicted: bigint;
         stagesWithPoints: bigint;
@@ -23,13 +24,14 @@ export async function GET(req: NextRequest) {
       SELECT
         u.id,
         u.name,
+        u.avatar,
         COALESCE(SUM(p."totalScore"), 0)              AS "totalPredictionPoints",
         COUNT(p.id)                                    AS "stagesPredicted",
         COUNT(p.id) FILTER (WHERE p."totalScore" > 0)  AS "stagesWithPoints"
       FROM "User" u
       JOIN "Prediction" p ON p."userId" = u.id
       WHERE p.status = 'SCORED'
-      GROUP BY u.id, u.name
+      GROUP BY u.id, u.name, u.avatar
       ORDER BY "totalPredictionPoints" DESC
       LIMIT ${top}
     `;
@@ -37,6 +39,7 @@ export async function GET(req: NextRequest) {
     const result = leaderboard.map((r) => ({
       id: r.id,
       name: r.name,
+      avatar: r.avatar,
       totalPredictionPoints: Number(r.totalPredictionPoints),
       stagesPredicted: Number(r.stagesPredicted),
       stagesWithPoints: Number(r.stagesWithPoints),

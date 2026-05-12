@@ -32,7 +32,7 @@ export async function GET(
       orderBy: { totalScore: "desc" },
       take: top,
       include: {
-        user: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, avatar: true } },
         entries: {
           include: {
             group: {
@@ -59,6 +59,7 @@ export async function GET(
       rank: idx + 1,
       userId: pred.user.id,
       userName: pred.user.name || "Ẩn danh",
+      userAvatar: pred.user.avatar,
       totalScore: pred.totalScore,
       entries: pred.entries.map((e) => ({
         groupName: e.group.name,

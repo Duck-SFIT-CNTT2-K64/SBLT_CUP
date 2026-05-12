@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle, XCircle, ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/utils";
 
 interface ActualResult {
@@ -21,6 +22,7 @@ interface EntryResult {
 
 interface PredictionScoreCardProps {
   userName: string;
+  userAvatar?: string | null;
   totalScore: number;
   entries: EntryResult[];
   rank?: number;
@@ -69,6 +71,7 @@ const RANK_BORDER: Record<number, string> = {
 
 export default function PredictionScoreCard({
   userName,
+  userAvatar,
   totalScore,
   entries,
   rank,
@@ -94,6 +97,7 @@ export default function PredictionScoreCard({
       <div className="flex items-center justify-between p-5 pb-3">
         <div className="flex items-center gap-3">
           {rank !== undefined && <RankDisplay rank={rank} />}
+          <Avatar name={userName} src={userAvatar ?? undefined} size="md" />
           <div>
             <span className={cn(
               "font-bold text-[15px]",

@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
       id: string;
       ign: string;
       rank: string | null;
+      avatar: string | null;
       totalPoints: bigint;
       totalGames: bigint;
       top1Count: bigint;
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
       p.id,
       p.ign,
       p.rank,
+      u.avatar,
       COALESCE(SUM(gr.points), 0)                        AS "totalPoints",
       COUNT(gr.id)                                        AS "totalGames",
       COUNT(*) FILTER (WHERE gr.placement = 1)            AS "top1Count",
@@ -40,8 +42,9 @@ export async function GET(req: NextRequest) {
       )                                                   AS "tournamentsPlayed"
     FROM "Player" p
     JOIN "GameResult" gr ON gr."playerId" = p.id
+    JOIN "User" u ON u.id = p."userId"
     WHERE p."isGuest" = false
-    GROUP BY p.id, p.ign, p.rank
+    GROUP BY p.id, p.ign, p.rank, u.avatar
     ORDER BY "totalPoints" DESC, "top1Count" DESC, "avgPlacement" ASC
     LIMIT ${top}
   `;
@@ -54,6 +57,7 @@ export async function GET(req: NextRequest) {
       id: r.id,
       ign: r.ign,
       rank: r.rank,
+      avatar: r.avatar,
       totalPoints: Number(r.totalPoints),
       totalGames,
       top1Count: Number(r.top1Count),

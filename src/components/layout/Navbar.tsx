@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Menu, X, User, LogOut, Shield, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/ui/Avatar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import brandLogo from "../../../assets/Logo.png";
 
@@ -98,11 +99,12 @@ export default function Navbar() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/5 transition-colors duration-300"
                 >
-                  {session.user.role === "ADMIN" ? (
-                    <Shield className="h-4 w-4 text-[#dc2626]" />
-                  ) : (
-                    <User className="h-4 w-4 text-[#888]" />
-                  )}
+                  <Avatar
+                    name={session.user.name}
+                    src={session.user.avatar ?? undefined}
+                    size="sm"
+                    variant={session.user.role === "ADMIN" ? "host" : "default"}
+                  />
                   <span className="text-sm text-[#f5f5f5]">{session.user.name}</span>
                   <ChevronDown className={cn("h-4 w-4 text-[#888] transition-transform duration-300", userMenuOpen && "rotate-180")} />
                 </button>
@@ -206,11 +208,12 @@ export default function Navbar() {
                     className="flex items-center gap-2 px-3 py-2.5 text-sm text-[#888] hover:text-white rounded hover:bg-white/5"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {session.user.role === "ADMIN" ? (
-                      <Shield className="h-4 w-4 text-[#dc2626]" />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
+                    <Avatar
+                      name={session.user.name}
+                      src={session.user.avatar ?? undefined}
+                      size="sm"
+                      variant={session.user.role === "ADMIN" ? "host" : "default"}
+                    />
                     {session.user.role === "ADMIN" ? "Admin Panel" : "Dashboard"}
                   </Link>
                   <button

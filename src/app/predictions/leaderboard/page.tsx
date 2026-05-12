@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
+import TopWinners from "@/components/leaderboard/TopWinners";
 import { Trophy, Target, Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
@@ -12,6 +14,7 @@ import { cn } from "@/lib/utils";
 interface PredictionLeaderboardEntry {
   id: string;
   name: string;
+  avatar?: string | null;
   totalPredictionPoints: number;
   stagesPredicted: number;
   stagesWithPoints: number;
@@ -113,6 +116,17 @@ export default function GlobalPredictionLeaderboardPage() {
         </div>
       ) : (
         <RevealOnScroll>
+          {leaderboard.length >= 1 && (
+            <TopWinners
+              winners={leaderboard.slice(0, 4).map((e, idx) => ({
+                id: e.id,
+                name: e.name,
+                avatar: e.avatar,
+                score: e.totalPredictionPoints,
+                rank: idx + 1,
+              }))}
+            />
+          )}
           <Card hover={false}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -153,14 +167,17 @@ export default function GlobalPredictionLeaderboardPage() {
                         >
                           <td className="py-3 px-4">{rankBadge(rank)}</td>
                           <td className="py-3 px-4">
-                            <span className={cn("font-medium", isCurrentUser ? "text-[#dc2626]" : "text-[#f5f5f5]")}>
-                              {entry.name}
-                            </span>
-                            {isCurrentUser && (
-                              <span className="ml-2 text-xs bg-[#dc2626]/10 text-red-400 px-1.5 py-0.5 rounded">
-                                Bạn
+                            <div className="flex items-center gap-2">
+                              <Avatar name={entry.name} src={entry.avatar ?? undefined} size="sm" />
+                              <span className={cn("font-medium", isCurrentUser ? "text-[#dc2626]" : "text-[#f5f5f5]")}>
+                                {entry.name}
                               </span>
-                            )}
+                              {isCurrentUser && (
+                                <span className="ml-2 text-xs bg-[#dc2626]/10 text-red-400 px-1.5 py-0.5 rounded">
+                                  Bạn
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-center text-[#888]">
                             {entry.stagesPredicted}
@@ -209,6 +226,7 @@ export default function GlobalPredictionLeaderboardPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                               {rankBadge(rank)}
+                              <Avatar name={entry.name} src={entry.avatar ?? undefined} size="sm" />
                               <span className={cn("font-bold truncate", isCurrentUser ? "text-[#dc2626]" : "text-[#f5f5f5]")}>
                                 {entry.name}
                               </span>
