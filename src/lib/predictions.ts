@@ -1,6 +1,35 @@
 import { prisma } from "@/lib/prisma";
-import { PREDICTION_SCORING } from "@/lib/constants";
+import { PREDICTION_SCORING, PREDICTION_WINDOW } from "@/lib/constants";
 import { createNotification } from "@/lib/notifications";
+
+interface PredictionWindowResult {
+  isOpen: boolean;
+  windowOpensAt: string;
+  windowClosesAt: string;
+}
+
+/**
+ * Kiểm tra cửa sổ dự đoán cho một stage.
+ * Window: 09:00-19:30 giờ Việt Nam (UTC+7) ngày thi đấu.
+ */
+export function getPredictionWindow(stageDate: Date): PredictionWindowResult {
+  const { OPEN_HOUR, OPEN_MINUTE, CLOSE_HOUR, CLOSE_MINUTE, TIMEZONE_OFFSET_HOURS } = PREDICTION_WINDOW;
+
+  const vnDateStr = stageDate.toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
+  const [year, month, day] = vnDateStr.split("-").map(Number);
+
+  const opensAt = new Date(Date.UTC(year, month - 1, day, OPEN_HOUR - TIMEZONE_OFFSET_HOURS, OPEN_MINUTE, 0, 0));
+  const closesAt = new Date(Date.UTC(year, month - 1, day, CLOSE_HOUR - TIMEZONE_OFFSET_HOURS, CLOSE_MINUTE, 0, 0));
+
+  const now = new Date();
+  const isOpen = now >= opensAt && now < closesAt;
+
+  return {
+    isOpen,
+    windowOpensAt: opensAt.toISOString(),
+    windowClosesAt: closesAt.toISOString(),
+  };
+}
 
 /**
  * Chấm điểm dự đoán cho một stage đã hoàn thành.
@@ -38,15 +67,16 @@ export async function scorePredictionsForStage(
     },
   });
 
-  const actualRankMap = new Map<string, Map<number, string>>();
+  // Logic mới: top 4 = 4 người có finalRank 1-4 (không cần đúng vị trí)
+  const actualTop4Map = new Map<string, Set<string>>();
   for (const group of groups) {
-    const rankMap = new Map<number, string>();
+    const top4 = new Set<string>();
     for (const gp of group.players) {
-      if (gp.finalRank !== null) {
-        rankMap.set(gp.finalRank, gp.playerId);
+      if (gp.finalRank !== null && gp.finalRank >= 1 && gp.finalRank <= 4) {
+        top4.add(gp.playerId);
       }
     }
-    actualRankMap.set(group.id, rankMap);
+    actualTop4Map.set(group.id, top4);
   }
 
   let scored = 0;
@@ -55,13 +85,14 @@ export async function scorePredictionsForStage(
       let totalScore = 0;
 
       for (const entry of prediction.entries) {
-        const actualRanks = actualRankMap.get(entry.groupId);
-        if (!actualRanks) continue;
+        const actualTop4 = actualTop4Map.get(entry.groupId);
+        if (!actualTop4) continue;
 
-        const r1pts = (actualRanks.get(1) === entry.rank1PlayerId ? PREDICTION_SCORING[1] : 0) * multiplier;
-        const r2pts = (actualRanks.get(2) === entry.rank2PlayerId ? PREDICTION_SCORING[2] : 0) * multiplier;
-        const r3pts = (actualRanks.get(3) === entry.rank3PlayerId ? PREDICTION_SCORING[3] : 0) * multiplier;
-        const r4pts = (actualRanks.get(4) === entry.rank4PlayerId ? PREDICTION_SCORING[4] : 0) * multiplier;
+        // Logic mới: mỗi predicted player có trong top 4 thực tế = +10đ (không cần đúng vị trí)
+        const r1pts = (actualTop4.has(entry.rank1PlayerId) ? PREDICTION_SCORING[1] : 0) * multiplier;
+        const r2pts = (actualTop4.has(entry.rank2PlayerId) ? PREDICTION_SCORING[2] : 0) * multiplier;
+        const r3pts = (actualTop4.has(entry.rank3PlayerId) ? PREDICTION_SCORING[3] : 0) * multiplier;
+        const r4pts = (actualTop4.has(entry.rank4PlayerId) ? PREDICTION_SCORING[4] : 0) * multiplier;
 
         totalScore += r1pts + r2pts + r3pts + r4pts;
 

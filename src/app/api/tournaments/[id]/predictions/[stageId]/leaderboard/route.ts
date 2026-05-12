@@ -62,10 +62,11 @@ export async function GET(
       totalScore: pred.totalScore,
       entries: pred.entries.map((e) => ({
         groupName: e.group.name,
-        rank1Correct: e.rank1Points > 0,
-        rank2Correct: e.rank2Points > 0,
-        rank3Correct: e.rank3Points > 0,
-        rank4Correct: e.rank4Points > 0,
+        // Logic mới: slot1-4Correct = predicted player có trong top 4 thực tế (không cần đúng vị trí)
+        slot1Correct: e.rank1Points > 0,
+        slot2Correct: e.rank2Points > 0,
+        slot3Correct: e.rank3Points > 0,
+        slot4Correct: e.rank4Points > 0,
         points: e.rank1Points + e.rank2Points + e.rank3Points + e.rank4Points,
         predictedPlayers: [
           e.rank1Player.ign,
@@ -73,10 +74,13 @@ export async function GET(
           e.rank3Player.ign,
           e.rank4Player.ign,
         ],
-        actualResults: e.group.players.map((gp) => ({
-          ign: gp.player.ign,
-          finalRank: gp.finalRank,
-        })),
+        actualResults: e.group.players
+          .filter((gp) => gp.finalRank !== null && gp.finalRank >= 1 && gp.finalRank <= 4)
+          .sort((a, b) => (a.finalRank ?? 0) - (b.finalRank ?? 0))
+          .map((gp) => ({
+            ign: gp.player.ign,
+            finalRank: gp.finalRank,
+          })),
       })),
     }));
 
