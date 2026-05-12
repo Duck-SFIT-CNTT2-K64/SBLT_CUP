@@ -40,5 +40,12 @@ export function validateEnv() {
   return parsed.data;
 }
 
-// Validate on import — app crashes immediately if env is invalid
-export const env = validateEnv();
+// Lazy — validates on first access, not at import time (avoids build-time crashes)
+let _env: ReturnType<typeof validateEnv> | null = null;
+
+export function getEnv() {
+  if (!_env) {
+    _env = validateEnv();
+  }
+  return _env;
+}
