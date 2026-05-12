@@ -249,9 +249,28 @@ export async function POST(
         },
       },
     });
-  }).catch((err) => {
+  }).catch(async (err) => {
     if (err.message === "LOCKED") {
       return null;
+    }
+    // P2002 = unique constraint violation (race condition: 2 request cùng user+stage)
+    if (err?.code === "P2002") {
+      const existing = await prisma.prediction.findUnique({
+        where: { userId_stageId: { userId: session.user.id, stageId } },
+      });
+      if (!existing || existing.status !== "OPEN") return null;
+      await prisma.predictionEntry.deleteMany({ where: { predictionId: existing.id } });
+      await prisma.predictionEntry.createMany({
+        data: entries.map((e: { groupId: string; rank1PlayerId: string; rank2PlayerId: string; rank3PlayerId: string; rank4PlayerId: string }) => ({
+          predictionId: existing.id,
+          groupId: e.groupId,
+          rank1PlayerId: e.rank1PlayerId,
+          rank2PlayerId: e.rank2PlayerId,
+          rank3PlayerId: e.rank3PlayerId,
+          rank4PlayerId: e.rank4PlayerId,
+        })),
+      });
+      return existing;
     }
     throw err;
   });
