@@ -4,11 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Target, Clock, Lock, CheckCircle, Loader2 } from "lucide-react";
+import { Target, Clock, Lock, CheckCircle, Loader2, ArrowRight, Trophy } from "lucide-react";
 import PredictionRulesAndRewardsPanel from "@/components/predictions/PredictionRulesAndRewards";
 
 interface StageData {
@@ -29,11 +27,11 @@ interface StageData {
   }[];
 }
 
-const STATUS_LABELS: Record<string, { label: string; variant: "green" | "yellow" | "blue" | "default" }> = {
-  OPEN: { label: "Đang mở", variant: "green" },
-  LOCKED: { label: "Đã khóa", variant: "yellow" },
-  SCORED: { label: "Đã chấm", variant: "blue" },
-  NOT_READY: { label: "Chưa sẵn sàng", variant: "default" },
+const STATUS_CONFIG: Record<string, { label: string; dot: string; bg: string; text: string }> = {
+  OPEN: { label: "Đang mở", dot: "bg-green-400", bg: "bg-green-500/10", text: "text-green-400" },
+  LOCKED: { label: "Đã khóa", dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400" },
+  SCORED: { label: "Đã chấm", dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400" },
+  NOT_READY: { label: "Chưa sẵn sàng", dot: "bg-[#555]", bg: "bg-[#222]", text: "text-[#888]" },
 };
 
 function formatVietnamTime(isoString: string): string {
@@ -94,113 +92,159 @@ export default function PredictionsPage() {
   if (!session?.user?.id) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <div className="text-center">
-          <Target className="h-16 w-16 text-[#dc2626] mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-[#f5f5f5] mb-4">Dự đoán kết quả</h1>
-          <p className="text-[#888] mb-6">
-            Đăng nhập để dự đoán 4 người đi tiếp mỗi bảng đấu và xem cơ cấu phần thưởng từ BTC.
-          </p>
-          <Link href="/auth/login">
-            <Button>Đăng nhập để dự đoán</Button>
-          </Link>
+        {/* Hero header for guests */}
+        <div className="relative text-center mb-10">
+          <div className="hero-orb absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <div className="relative">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#dc2626]/10 text-[#dc2626] shadow-[0_0_30px_rgba(220,38,38,0.2)] mb-5">
+              <Target className="h-8 w-8" />
+            </div>
+            <h1 className="sblt-heading text-4xl text-[#f5f5f5] tracking-tight mb-3">Dự đoán kết quả</h1>
+            <p className="text-[#888] max-w-lg mx-auto text-sm leading-relaxed">
+              Đăng nhập để dự đoán 4 người đi tiếp mỗi bảng đấu và xem cơ cấu phần thưởng từ BTC.
+            </p>
+            <div className="sblt-divider mx-auto mt-5 w-16" />
+            <div className="mt-6">
+              <Link href="/auth/login">
+                <Button size="lg">Đăng nhập để dự đoán</Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-10">
-          <PredictionRulesAndRewardsPanel />
-        </div>
+        <PredictionRulesAndRewardsPanel />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#f5f5f5] flex items-center gap-3 mb-2">
-          <Target className="h-8 w-8 text-[#dc2626]" />
-          Dự đoán kết quả
-        </h1>
-        <p className="text-[#888]">
-          Dự đoán 4 người đi tiếp của mỗi bảng đấu. Đúng mỗi người thuộc top 4 = 10đ. Chung kết x2!
-        </p>
+      {/* Hero header */}
+      <div className="relative mb-10">
+        <div className="hero-orb absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#dc2626]/10 text-[#dc2626] shadow-[0_0_24px_rgba(220,38,38,0.2)]">
+              <Target className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="sblt-heading text-3xl text-[#f5f5f5] tracking-tight">Dự đoán kết quả</h1>
+              <p className="text-sm text-[#888] mt-0.5">
+                Dự đoán 4 người đi tiếp của mỗi bảng đấu. Đúng mỗi người thuộc top 4 = <span className="text-[#f5f5f5] font-medium">10đ</span>. <span className="text-[#dc2626] font-medium">Chung kết x2!</span>
+              </p>
+            </div>
+          </div>
+          <div className="sblt-divider mt-4" />
+        </div>
       </div>
 
       <PredictionRulesAndRewardsPanel />
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
+      {/* Section title */}
+      <div className="flex items-center gap-3 mb-5">
+        <Trophy className="h-5 w-5 text-[#dc2626]" />
+        <h2 className="sblt-heading text-lg text-[#f5f5f5] tracking-wider">Vòng đấu</h2>
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />
         </div>
       ) : stages.length === 0 ? (
-        <div className="text-center py-12 text-[#888]">
-          Chưa có vòng đấu nào hỗ trợ dự đoán.
+        <div className="text-center py-16 text-[#888] rounded-2xl border border-[#222] bg-[#111]">
+          <Target className="h-10 w-10 text-[#333] mx-auto mb-3" />
+          <p>Chưa có vòng đấu nào hỗ trợ dự đoán.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {stages.map((stage) => {
-            const statusInfo = STATUS_LABELS[stage.predictionStatus] || STATUS_LABELS.NOT_READY;
+            const status = STATUS_CONFIG[stage.predictionStatus] || STATUS_CONFIG.NOT_READY;
             const totalPlayers = stage.groups.reduce((sum, g) => sum + g.players.length, 0);
 
             return (
-              <Card key={stage.stageId} hover={stage.predictionStatus === "OPEN"}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      {stage.stageName}
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    </CardTitle>
-                    {stage.hasSubmitted && stage.userScore !== null && (
-                      <span className="text-lg font-bold text-[#dc2626]">{stage.userScore}đ</span>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-[#888]">
-                      {stage.groups.length} bảng đấu &middot; {totalPlayers} tuyển thủ
-                      {stage.hasSubmitted && (
-                        <span className="ml-2 text-green-400">
-                          <CheckCircle className="inline h-3 w-3 mr-1" />
-                          Đã dự đoán
+              <div
+                key={stage.stageId}
+                className={`group relative overflow-hidden rounded-2xl border bg-[#111] transition-all ${
+                  stage.predictionStatus === "OPEN"
+                    ? "border-[#333] hover:border-[#dc2626]/40 hover:shadow-[0_0_24px_rgba(220,38,38,0.1)]"
+                    : "border-[#222]"
+                }`}
+              >
+                <div className="p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="sblt-heading text-xl text-[#f5f5f5] tracking-wider">{stage.stageName}</h3>
+                        <span className={`inline-flex items-center gap-1.5 rounded-md ${status.bg} ${status.text} border ${status.bg} px-2 py-0.5 text-[11px] font-semibold`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                          {status.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-[#888]">
+                        <span>{stage.groups.length} bảng đấu</span>
+                        <span className="text-[#333]">&middot;</span>
+                        <span>{totalPlayers} tuyển thủ</span>
+                        {stage.hasSubmitted && (
+                          <>
+                            <span className="text-[#333]">&middot;</span>
+                            <span className="inline-flex items-center gap-1 text-green-400">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Đã dự đoán
+                            </span>
+                          </>
+                        )}
+                        {stage.hasSubmitted && stage.userScore !== null && (
+                          <>
+                            <span className="text-[#333]">&middot;</span>
+                            <span className="text-[#dc2626] font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                              {stage.userScore}đ
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0">
+                      {stage.predictionStatus === "OPEN" && (
+                        <Link href={`/tournaments/${tournamentId}/predictions/${stage.stageId}`}>
+                          <Button size="sm" className="gap-1.5">
+                            {stage.hasSubmitted ? "Chỉnh sửa" : "Dự đoán ngay"}
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+                      )}
+
+                      {stage.predictionStatus === "SCORED" && (
+                        <Link href={`/tournaments/${tournamentId}/predictions/${stage.stageId}/leaderboard`}>
+                          <Button size="sm" variant="outline" className="gap-1.5">
+                            Bảng xếp hạng
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+                      )}
+
+                      {stage.predictionStatus === "LOCKED" && (
+                        <span className="inline-flex items-center gap-1.5 text-sm text-[#888] bg-[#222] px-3 py-1.5 rounded-lg">
+                          <Lock className="h-3.5 w-3.5" />
+                          {stage.lockedReason === "window_not_open"
+                            ? `Mở lúc ${formatVietnamTime(stage.windowOpensAt)} ${formatVietnamDate(stage.windowOpensAt)}`
+                            : stage.lockedReason === "window_closed"
+                              ? "Cửa sổ dự đoán đã đóng"
+                              : "Đã khóa"}
+                        </span>
+                      )}
+
+                      {stage.predictionStatus === "NOT_READY" && (
+                        <span className="inline-flex items-center gap-1.5 text-sm text-[#888] bg-[#222] px-3 py-1.5 rounded-lg">
+                          <Clock className="h-3.5 w-3.5" /> Chờ bốc thăm
                         </span>
                       )}
                     </div>
-
-                    {stage.predictionStatus === "OPEN" && (
-                      <Link href={`/tournaments/${tournamentId}/predictions/${stage.stageId}`}>
-                        <Button size="sm">
-                          {stage.hasSubmitted ? "Chỉnh sửa" : "Dự đoán ngay"}
-                        </Button>
-                      </Link>
-                    )}
-
-                    {stage.predictionStatus === "SCORED" && (
-                      <Link href={`/tournaments/${tournamentId}/predictions/${stage.stageId}/leaderboard`}>
-                        <Button size="sm" variant="outline">Xem bảng xếp hạng</Button>
-                      </Link>
-                    )}
-
-                    {stage.predictionStatus === "LOCKED" && (
-                      <span className="text-sm text-[#888] flex items-center gap-1">
-                        <Lock className="h-3 w-3" />
-                        {stage.lockedReason === "window_not_open"
-                          ? `Mở lúc ${formatVietnamTime(stage.windowOpensAt)} ngày ${formatVietnamDate(stage.windowOpensAt)}`
-                          : stage.lockedReason === "window_closed"
-                            ? "Cửa sổ dự đoán đã đóng"
-                            : "Đã khóa"}
-                      </span>
-                    )}
-
-                    {stage.predictionStatus === "NOT_READY" && (
-                      <span className="text-sm text-[#888] flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> Chờ bốc thăm
-                      </span>
-                    )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>

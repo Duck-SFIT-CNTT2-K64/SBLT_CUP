@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Users } from "lucide-react";
 
 interface Player {
   id: string;
@@ -34,7 +34,6 @@ export default function PredictionGroupForm({
   locked,
   onChange,
 }: PredictionGroupFormProps) {
-  // Chuyển đổi từ RankSlots sang array để dễ quản lý
   const [selectedIds, setSelectedIds] = useState<string[]>(() => {
     if (!existingEntries) return [];
     return [
@@ -50,7 +49,6 @@ export default function PredictionGroupForm({
       setSelectedIds([]);
       return;
     }
-
     setSelectedIds([
       existingEntries.rank1PlayerId,
       existingEntries.rank2PlayerId,
@@ -60,12 +58,12 @@ export default function PredictionGroupForm({
   }, [existingEntries]);
 
   const isComplete = selectedIds.length === 4;
+  const progress = selectedIds.length;
 
   const handleToggle = (playerId: string) => {
     if (locked) return;
 
     let next: string[];
-
     if (selectedIds.includes(playerId)) {
       next = selectedIds.filter((id) => id !== playerId);
     } else if (selectedIds.length < 4) {
@@ -84,104 +82,155 @@ export default function PredictionGroupForm({
   };
 
   return (
-    <div className={cn("bg-[#111] border border-[#222] rounded-xl p-5", isComplete && "border-green-800/50")}>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-[#f5f5f5] font-bold text-lg">{group.name}</h4>
-        <div className="flex items-center gap-2">
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border bg-[#111] transition-all",
+        isComplete
+          ? "border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.08)]"
+          : "border-[#222]"
+      )}
+    >
+      {/* Top accent bar */}
+      <div
+        className={cn(
+          "absolute top-0 left-0 right-0 h-0.5 transition-colors",
+          isComplete ? "bg-gradient-to-r from-green-500 via-emerald-400 to-green-500" : "bg-gradient-to-r from-transparent via-[#dc2626]/20 to-transparent"
+        )}
+      />
+
+      {/* Header */}
+      <div className="p-5 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="sblt-heading text-xl text-[#f5f5f5] tracking-wider">{group.name}</h4>
+          <div className="flex items-center gap-2">
+            {isComplete && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-green-400 bg-green-500/10 border border-green-500/25 px-2 py-0.5 rounded-md font-semibold">
+                <CheckCircle className="h-3 w-3" />
+                Hoàn thành
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-1.5 rounded-full bg-[#222] overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                isComplete
+                  ? "bg-gradient-to-r from-green-500 to-emerald-400"
+                  : "bg-gradient-to-r from-[#dc2626] to-red-400"
+              )}
+              style={{ width: `${(progress / 4) * 100}%` }}
+            />
+          </div>
           <span className={cn(
-            "text-xs px-2 py-1 rounded-full",
-            isComplete
-              ? "text-green-400 bg-green-500/10"
-              : "text-[#888] bg-[#222]"
+            "text-xs font-bold tabular-nums",
+            isComplete ? "text-green-400" : "text-[#888]"
           )}>
-            {selectedIds.length}/4
+            {progress}/4
           </span>
-          {isComplete && (
-            <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded-full">
-              Hoàn thành
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Selected slots preview */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
-        {[0, 1, 2, 3].map((i) => {
-          const playerId = selectedIds[i];
-          const player = playerId ? group.players.find((p) => p.id === playerId) : null;
+      {/* Slot preview */}
+      <div className="px-5 pb-4">
+        <div className="grid grid-cols-4 gap-2">
+          {[0, 1, 2, 3].map((i) => {
+            const playerId = selectedIds[i];
+            const player = playerId ? group.players.find((p) => p.id === playerId) : null;
 
-          return (
-            <div
-              key={i}
-              className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-lg border-2 border-dashed min-h-[64px] transition-all",
-                player
-                  ? "border-[#dc2626]/30 bg-[#dc2626]/5"
-                  : "border-[#222]"
-              )}
-            >
-              <span className={cn(
-                "text-xs font-bold mb-1",
-                player ? "text-[#dc2626]" : "text-[#444]"
-              )}>
-                {i + 1}
-              </span>
-              {player ? (
-                <span className="text-xs text-[#f5f5f5] font-medium text-center truncate max-w-full">
-                  {player.ign}
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "relative flex flex-col items-center justify-center p-3 rounded-xl border min-h-[72px] transition-all",
+                  player
+                    ? "border-[#dc2626]/30 bg-[#dc2626]/5 shadow-[0_0_12px_rgba(220,38,38,0.1)]"
+                    : "border-dashed border-[#333] bg-[#0d0d0d]"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-1.5 left-2 text-[10px] font-bold",
+                  player ? "text-[#dc2626]" : "text-[#333]"
+                )}>
+                  {i + 1}
                 </span>
-              ) : (
-                <span className="text-xs text-[#444]">Trống</span>
-              )}
-            </div>
-          );
-        })}
+                {player ? (
+                  <span className="text-xs text-[#f5f5f5] font-semibold text-center truncate max-w-full mt-1">
+                    {player.ign}
+                  </span>
+                ) : (
+                  <Users className="h-4 w-4 text-[#333]" />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Player list - click to toggle */}
-      <div className="space-y-1">
-        <p className="text-xs text-[#888] mb-2">
+      {/* Player list */}
+      <div className="px-5 pb-5">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-[#888] mb-3 font-medium">
           {locked
-            ? "Dự đoán đã bị khóa."
+            ? "Dự đoán đã bị khóa"
             : isComplete
-              ? "Đã chọn đủ 4 người. Nhấn để bỏ chọn."
-              : "Chọn 4 người bạn nghĩ sẽ đi tiếp:"}
+              ? "Đã chọn đủ 4 người — nhấn để bỏ chọn"
+              : "Chọn 4 người bạn nghĩ sẽ đi tiếp"}
         </p>
-        {group.players.map((player) => {
-          const isSelected = selectedIds.includes(player.id);
-          const canSelect = !locked && (isSelected || selectedIds.length < 4);
+        <div className="space-y-1">
+          {group.players.map((player, idx) => {
+            const isSelected = selectedIds.includes(player.id);
+            const canSelect = !locked && (isSelected || selectedIds.length < 4);
 
-          return (
-            <button
-              key={player.id}
-              type="button"
-              disabled={locked || !canSelect}
-              onClick={() => handleToggle(player.id)}
-              className={cn(
-                "w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2",
-                isSelected
-                  ? "bg-[#dc2626]/10 text-[#f5f5f5] border border-[#dc2626]/30"
-                  : canSelect
-                    ? "bg-[#111] hover:bg-[#222] text-[#f5f5f5] cursor-pointer"
-                    : "bg-[#111] text-[#555] opacity-50 cursor-not-allowed",
-                locked && "opacity-60 cursor-not-allowed"
-              )}
-            >
-              <span className="flex-1">{player.ign}</span>
-              {player.isGuest && (
-                <span className="text-xs bg-[#dc2626]/10 text-red-400 px-1.5 py-0.5 rounded">
-                  Khách mời
+            return (
+              <button
+                key={player.id}
+                type="button"
+                disabled={locked || !canSelect}
+                onClick={() => handleToggle(player.id)}
+                className={cn(
+                  "group w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all flex items-center gap-3 relative overflow-hidden",
+                  isSelected
+                    ? "bg-[#dc2626]/8 text-[#f5f5f5] border border-[#dc2626]/25"
+                    : canSelect
+                      ? "bg-[#0d0d0d] hover:bg-[#1a1a1a] text-[#f5f5f5] cursor-pointer border border-transparent hover:border-[#333]"
+                      : "bg-[#0d0d0d] text-[#555] opacity-40 cursor-not-allowed border border-transparent",
+                  locked && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                {/* Left accent bar for selected */}
+                {isSelected && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#dc2626] rounded-l-xl" />
+                )}
+
+                {/* Row number */}
+                <span className={cn(
+                  "text-[10px] font-bold w-4 text-center tabular-nums",
+                  isSelected ? "text-[#dc2626]" : "text-[#444]"
+                )}>
+                  {idx + 1}
                 </span>
-              )}
-              {isSelected && (
-                <span className="flex items-center gap-1 text-xs text-[#dc2626]">
-                  <CheckCircle className="h-3 w-3" />
-                  Đã chọn
-                </span>
-              )}
-            </button>
-          );
-        })}
+
+                <span className="flex-1 pl-1">{player.ign}</span>
+
+                {player.isGuest && (
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-medium">
+                    Khách mời
+                  </span>
+                )}
+
+                {isSelected && (
+                  <span className="flex items-center gap-1 text-[11px] text-[#dc2626] font-semibold">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Đã chọn
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

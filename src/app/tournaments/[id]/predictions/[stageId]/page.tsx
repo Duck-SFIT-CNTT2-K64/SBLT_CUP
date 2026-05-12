@@ -7,7 +7,7 @@ import Link from "next/link";
 import PredictionGroupForm from "@/components/predictions/PredictionGroupForm";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Target, ArrowLeft, Loader2, Lock } from "lucide-react";
+import { Target, ArrowLeft, Loader2, Lock, AlertTriangle, Send, CheckCircle } from "lucide-react";
 
 interface Player {
   id: string;
@@ -103,10 +103,10 @@ export default function PredictionFormPage() {
   }, []);
 
   const isLocked = predictionStatus === "LOCKED" || predictionStatus === "SCORED";
-  const allComplete = groups.length > 0 && groups.every((g) => {
-    const e = entries.get(g.id);
-    return e && e.rank1PlayerId && e.rank2PlayerId && e.rank3PlayerId && e.rank4PlayerId;
-  });
+  const completedCount = Array.from(entries.values()).filter(
+    (e) => e.rank1PlayerId && e.rank2PlayerId && e.rank3PlayerId && e.rank4PlayerId
+  ).length;
+  const allComplete = groups.length > 0 && completedCount === groups.length;
 
   const handleSubmit = async () => {
     if (!allComplete || isLocked) return;
@@ -158,51 +158,65 @@ export default function PredictionFormPage() {
     );
   }
 
+  const getLockedMessage = () => {
+    if (predictionStatus === "SCORED") return "Vòng đấu đã kết thúc. Dự đoán đã được chấm điểm.";
+    if (lockedReason === "window_not_open") return `Cửa sổ dự đoán sẽ mở lúc 9h sáng ngày ${new Date(windowOpensAt).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}.`;
+    if (lockedReason === "window_closed") return "Cửa sổ dự đoán đã đóng. Hạn cuối dự đoán là 19h30.";
+    return "Vòng đấu đã bắt đầu. Không thể chỉnh sửa dự đoán.";
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl pb-28">
       {/* Back link */}
       <Link
         href={`/tournaments/${tournamentId}/predictions`}
-        className="inline-flex items-center gap-1 text-sm text-[#888] hover:text-[#f5f5f5] mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-[#888] hover:text-[#f5f5f5] transition-colors mb-6"
       >
         <ArrowLeft className="h-4 w-4" />
         Quay lại
       </Link>
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#f5f5f5] flex items-center gap-3">
-          <Target className="h-7 w-7 text-[#dc2626]" />
-          Dự đoán {stageName}
-        </h1>
-        {isLocked && (
-          <div className="mt-2 flex items-center gap-2 text-yellow-400 text-sm">
-            <Lock className="h-4 w-4" />
-            {predictionStatus === "SCORED"
-              ? "Vòng đấu đã kết thúc. Dự đoán đã được chấm điểm."
-              : lockedReason === "window_not_open"
-                ? `Cửa sổ dự đoán sẽ mở lúc 9h sáng ngày ${new Date(windowOpensAt).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}.`
-                : lockedReason === "window_closed"
-                  ? "Cửa sổ dự đoán đã đóng. Hạn cuối dự đoán là 19h30."
-                  : "Vòng đấu đã bắt đầu. Không thể chỉnh sửa dự đoán."}
+      <div className="relative mb-8">
+        <div className="hero-orb absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#dc2626]/10 text-[#dc2626] shadow-[0_0_20px_rgba(220,38,38,0.2)]">
+              <Target className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-[#dc2626] font-semibold">Dự đoán</p>
+              <h1 className="sblt-heading text-2xl text-[#f5f5f5] tracking-tight">{stageName}</h1>
+            </div>
           </div>
-        )}
+          <div className="sblt-divider mt-4" />
+        </div>
       </div>
+
+      {/* Locked warning */}
+      {isLocked && (
+        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-400">Dự đoán đã bị khóa</p>
+            <p className="text-sm text-[#b7b7b7] mt-0.5">{getLockedMessage()}</p>
+          </div>
+        </div>
+      )}
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {successMessage && (
-        <Alert
-          variant="success"
-          message={successMessage}
-          className="mb-4"
-          autoDismiss={5000}
-          onDismiss={() => setSuccessMessage("")}
-        />
+        <div className="mb-6 rounded-xl border border-green-500/20 bg-green-500/5 p-4 flex items-start gap-3">
+          <CheckCircle className="h-5 w-5 text-green-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-green-400">{successMessage}</p>
+          </div>
+        </div>
       )}
 
       {/* Group forms */}
-      <div className="space-y-6">
+      <div className="space-y-5">
         {groups.map((group) => (
           <PredictionGroupForm
             key={group.id}
@@ -214,36 +228,57 @@ export default function PredictionFormPage() {
         ))}
       </div>
 
-      {/* Submit */}
-      {!isLocked && (
-        <div className="mt-8 flex items-center justify-between">
-          <p className="text-sm text-[#888]">
-            {allComplete
-              ? "Tất cả bảng đã dự đoán xong. Nhấn gửi để lưu."
-              : `Đã dự đoán ${Array.from(entries.values()).filter((e) => e.rank1PlayerId && e.rank2PlayerId && e.rank3PlayerId && e.rank4PlayerId).length}/${groups.length} bảng`}
-          </p>
-          <Button
-            onClick={handleSubmit}
-            disabled={!allComplete || submitting}
-            className="min-w-[140px]"
-          >
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : existingPredictionId ? (
-              "Cập nhật dự đoán"
-            ) : (
-              "Gửi dự đoán"
-            )}
-          </Button>
-        </div>
-      )}
-
-      {/* View leaderboard link if scored */}
+      {/* Leaderboard link if scored */}
       {predictionStatus === "SCORED" && (
         <div className="mt-8 text-center">
           <Link href={`/tournaments/${tournamentId}/predictions/${stageId}/leaderboard`}>
-            <Button variant="outline">Xem bảng xếp hạng dự đoán</Button>
+            <Button variant="outline" size="lg">Xem bảng xếp hạng dự đoán</Button>
           </Link>
+        </div>
+      )}
+
+      {/* Sticky submit bar */}
+      {!isLocked && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#222] bg-[#0a0a0a]/90 backdrop-blur-md">
+          <div className="container mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Progress dots */}
+              <div className="hidden sm:flex items-center gap-1.5">
+                {groups.map((g) => {
+                  const e = entries.get(g.id);
+                  const done = e && e.rank1PlayerId && e.rank2PlayerId && e.rank3PlayerId && e.rank4PlayerId;
+                  return (
+                    <div
+                      key={g.id}
+                      className={`h-2 w-2 rounded-full transition-colors ${done ? "bg-green-400" : "bg-[#333]"}`}
+                      title={g.name}
+                    />
+                  );
+                })}
+              </div>
+              <p className="text-sm text-[#888]">
+                {allComplete ? (
+                  <span className="text-green-400 font-medium">Sẵn sàng gửi!</span>
+                ) : (
+                  <span>Đã dự đoán <span className="text-[#f5f5f5] font-medium">{completedCount}/{groups.length}</span> bảng</span>
+                )}
+              </p>
+            </div>
+            <Button
+              onClick={handleSubmit}
+              disabled={!allComplete || submitting}
+              className="min-w-[160px] gap-2"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  {existingPredictionId ? "Cập nhật dự đoán" : "Gửi dự đoán"}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       )}
     </div>

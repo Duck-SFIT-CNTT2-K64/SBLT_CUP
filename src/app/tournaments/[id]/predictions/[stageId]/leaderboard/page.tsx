@@ -67,34 +67,41 @@ export default function StagePredictionLeaderboardPage() {
         Quay lại
       </Link>
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#f5f5f5] flex items-center gap-3 mb-2">
-          <Trophy className="h-7 w-7 text-[#dc2626]" />
-          Bảng xếp hạng dự đoán &mdash; {stageName}
-        </h1>
-        <p className="text-[#888]">
-          Kết quả dự đoán của tất cả người tham gia cho vòng đấu này. Nhấp vào để xem chi tiết.
-        </p>
+      <div className="relative mb-8">
+        <div className="hero-orb absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        <div className="relative">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#dc2626]/10 text-[#dc2626] shadow-[0_0_20px_rgba(220,38,38,0.2)]">
+              <Trophy className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-[#dc2626] font-semibold">Bảng xếp hạng</p>
+              <h1 className="sblt-heading text-2xl text-[#f5f5f5] tracking-tight">{stageName}</h1>
+            </div>
+          </div>
+          <p className="text-sm text-[#888] mt-1 ml-15">
+            Kết quả dự đoán của tất cả người tham gia. Nhấp vào để xem chi tiết.
+          </p>
+          <div className="sblt-divider mt-4" />
+        </div>
       </div>
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {!loading && leaderboard.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center">
-            <div className="text-xs uppercase tracking-wider text-[#888]">Người tham gia</div>
-            <div className="mt-1 text-lg font-bold text-[#f5f5f5]">{leaderboard.length}</div>
-          </div>
-          <div className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center">
-            <div className="text-xs uppercase tracking-wider text-[#888]">Điểm cao nhất</div>
-            <div className="mt-1 text-lg font-bold text-[#dc2626]">{leaderboard[0]?.totalScore ?? 0}</div>
-          </div>
-          <div className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center">
-            <div className="text-xs uppercase tracking-wider text-[#888]">Điểm trung bình</div>
-            <div className="mt-1 text-lg font-bold text-[#f5f5f5]">
-              {Math.round(leaderboard.reduce((s, e) => s + e.totalScore, 0) / leaderboard.length)}
+          {[
+            { label: "Người tham gia", value: leaderboard.length, color: "text-[#f5f5f5]" },
+            { label: "Điểm cao nhất", value: leaderboard[0]?.totalScore ?? 0, color: "text-[#dc2626]" },
+            { label: "Điểm trung bình", value: Math.round(leaderboard.reduce((s, e) => s + e.totalScore, 0) / leaderboard.length), color: "text-[#f5f5f5]" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center border-l-2 border-l-[#dc2626]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-medium">{stat.label}</div>
+              <div className={`mt-1.5 text-xl font-black ${stat.color}`} style={{ fontFamily: "var(--font-heading)" }}>
+                {stat.value}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
 
