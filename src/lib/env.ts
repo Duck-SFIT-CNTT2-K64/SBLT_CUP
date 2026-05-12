@@ -27,6 +27,8 @@ const envSchema = z.object({
   VAPID_SUBJECT: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
   REDIS_URL: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 export function validateEnv() {

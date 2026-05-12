@@ -70,3 +70,23 @@ export async function deleteUploadedFile(url: string): Promise<void> {
     // File may already be deleted
   }
 }
+
+/**
+ * Save a processed avatar buffer to disk.
+ * Returns the URL path (e.g., /uploads/avatars/xxx.webp).
+ */
+export async function saveAvatarBuffer(buffer: Buffer): Promise<string> {
+  const uniqueId = crypto.randomUUID();
+  const timestamp = Date.now();
+  const filename = `${uniqueId}-${timestamp}.webp`;
+
+  const dirPath = path.join(UPLOAD_DIR, "avatars");
+  if (!existsSync(dirPath)) {
+    await mkdir(dirPath, { recursive: true });
+  }
+
+  const filePath = path.join(dirPath, filename);
+  await writeFile(filePath, buffer);
+
+  return `/uploads/avatars/${filename}`;
+}

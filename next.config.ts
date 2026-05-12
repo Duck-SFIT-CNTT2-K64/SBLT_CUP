@@ -46,6 +46,9 @@ const nextConfig: NextConfig = {
       { pathname: "/logo.png" },
       { pathname: "/og-image.png" },
     ],
+    remotePatterns: [
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+    ],
     formats: ["image/avif", "image/webp"],
   },
   async headers() {
