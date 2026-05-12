@@ -28,7 +28,7 @@ export default function DashboardPredictionsPage() {
     if (!session?.user?.id) return;
 
     // Fetch all tournaments to get user's predictions
-    fetch("/api/tournaments?limit=100")
+    fetch("/api/tournaments?limit=20")
       .then(async (r) => {
         if (r.status === 401) {
           window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;

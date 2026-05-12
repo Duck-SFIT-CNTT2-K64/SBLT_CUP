@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Crown, CheckCircle, Clock } from "lucide-react";
@@ -26,6 +27,7 @@ export default function GuestCard({
   rank,
   index = 0,
 }: GuestCardProps) {
+  const [imgError, setImgError] = useState(false);
   const isHost = role === "Host";
 
   return (
@@ -82,13 +84,14 @@ export default function GuestCard({
               isHost ? "w-full aspect-[3/4]" : "w-full aspect-square"
             } ${isHost ? "gold-border" : ""}`}>
 
-              {image ? (
+              {image && !imgError ? (
                 <Image
                   src={image}
                   alt={name}
                   fill
                   className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 640px) 50vw, 150px"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 /* Fallback — vẫn đẹp khi không có ảnh */

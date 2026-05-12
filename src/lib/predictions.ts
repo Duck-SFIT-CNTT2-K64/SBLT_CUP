@@ -80,6 +80,8 @@ export async function scorePredictionsForStage(
   }
 
   let scored = 0;
+  const scoreMap = new Map<string, number>();
+
   await prisma.$transaction(async (tx) => {
     for (const prediction of predictions) {
       let totalScore = 0;
@@ -112,15 +114,14 @@ export async function scorePredictionsForStage(
         data: { totalScore, status: "SCORED" },
       });
 
+      scoreMap.set(prediction.id, totalScore);
       scored++;
     }
   });
 
-  // Send notifications to users about their prediction scores
+  // Send notifications using freshly computed scores from the transaction
   for (const prediction of predictions) {
-    const totalScore = prediction.entries.reduce((sum, entry) => {
-      return sum + entry.rank1Points + entry.rank2Points + entry.rank3Points + entry.rank4Points;
-    }, 0);
+    const totalScore = scoreMap.get(prediction.id) ?? 0;
 
     if (totalScore > 0) {
       await createNotification({

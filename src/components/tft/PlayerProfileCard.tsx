@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Trophy, Star, TrendingUp, Zap, Medal } from "lucide-react";
@@ -56,6 +57,7 @@ export default function PlayerProfileCard({
   favoriteChampion,
   isGuest = false,
 }: PlayerProfileCardProps) {
+  const [imgError, setImgError] = useState(false);
   const rankStyle = getRankStyle(rank);
   const rankBadge = getGlobalRankStyle(globalRank);
   const top4Rate = totalGames > 0 ? Math.round((top4Count / totalGames) * 100) : 0;
@@ -115,8 +117,8 @@ export default function PlayerProfileCard({
               <div className={`w-14 h-14 rounded-xl overflow-hidden border-2 ${
                 globalRank === 1 ? "border-[#c89b3c]/60" : "border-[#222]"
               }`}>
-                {avatar ? (
-                  <Image src={avatar} alt={ign} fill className="object-cover" sizes="56px" />
+                {avatar && !imgError ? (
+                  <Image src={avatar} alt={ign} fill className="object-cover" sizes="56px" onError={() => setImgError(true)} />
                 ) : (
                   <div className={`w-full h-full flex items-center justify-center ${
                     globalRank === 1 ? "bg-gradient-to-b from-[#2a1f08] to-[#1a1208]" : "bg-[#111]"

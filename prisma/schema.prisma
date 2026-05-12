@@ -69,7 +69,7 @@ enum PredictionStatus {
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
-  password          String
+  password          String?
   name              String
   role              Role      @default(PLAYER)
   avatar            String?
@@ -77,7 +77,8 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  player Player?
+  player   Player?
+  accounts Account[]
 
   passwordResetTokens    PasswordResetToken[]
   auditLogs              AuditLog[]
@@ -87,6 +88,26 @@ model User {
   comments               Comment[]
   reactions              Reaction[]
   pushSubscriptions      PushSubscription[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Player {
@@ -415,13 +436,13 @@ model PredictionEntry {
   group        Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   rank1PlayerId String
-  rank1Player   Player @relation("PredRank1", fields: [rank1PlayerId], references: [id], onDelete: Cascade)
+  rank1Player   Player @relation("PredRank1", fields: [rank1PlayerId], references: [id], onDelete: Restrict)
   rank2PlayerId String
-  rank2Player   Player @relation("PredRank2", fields: [rank2PlayerId], references: [id], onDelete: Cascade)
+  rank2Player   Player @relation("PredRank2", fields: [rank2PlayerId], references: [id], onDelete: Restrict)
   rank3PlayerId String
-  rank3Player   Player @relation("PredRank3", fields: [rank3PlayerId], references: [id], onDelete: Cascade)
+  rank3Player   Player @relation("PredRank3", fields: [rank3PlayerId], references: [id], onDelete: Restrict)
   rank4PlayerId String
-  rank4Player   Player @relation("PredRank4", fields: [rank4PlayerId], references: [id], onDelete: Cascade)
+  rank4Player   Player @relation("PredRank4", fields: [rank4PlayerId], references: [id], onDelete: Restrict)
 
   rank1Points Int @default(0)
   rank2Points Int @default(0)

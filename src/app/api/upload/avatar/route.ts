@@ -32,20 +32,22 @@ export async function POST(req: NextRequest) {
       maxSizeMB: 5,
     });
 
-    // Delete old avatar if exists
+    // Get old avatar URL before updating
     const currentUser = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { avatar: true },
     });
-    if (currentUser?.avatar) {
-      await deleteUploadedFile(currentUser.avatar);
-    }
 
-    // Update user avatar
+    // Update user avatar first (before deleting old file)
     await prisma.user.update({
       where: { id: session.user.id },
       data: { avatar: result.url },
     });
+
+    // Delete old avatar after DB is updated
+    if (currentUser?.avatar) {
+      await deleteUploadedFile(currentUser.avatar);
+    }
 
     return NextResponse.json({ avatarUrl: result.url });
   } catch (error) {
