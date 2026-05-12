@@ -39,12 +39,14 @@ export default function PredictionFormPage() {
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [stageName, setStageName] = useState("");
   const [predictionStatus, setPredictionStatus] = useState("");
+  const [lockedReason, setLockedReason] = useState<string | null>(null);
+  const [windowOpensAt, setWindowOpensAt] = useState<string>("");
   const [existingPredictionId, setExistingPredictionId] = useState<string | null>(null);
   const [entries, setEntries] = useState<Map<string, RankSlots>>(new Map());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -71,6 +73,8 @@ export default function PredictionFormPage() {
         })));
         setStageName(data.stageName || "");
         setPredictionStatus(data.predictionStatus || "");
+        setLockedReason(data.lockedReason || null);
+        setWindowOpensAt(data.windowOpensAt || "");
 
         if (data.existingPrediction) {
           setExistingPredictionId(data.existingPrediction.id);
@@ -109,6 +113,9 @@ export default function PredictionFormPage() {
 
     setSubmitting(true);
     setError("");
+    setSuccessMessage("");
+
+    const isUpdating = Boolean(existingPredictionId);
 
     const entriesArray = groups.map((g) => ({
       groupId: g.id,
@@ -133,7 +140,7 @@ export default function PredictionFormPage() {
         return;
       }
 
-      setSuccess(true);
+      setSuccessMessage(isUpdating ? "Cập nhật dự đoán thành công!" : "Gửi dự đoán thành công!");
       setExistingPredictionId(data.predictionId);
     } catch {
       setError("Lỗi kết nối server");
@@ -172,15 +179,19 @@ export default function PredictionFormPage() {
             <Lock className="h-4 w-4" />
             {predictionStatus === "SCORED"
               ? "Vòng đấu đã kết thúc. Dự đoán đã được chấm điểm."
-              : "Vòng đấu đã bắt đầu. Không thể chỉnh sửa dự đoán."}
+              : lockedReason === "window_not_open"
+                ? `Cửa sổ dự đoán sẽ mở lúc 9h sáng ngày ${new Date(windowOpensAt).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}.`
+                : lockedReason === "window_closed"
+                  ? "Cửa sổ dự đoán đã đóng. Hạn cuối dự đoán là 19h30."
+                  : "Vòng đấu đã bắt đầu. Không thể chỉnh sửa dự đoán."}
           </div>
         )}
       </div>
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
-      {success && (
-        <Alert variant="success" message="Dự đoán đã được lưu thành công!" className="mb-4" />
+      {successMessage && (
+        <Alert variant="success" message={successMessage} className="mb-4" />
       )}
 
       {/* Group forms */}

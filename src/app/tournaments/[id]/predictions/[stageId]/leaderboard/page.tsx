@@ -20,10 +20,10 @@ interface LeaderboardEntry {
   totalScore: number;
   entries: {
     groupName: string;
-    rank1Correct: boolean;
-    rank2Correct: boolean;
-    rank3Correct: boolean;
-    rank4Correct: boolean;
+    slot1Correct: boolean;
+    slot2Correct: boolean;
+    slot3Correct: boolean;
+    slot4Correct: boolean;
     points: number;
     predictedPlayers: string[];
     actualResults: ActualResult[];

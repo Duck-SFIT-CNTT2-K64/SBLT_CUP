@@ -55,7 +55,7 @@ export default async function Home() {
     if (!image) return "object-contain object-center brightness-110 contrast-105";
     if (image.includes("emduatft")) return "object-contain object-center brightness-110 contrast-105 scale-[1.96] -translate-x-[75px]";
     if (image.includes("ngoc6mui")) return "object-contain object-center brightness-110 contrast-105 scale-[1.96] -translate-x-[75px]";
-    if (image.includes("furyy")) return "object-contain object-center brightness-110 contrast-105 scale-[0.96] -translate-x-[-15px]";
+    if (image.includes("furyy")) return "object-contain object-center brightness-110 contrast-105 scale-[0.96]";
     // Known bright unconfirmed guests (keep existing special bright styling)
     if (image.includes("duong_thieu_ngu") || image.includes("giay_co_dong")) {
       return "object-contain object-center brightness-140 contrast-110 saturate-110";

@@ -26,10 +26,10 @@ interface StageDetail {
     groupName: string;
     predictedPlayers: string[];
     actualResults: { ign: string; finalRank: number | null }[];
-    rank1Correct: boolean;
-    rank2Correct: boolean;
-    rank3Correct: boolean;
-    rank4Correct: boolean;
+    slot1Correct: boolean;
+    slot2Correct: boolean;
+    slot3Correct: boolean;
+    slot4Correct: boolean;
     points: number;
   }[];
 }
@@ -271,15 +271,14 @@ export default function GlobalPredictionLeaderboardPage() {
                                         </div>
                                         <div className="space-y-2">
                                           <div>
-                                            <p className="text-[#666] text-[10px] uppercase tracking-wider font-medium mb-1">Dự đoán</p>
+                                            <p className="text-[#666] text-[10px] uppercase tracking-wider font-medium mb-1">Dự đoán (4 người đi tiếp)</p>
                                             {e.predictedPlayers.map((ign, pi) => {
-                                              const correct = pi === 0 ? e.rank1Correct
-                                                : pi === 1 ? e.rank2Correct
-                                                : pi === 2 ? e.rank3Correct
-                                                : e.rank4Correct;
+                                              const correct = pi === 0 ? e.slot1Correct
+                                                : pi === 1 ? e.slot2Correct
+                                                : pi === 2 ? e.slot3Correct
+                                                : e.slot4Correct;
                                               return (
                                                 <div key={pi} className="flex items-center gap-1 mb-1">
-                                                  <span className="text-[#888] text-xs w-5 font-medium">#{pi + 1}</span>
                                                   <span className={cn("text-xs truncate flex-1", correct ? "text-emerald-400 font-medium" : "text-[#888]")}>
                                                     {ign}
                                                   </span>
@@ -293,12 +292,9 @@ export default function GlobalPredictionLeaderboardPage() {
                                             })}
                                           </div>
                                           <div className="border-t border-[#222]/30 pt-2">
-                                            <p className="text-[#666] text-[10px] uppercase tracking-wider font-medium mb-1">Thực tế</p>
+                                            <p className="text-[#666] text-[10px] uppercase tracking-wider font-medium mb-1">Top 4 thực tế</p>
                                             {e.actualResults.map((r, ri) => (
                                               <div key={ri} className="flex items-center gap-1 mb-1">
-                                                <span className="text-[#888] text-xs w-5 font-medium">
-                                                  {r.finalRank ? `#${r.finalRank}` : `#${ri + 1}`}
-                                                </span>
                                                 <span className="text-[#f5f5f5] text-xs truncate flex-1">{r.ign}</span>
                                               </div>
                                             ))}
@@ -357,15 +353,14 @@ export default function GlobalPredictionLeaderboardPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                   <div>
-                                    <p className="text-[#888] text-xs mb-1.5">Dự đoán</p>
+                                    <p className="text-[#888] text-xs mb-1.5">Dự đoán (4 người đi tiếp)</p>
                                     {e.predictedPlayers.map((ign, pi) => {
-                                      const correct = pi === 0 ? e.rank1Correct
-                                        : pi === 1 ? e.rank2Correct
-                                        : pi === 2 ? e.rank3Correct
-                                        : e.rank4Correct;
+                                      const correct = pi === 0 ? e.slot1Correct
+                                        : pi === 1 ? e.slot2Correct
+                                        : pi === 2 ? e.slot3Correct
+                                        : e.slot4Correct;
                                       return (
                                         <div key={pi} className="flex items-center gap-1.5 mb-1">
-                                          <span className="text-[#888] text-xs w-4">#{pi + 1}</span>
                                           <span className={correct ? "text-emerald-400" : "text-[#888]"}>
                                             {ign}
                                           </span>
@@ -379,12 +374,9 @@ export default function GlobalPredictionLeaderboardPage() {
                                     })}
                                   </div>
                                   <div>
-                                    <p className="text-[#888] text-xs mb-1.5">Thực tế</p>
+                                    <p className="text-[#888] text-xs mb-1.5">Top 4 thực tế</p>
                                     {e.actualResults.map((r, ri) => (
                                       <div key={ri} className="flex items-center gap-1.5 mb-1">
-                                        <span className="text-[#888] text-xs w-4">
-                                          {r.finalRank ? `#${r.finalRank}` : `#${ri + 1}`}
-                                        </span>
                                         <span className="text-[#f5f5f5]">{r.ign}</span>
                                       </div>
                                     ))}

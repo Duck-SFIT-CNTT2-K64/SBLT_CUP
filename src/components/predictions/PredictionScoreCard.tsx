@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle, XCircle, ChevronDown, ChevronUp, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
@@ -11,10 +11,10 @@ interface ActualResult {
 
 interface EntryResult {
   groupName: string;
-  rank1Correct: boolean;
-  rank2Correct: boolean;
-  rank3Correct: boolean;
-  rank4Correct: boolean;
+  slot1Correct: boolean;
+  slot2Correct: boolean;
+  slot3Correct: boolean;
+  slot4Correct: boolean;
   points: number;
   predictedPlayers: string[];
   actualResults: ActualResult[];
@@ -84,7 +84,7 @@ export default function PredictionScoreCard({
           <div key={idx} className="flex items-center gap-3 text-sm">
             <span className="text-[#888] w-20 shrink-0">{entry.groupName}</span>
             <div className="flex items-center gap-1">
-              {[entry.rank1Correct, entry.rank2Correct, entry.rank3Correct, entry.rank4Correct].map(
+              {[entry.slot1Correct, entry.slot2Correct, entry.slot3Correct, entry.slot4Correct].map(
                 (correct, i) =>
                   correct ? (
                     <CheckCircle key={i} className="h-4 w-4 text-green-400" />
@@ -114,19 +114,19 @@ export default function PredictionScoreCard({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {/* Predicted */}
                 <div>
-                  <p className="text-[#888] text-xs mb-2">Dự đoán của bạn</p>
+                  <p className="text-[#888] text-xs mb-2">Dự đoán của bạn (4 người đi tiếp)</p>
                   <div className="space-y-1.5">
                     {entry.predictedPlayers.map((ign, i) => {
-                      const correct = i === 0 ? entry.rank1Correct
-                        : i === 1 ? entry.rank2Correct
-                        : i === 2 ? entry.rank3Correct
-                        : entry.rank4Correct;
+                      const correct = i === 0 ? entry.slot1Correct
+                        : i === 1 ? entry.slot2Correct
+                        : i === 2 ? entry.slot3Correct
+                        : entry.slot4Correct;
                       return (
                         <div key={i} className="flex items-center gap-2">
-                          <span className="text-[#888] text-xs w-4">#{i + 1}</span>
+                          <Users className="h-3 w-3 text-[#666]" />
                           <span className={cn(
                             "text-sm",
-                            correct ? "text-green-400" : "text-[#888]"
+                            correct ? "text-green-400 font-medium" : "text-[#888]"
                           )}>
                             {ign}
                           </span>
@@ -143,13 +143,11 @@ export default function PredictionScoreCard({
 
                 {/* Actual */}
                 <div>
-                  <p className="text-[#888] text-xs mb-2">Kết quả thực tế</p>
+                  <p className="text-[#888] text-xs mb-2">Top 4 thực tế (đi tiếp)</p>
                   <div className="space-y-1.5">
                     {entry.actualResults.map((result, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="text-[#888] text-xs w-4">
-                          {result.finalRank ? `#${result.finalRank}` : `#${i + 1}`}
-                        </span>
+                        <Users className="h-3 w-3 text-[#666]" />
                         <span className="text-[#f5f5f5] text-sm">{result.ign}</span>
                       </div>
                     ))}

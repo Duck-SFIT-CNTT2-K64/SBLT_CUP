@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Trophy, Medal, Star, X } from "lucide-react";
+import { CheckCircle, Users } from "lucide-react";
 
 interface Player {
   id: string;
@@ -28,134 +28,140 @@ interface PredictionGroupFormProps {
   onChange: (groupId: string, entries: RankSlots) => void;
 }
 
-const RANK_CONFIG = [
-  { key: "rank1PlayerId" as const, label: "Top 1", points: 10, icon: Trophy, color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30" },
-  { key: "rank2PlayerId" as const, label: "Top 2", points: 10, icon: Medal, color: "text-gray-300", bg: "bg-gray-400/10 border-gray-400/30" },
-  { key: "rank3PlayerId" as const, label: "Top 3", points: 10, icon: Medal, color: "text-amber-600", bg: "bg-amber-600/10 border-amber-600/30" },
-  { key: "rank4PlayerId" as const, label: "Top 4", points: 10, icon: Star, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
-];
-
 export default function PredictionGroupForm({
   group,
   existingEntries,
   locked,
   onChange,
 }: PredictionGroupFormProps) {
-  const [selections, setSelections] = useState<RankSlots>({
-    rank1PlayerId: existingEntries?.rank1PlayerId || "",
-    rank2PlayerId: existingEntries?.rank2PlayerId || "",
-    rank3PlayerId: existingEntries?.rank3PlayerId || "",
-    rank4PlayerId: existingEntries?.rank4PlayerId || "",
+  // Chuyển đổi từ RankSlots sang array để dễ quản lý
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => {
+    if (!existingEntries) return [];
+    return [
+      existingEntries.rank1PlayerId,
+      existingEntries.rank2PlayerId,
+      existingEntries.rank3PlayerId,
+      existingEntries.rank4PlayerId,
+    ].filter(Boolean);
   });
-  const [selectingSlot, setSelectingSlot] = useState<keyof RankSlots | null>(null);
 
-  const [prevEntries, setPrevEntries] = useState(existingEntries);
-  if (existingEntries !== prevEntries) {
-    setPrevEntries(existingEntries);
-    if (existingEntries) {
-      setSelections(existingEntries);
+  useEffect(() => {
+    if (!existingEntries) {
+      setSelectedIds([]);
+      return;
     }
-  }
 
-  const selectedPlayerIds = new Set(Object.values(selections).filter(Boolean));
+    setSelectedIds([
+      existingEntries.rank1PlayerId,
+      existingEntries.rank2PlayerId,
+      existingEntries.rank3PlayerId,
+      existingEntries.rank4PlayerId,
+    ].filter(Boolean));
+  }, [existingEntries]);
 
-  const handleSlotClick = (slot: keyof RankSlots) => {
+  const isComplete = selectedIds.length === 4;
+
+  const handleToggle = (playerId: string) => {
     if (locked) return;
-    if (selections[slot]) {
-      // Clear slot
-      const next = { ...selections, [slot]: "" };
-      setSelections(next);
-      setSelectingSlot(null);
-      onChange(group.id, next);
+
+    let next: string[];
+
+    if (selectedIds.includes(playerId)) {
+      next = selectedIds.filter((id) => id !== playerId);
+    } else if (selectedIds.length < 4) {
+      next = [...selectedIds, playerId];
     } else {
-      setSelectingSlot(slot);
+      return;
     }
+
+    setSelectedIds(next);
+    onChange(group.id, {
+      rank1PlayerId: next[0] || "",
+      rank2PlayerId: next[1] || "",
+      rank3PlayerId: next[2] || "",
+      rank4PlayerId: next[3] || "",
+    });
   };
-
-  const handlePlayerClick = (playerId: string) => {
-    if (locked || !selectingSlot) return;
-    if (selectedPlayerIds.has(playerId)) return; // Already selected in another slot
-
-    const next = { ...selections, [selectingSlot]: playerId };
-    setSelections(next);
-    setSelectingSlot(null);
-    onChange(group.id, next);
-  };
-
-  const isComplete = Object.values(selections).every(Boolean);
 
   return (
     <div className={cn("bg-[#111] border border-[#222] rounded-xl p-5", isComplete && "border-green-800/50")}>
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-[#f5f5f5] font-bold text-lg">{group.name}</h4>
-        {isComplete && (
-          <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded-full">
-            Hoàn thành
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            "text-xs px-2 py-1 rounded-full",
+            isComplete
+              ? "text-green-400 bg-green-500/10"
+              : "text-[#888] bg-[#222]"
+          )}>
+            {selectedIds.length}/4
           </span>
-        )}
+          {isComplete && (
+            <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded-full">
+              Hoàn thành
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Rank slots */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-        {RANK_CONFIG.map(({ key, label, points, icon: Icon, color, bg }) => {
-          const selectedId = selections[key];
-          const selectedPlayer = group.players.find((p) => p.id === selectedId);
-          const isSelecting = selectingSlot === key;
+      {/* Selected slots preview */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[0, 1, 2, 3].map((i) => {
+          const playerId = selectedIds[i];
+          const player = playerId ? group.players.find((p) => p.id === playerId) : null;
 
           return (
-            <button
-              key={key}
-              type="button"
-              disabled={locked}
-              onClick={() => handleSlotClick(key)}
+            <div
+              key={i}
               className={cn(
-                "relative flex flex-col items-center justify-center p-3 rounded-lg border-2 border-dashed transition-all min-h-[80px]",
-                isSelecting
-                  ? "border-[#dc2626] bg-[#dc2626]/10 animate-pulse"
-                  : selectedPlayer
-                    ? bg
-                    : "border-[#222] hover:border-[#888]",
-                locked && "opacity-60 cursor-not-allowed"
+                "flex flex-col items-center justify-center p-2 rounded-lg border-2 border-dashed min-h-[64px] transition-all",
+                player
+                  ? "border-[#dc2626]/30 bg-[#dc2626]/5"
+                  : "border-[#222]"
               )}
             >
-              <Icon className={cn("h-5 w-5 mb-1", color)} />
-              <span className="text-xs text-[#888]">{label}</span>
-              <span className="text-xs text-[#888]">({points}đ)</span>
-              {selectedPlayer ? (
-                <div className="mt-1 flex items-center gap-1">
-                  <span className="text-sm text-[#f5f5f5] font-medium truncate max-w-[80px]">
-                    {selectedPlayer.ign}
+              {player ? (
+                <>
+                  <Users className="h-4 w-4 text-[#dc2626] mb-1" />
+                  <span className="text-xs text-[#f5f5f5] font-medium text-center truncate max-w-full">
+                    {player.ign}
                   </span>
-                  {!locked && <X className="h-3 w-3 text-[#888]" />}
-                </div>
-              ) : isSelecting ? (
-                <span className="text-xs text-[#dc2626] mt-1">Chọn bên dưới</span>
-              ) : null}
-            </button>
+                </>
+              ) : (
+                <>
+                  <Users className="h-4 w-4 text-[#444] mb-1" />
+                  <span className="text-xs text-[#444]">Trống</span>
+                </>
+              )}
+            </div>
           );
         })}
       </div>
 
-      {/* Player list */}
+      {/* Player list - click to toggle */}
       <div className="space-y-1">
         <p className="text-xs text-[#888] mb-2">
-          {selectingSlot ? "Nhấn vào tuyển thủ để chọn:" : "Nhấn vào ô Top 1-4 ở trên, rồi chọn tuyển thủ:"}
+          {locked
+            ? "Dự đoán đã bị khóa."
+            : isComplete
+              ? "Đã chọn đủ 4 người. Nhấn để bỏ chọn."
+              : "Chọn 4 người bạn nghĩ sẽ đi tiếp:"}
         </p>
         {group.players.map((player) => {
-          const isSelected = selectedPlayerIds.has(player.id);
-          const isSelectable = selectingSlot && !isSelected;
+          const isSelected = selectedIds.includes(player.id);
+          const canSelect = !locked && (isSelected || selectedIds.length < 4);
 
           return (
             <button
               key={player.id}
               type="button"
-              disabled={locked || !isSelectable}
-              onClick={() => handlePlayerClick(player.id)}
+              disabled={locked || !canSelect}
+              onClick={() => handleToggle(player.id)}
               className={cn(
                 "w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2",
                 isSelected
                   ? "bg-[#dc2626]/10 text-[#f5f5f5] border border-[#dc2626]/30"
-                  : isSelectable
+                  : canSelect
                     ? "bg-[#111] hover:bg-[#222] text-[#f5f5f5] cursor-pointer"
                     : "bg-[#111] text-[#888]",
                 locked && "opacity-60"
@@ -168,7 +174,10 @@ export default function PredictionGroupForm({
                 </span>
               )}
               {isSelected && (
-                <span className="text-xs text-[#dc2626]">Đã chọn</span>
+                <span className="flex items-center gap-1 text-xs text-[#dc2626]">
+                  <CheckCircle className="h-3 w-3" />
+                  Đã chọn
+                </span>
               )}
             </button>
           );
