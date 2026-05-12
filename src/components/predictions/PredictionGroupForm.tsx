@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle, Users } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 interface Player {
   id: string;
@@ -120,18 +120,18 @@ export default function PredictionGroupForm({
                   : "border-[#222]"
               )}
             >
+              <span className={cn(
+                "text-xs font-bold mb-1",
+                player ? "text-[#dc2626]" : "text-[#444]"
+              )}>
+                {i + 1}
+              </span>
               {player ? (
-                <>
-                  <Users className="h-4 w-4 text-[#dc2626] mb-1" />
-                  <span className="text-xs text-[#f5f5f5] font-medium text-center truncate max-w-full">
-                    {player.ign}
-                  </span>
-                </>
+                <span className="text-xs text-[#f5f5f5] font-medium text-center truncate max-w-full">
+                  {player.ign}
+                </span>
               ) : (
-                <>
-                  <Users className="h-4 w-4 text-[#444] mb-1" />
-                  <span className="text-xs text-[#444]">Trống</span>
-                </>
+                <span className="text-xs text-[#444]">Trống</span>
               )}
             </div>
           );
@@ -163,8 +163,8 @@ export default function PredictionGroupForm({
                   ? "bg-[#dc2626]/10 text-[#f5f5f5] border border-[#dc2626]/30"
                   : canSelect
                     ? "bg-[#111] hover:bg-[#222] text-[#f5f5f5] cursor-pointer"
-                    : "bg-[#111] text-[#888]",
-                locked && "opacity-60"
+                    : "bg-[#111] text-[#555] opacity-50 cursor-not-allowed",
+                locked && "opacity-60 cursor-not-allowed"
               )}
             >
               <span className="flex-1">{player.ign}</span>

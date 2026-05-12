@@ -142,6 +142,7 @@ export default function PredictionFormPage() {
 
       setSuccessMessage(isUpdating ? "Cập nhật dự đoán thành công!" : "Gửi dự đoán thành công!");
       setExistingPredictionId(data.predictionId);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setError("Lỗi kết nối server");
     } finally {
@@ -191,7 +192,13 @@ export default function PredictionFormPage() {
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
       {successMessage && (
-        <Alert variant="success" message={successMessage} className="mb-4" />
+        <Alert
+          variant="success"
+          message={successMessage}
+          className="mb-4"
+          autoDismiss={5000}
+          onDismiss={() => setSuccessMessage("")}
+        />
       )}
 
       {/* Group forms */}

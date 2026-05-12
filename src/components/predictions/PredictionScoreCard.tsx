@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, XCircle, ChevronDown, ChevronUp, Users } from "lucide-react";
+import { CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
@@ -105,7 +105,7 @@ export default function PredictionScoreCard({
             Chi tiết dự đoán
           </p>
           {entries.map((entry, idx) => (
-            <div key={idx} className="bg-[#111] rounded-lg p-4">
+            <div key={idx} className="bg-[#0d0d0d] rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[#f5f5f5] font-medium text-sm">{entry.groupName}</span>
                 <span className="text-[#dc2626] text-sm font-bold">{entry.points}đ</span>
@@ -123,7 +123,7 @@ export default function PredictionScoreCard({
                         : entry.slot4Correct;
                       return (
                         <div key={i} className="flex items-center gap-2">
-                          <Users className="h-3 w-3 text-[#666]" />
+                          <span className="text-xs text-[#666] w-4 text-center">{i + 1}</span>
                           <span className={cn(
                             "text-sm",
                             correct ? "text-green-400 font-medium" : "text-[#888]"
@@ -147,7 +147,9 @@ export default function PredictionScoreCard({
                   <div className="space-y-1.5">
                     {entry.actualResults.map((result, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <Users className="h-3 w-3 text-[#666]" />
+                        <span className="text-xs text-[#666] w-4 text-center">
+                          {result.finalRank ?? (i + 1)}
+                        </span>
                         <span className="text-[#f5f5f5] text-sm">{result.ign}</span>
                       </div>
                     ))}

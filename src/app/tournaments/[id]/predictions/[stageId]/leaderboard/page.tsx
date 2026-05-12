@@ -79,6 +79,25 @@ export default function StagePredictionLeaderboardPage() {
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
+      {!loading && leaderboard.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center">
+            <div className="text-xs uppercase tracking-wider text-[#888]">Người tham gia</div>
+            <div className="mt-1 text-lg font-bold text-[#f5f5f5]">{leaderboard.length}</div>
+          </div>
+          <div className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center">
+            <div className="text-xs uppercase tracking-wider text-[#888]">Điểm cao nhất</div>
+            <div className="mt-1 text-lg font-bold text-[#dc2626]">{leaderboard[0]?.totalScore ?? 0}</div>
+          </div>
+          <div className="rounded-xl border border-[#222] bg-[#111] px-4 py-3 text-center">
+            <div className="text-xs uppercase tracking-wider text-[#888]">Điểm trung bình</div>
+            <div className="mt-1 text-lg font-bold text-[#f5f5f5]">
+              {Math.round(leaderboard.reduce((s, e) => s + e.totalScore, 0) / leaderboard.length)}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 text-[#dc2626] animate-spin" />

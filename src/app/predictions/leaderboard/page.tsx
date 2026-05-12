@@ -95,7 +95,7 @@ export default function GlobalPredictionLeaderboardPage() {
           <h1 className="sblt-heading text-3xl text-[#f5f5f5] mb-3 tracking-tight">Bảng xếp hạng Dự đoán</h1>
           <p className="text-[#888] max-w-xl mx-auto text-sm">
             Xếp hạng tổng hợp điểm dự đoán qua tất cả các vòng đấu.
-            Người có nhiều điểm dự đoán nhất sẽ nhận giải thưởng từ Riot!
+            Người có nhiều điểm dự đoán nhất sẽ nhận phần thưởng từ BTC!
           </p>
           <div className="w-16 h-0.5 bg-[#dc2626] mx-auto mt-4" />
         </div>
