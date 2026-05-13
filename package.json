@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
+    "db:seed-dev": "ts-node --project tsconfig.seed.json prisma/seed-dev.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force",
     "db:setup": "prisma generate && prisma migrate deploy && ts-node --project tsconfig.seed.json prisma/seed.ts",
