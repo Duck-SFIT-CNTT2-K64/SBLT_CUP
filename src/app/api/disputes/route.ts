@@ -133,5 +133,7 @@ export async function GET(req: NextRequest) {
     take: 50,
   });
 
-  return NextResponse.json(disputes);
+  return NextResponse.json(disputes, {
+    headers: { "Cache-Control": "private, no-store" },
+  });
 }

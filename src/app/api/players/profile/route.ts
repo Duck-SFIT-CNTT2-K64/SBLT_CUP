@@ -28,7 +28,9 @@ export async function GET() {
     return NextResponse.json({ error: "Player not found" }, { status: 404 });
   }
 
-  return NextResponse.json(player);
+  return NextResponse.json(player, {
+    headers: { "Cache-Control": "private, no-store" },
+  });
   } catch (error) {
     return handleApiError(error);
   }

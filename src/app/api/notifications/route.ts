@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
       total,
       totalPages: Math.ceil(total / limit),
     },
+  }, {
+    headers: { "Cache-Control": "private, no-store" },
   });
 }
 

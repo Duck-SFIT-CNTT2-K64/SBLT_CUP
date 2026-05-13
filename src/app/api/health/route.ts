@@ -121,5 +121,8 @@ export async function GET() {
     timestamp: Date.now(),
   };
 
-  return NextResponse.json(response, { status: statusCode });
+  return NextResponse.json(response, {
+    status: statusCode,
+    headers: { "Cache-Control": "no-store" },
+  });
 }

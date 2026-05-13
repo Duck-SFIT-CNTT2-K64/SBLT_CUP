@@ -4,6 +4,9 @@ import { addLog } from "@/lib/logging";
 
 // =============================================================
 // IN-MEMORY RATE LIMITER — Edge-compatible, không cần Redis
+// NOTE: Với N PM2 instances, mỗi instance có store riêng.
+// Cloudflare Rate Limiting ở edge xử lý cross-instance.
+// Ở đây chỉ giảm limit để bù trừ cho multi-instance.
 // =============================================================
 
 interface RateLimitEntry {
@@ -136,6 +139,10 @@ function validateCsrfOrigin(request: NextRequest): boolean {
 }
 
 function getClientIp(request: NextRequest): string {
+  // Ưu tiên Cloudflare Connecting IP header (khi dùng Cloudflare proxy)
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
 
@@ -212,6 +219,7 @@ export function proxy(request: NextRequest) {
   }
 
   // --- RATE LIMIT: Login / Auth routes — 10 attempts per 5 min ---
+  // (Giữ nguyên vì auth brute-force protection quan trọng hơn throughput)
   if (
     pathname.startsWith("/api/auth/callback") ||
     pathname.startsWith("/api/auth/register") ||
@@ -224,26 +232,29 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // --- RATE LIMIT: Admin routes — 100 per minute ---
+  // --- RATE LIMIT: Admin routes — 50 per minute per instance ---
+  // (Giảm từ 100 xuống 50 để bù cho 2 PM2 instances → tổng 100/min)
   if (pathname.startsWith("/api/admin")) {
     const adminKey = `admin:${clientIp}`;
-    if (!checkRateLimit(adminKey, 100, 60_000)) {
+    if (!checkRateLimit(adminKey, 50, 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: General API routes — 200 per minute ---
+  // --- RATE LIMIT: General API routes — 100 per minute per instance ---
+  // (Giảm từ 200 xuống 100 để bù cho 2 PM2 instances → tổng 200/min)
   if (pathname.startsWith("/api")) {
     const apiKey = `api:${clientIp}`;
-    if (!checkRateLimit(apiKey, 200, 60_000)) {
+    if (!checkRateLimit(apiKey, 100, 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: Public page routes — 300 per minute ---
+  // --- RATE LIMIT: Public page routes — 150 per minute per instance ---
+  // (Giảm từ 300 xuống 150 để bù cho 2 PM2 instances → tổng 300/min)
   if (!pathname.startsWith("/api")) {
     const publicKey = `page:${clientIp}`;
-    if (!checkRateLimit(publicKey, 300, 60_000)) {
+    if (!checkRateLimit(publicKey, 150, 60_000)) {
       return rateLimitResponse(60);
     }
   }

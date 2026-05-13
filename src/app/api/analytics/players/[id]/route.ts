@@ -125,5 +125,7 @@ export async function GET(
     tournamentStats: Array.from(tournamentStats.values()),
     trend,
     placementDistribution,
+  }, {
+    headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
   });
 }

@@ -8,5 +8,7 @@ export async function GET() {
   }
 
   const count = await getUnreadCount(session.user.id);
-  return Response.json({ count });
+  return Response.json({ count }, {
+    headers: { "Cache-Control": "private, no-store" },
+  });
 }

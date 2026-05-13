@@ -88,7 +88,8 @@ export async function GET(
 
   return NextResponse.json(tournament, {
     headers: {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
+      "Cache-Control": isAdmin ? "private, no-store" : "public, s-maxage=60, stale-while-revalidate",
+      "Vary": "Authorization",
     },
   });
 }

@@ -23,6 +23,9 @@ export async function GET() {
       announcements: true,
       registrationStatus: true,
       checkInReminder: true,
+    },
+    {
+      headers: { "Cache-Control": "private, no-store" },
     }
   );
 }

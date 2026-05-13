@@ -169,5 +169,7 @@ export async function GET(
     },
     playerStats,
     stageStats,
+  }, {
+    headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
   });
 }
