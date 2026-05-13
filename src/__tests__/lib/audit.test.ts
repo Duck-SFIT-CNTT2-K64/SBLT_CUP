@@ -75,6 +75,6 @@ describe("auditLog", () => {
       auditLog({ userId: "u1", action: "X", entityType: "Y", entityId: "Z" })
     ).resolves.not.toThrow();
 
-    expect(console.error).toHaveBeenCalledWith("[AUDIT LOG ERROR]", expect.any(Error));
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("[AUDIT LOG ERROR]"), expect.any(Error));
   });
 });

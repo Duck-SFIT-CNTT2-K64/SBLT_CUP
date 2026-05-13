@@ -35,12 +35,12 @@ export default function ResultsPage() {
     return () => controller.abort();
   }, [params.id]);
 
+  const stage = tournament?.stages.find((s) => s.id === selectedStageId);
+  const totalPlayers = useMemo(() => stage ? stage.groups.reduce((sum, g) => sum + g.players.length, 0) : 0, [stage]);
+
   if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
   if (error) return <div className="text-center py-20 text-red-400">{error}</div>;
   if (!tournament) return <div className="text-center py-20 text-[#888]">Không tìm thấy giải đấu</div>;
-
-  const stage = tournament.stages.find((s) => s.id === selectedStageId);
-  const totalPlayers = useMemo(() => stage ? stage.groups.reduce((sum, g) => sum + g.players.length, 0) : 0, [stage]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

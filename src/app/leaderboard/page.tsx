@@ -9,7 +9,6 @@ import TopWinners from "@/components/leaderboard/TopWinners";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 import { Alert } from "@/components/ui/Alert";
-import { cn } from "@/lib/utils";
 
 interface PlayerRow {
   id: string;

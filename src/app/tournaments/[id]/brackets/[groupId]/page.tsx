@@ -99,31 +99,8 @@ export default function LobbyDetailPage() {
     return () => controller.abort();
   }, [params.id, params.groupId]);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-red-400">
-        {error}
-      </div>
-    );
-  }
-
-  if (!group) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-[#888]">
-        Không tìm thấy bảng đấu
-      </div>
-    );
-  }
-
-  const { maxRound, rounds, playerRows, isLive } = useMemo(() => {
+  const { rounds, playerRows, isLive } = useMemo(() => {
+    if (!group) return { rounds: [], playerRows: [], isLive: false };
     const mr = group.games.length > 0 ? Math.max(...group.games.map((g) => g.gameNumber)) : 0;
     const r = Array.from({ length: mr }, (_, i) => i + 1);
 
@@ -152,8 +129,32 @@ export default function LobbyDetailPage() {
 
     const live = group.games.some((g) => g.status === "IN_PROGRESS");
 
-    return { maxRound: mr, rounds: r, playerRows: rows, isLive: live };
+    return { rounds: r, playerRows: rows, isLive: live };
   }, [group]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-red-400">
+        {error}
+      </div>
+    );
+  }
+
+  if (!group) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-[#888]">
+        Không tìm thấy bảng đấu
+      </div>
+    );
+  }
 
   const getPlacementLabel = (p: number) => {
     if (p === 1) return "1st";

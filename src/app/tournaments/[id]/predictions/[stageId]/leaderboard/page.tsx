@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import PredictionScoreCard from "@/components/predictions/PredictionScoreCard";
 import TopWinners from "@/components/leaderboard/TopWinners";
-import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";

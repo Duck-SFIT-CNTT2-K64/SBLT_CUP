@@ -15,7 +15,7 @@ export interface SSEPubSubMessage {
 
 let pubClient: Redis | null = null;
 let subClient: Redis | null = null;
-let instanceId = `sse-${process.pid}-${Date.now()}`;
+const instanceId = `sse-${process.pid}-${Date.now()}`;
 let messageHandler: ((msg: SSEPubSubMessage) => void) | null = null;
 let subscribed = false;
 

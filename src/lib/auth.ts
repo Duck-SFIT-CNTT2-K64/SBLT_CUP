@@ -16,7 +16,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...prismaAdapter,
     async createUser(profile): Promise<AdapterUser> {
       const p = profile as unknown as Record<string, unknown>;
-      const { image, emailVerified: _ev, ...rest } = p;
+      const { image, ...rest } = p;
       const user = await prisma.user.create({
         data: { ...rest, avatar: image ?? null } as never,
       });
@@ -24,7 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async updateUser(profile): Promise<AdapterUser> {
       const p = profile as unknown as Record<string, unknown>;
-      const { image, emailVerified: _ev, ...rest } = p;
+      const { image, ...rest } = p;
       if (image !== undefined) {
         const user = await prisma.user.update({
           where: { id: rest.id as string },

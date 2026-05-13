@@ -93,6 +93,11 @@ export default function DashboardPredictionsPage() {
     return () => controller.abort();
   }, [session?.user?.id, sessionStatus]);
 
+  const { totalPoints, scoredCount } = useMemo(() => ({
+    totalPoints: predictions.reduce((sum, p) => sum + p.totalScore, 0),
+    scoredCount: predictions.filter((p) => p.status === "SCORED").length,
+  }), [predictions]);
+
   if (sessionStatus === "loading" || (loading && session?.user?.id)) {
     return (
       <div className="flex justify-center py-20">
@@ -113,11 +118,6 @@ export default function DashboardPredictionsPage() {
       </div>
     );
   }
-
-  const { totalPoints, scoredCount } = useMemo(() => ({
-    totalPoints: predictions.reduce((sum, p) => sum + p.totalScore, 0),
-    scoredCount: predictions.filter((p) => p.status === "SCORED").length,
-  }), [predictions]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

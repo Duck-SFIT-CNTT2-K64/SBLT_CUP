@@ -18,6 +18,12 @@ const config = {
       displayName: "unit",
       testEnvironment: "node",
       transform: {
+        "^.+\\.js$": ["ts-jest", {
+          tsconfig: {
+            module: "commonjs",
+            moduleResolution: "node",
+          },
+        }],
         "^.+\\.(ts|tsx)$": ["ts-jest", {
           tsconfig: {
             module: "commonjs",
