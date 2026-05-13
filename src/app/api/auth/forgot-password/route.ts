@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { logger } from "@/lib/logger";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const rateLimit = await checkRateLimit({
+    key: `forgot-password:${ip}`,
+    ...RATE_LIMITS.AUTH,
+  });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Quá nhiều yêu cầu. Vui lòng thử lại sau." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   const body = await req.json();
   const { email } = body;
 
@@ -35,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   // S-10: Never log reset token to console in production
   if (process.env.NODE_ENV === "development") {
-    console.log(`[DEV ONLY - PASSWORD RESET] User: ${user.email} | Link: ${resetUrl}`);
+    logger.info(`[DEV ONLY - PASSWORD RESET] User: ${user.email} | Link: ${resetUrl}`);
   }
 
   // If SMTP is configured, send email
@@ -66,7 +80,7 @@ export async function POST(req: NextRequest) {
         `,
       });
     } catch (err) {
-      console.error("[EMAIL ERROR]", err);
+      logger.error("[EMAIL ERROR]", err instanceof Error ? err : new Error(String(err)));
     }
   }
 

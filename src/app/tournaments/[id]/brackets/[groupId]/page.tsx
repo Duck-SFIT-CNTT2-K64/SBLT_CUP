@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Users, Trophy } from "lucide-react";
@@ -49,14 +49,17 @@ export default function LobbyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedRound, setSelectedRound] = useState(1);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const groupId = params.groupId as string;
     const tournamentId = params.id as string;
+    const controller = new AbortController();
 
     // First fetch tournament to find which stage contains this group
-    fetch(`/api/tournaments/${tournamentId}`)
+    fetch(`/api/tournaments/${tournamentId}`, { signal: controller.signal })
       .then((r) => {
-        if (!r.ok) throw new Error();
+        if (!r.ok) throw new Error("Không thể tải giải đấu");
         return r.json();
       })
       .then((tournament) => {
@@ -71,29 +74,43 @@ export default function LobbyDetailPage() {
           }
           if (foundStageId) break;
         }
-        if (!foundStageId) throw new Error();
+        if (!foundStageId) throw new Error("Không tìm thấy bảng đấu trong giải");
         // Now fetch group detail
-        return fetch(`/api/tournaments/${tournamentId}/stages/${foundStageId}/groups/${groupId}`);
+        return fetch(`/api/tournaments/${tournamentId}/stages/${foundStageId}/groups/${groupId}`, { signal: controller.signal });
       })
       .then((r) => {
-        if (!r.ok) throw new Error();
+        if (!r.ok) throw new Error("Không thể tải chi tiết bảng đấu");
         return r.json();
       })
       .then((data) => {
         setGroup(data);
         if (data.games?.length > 0) {
           const maxRound = Math.max(...data.games.map((g: Game) => g.gameNumber));
-          setSelectedRound(Math.min(1, maxRound));
+          setSelectedRound(Math.max(1, maxRound));
         }
       })
-      .catch(() => {})
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        console.error("Failed to fetch group bracket:", e);
+        setError(e instanceof Error ? e.message : "Đã xảy ra lỗi");
+      })
       .finally(() => setLoading(false));
+
+    return () => controller.abort();
   }, [params.id, params.groupId]);
 
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-red-400">
+        {error}
       </div>
     );
   }
@@ -106,36 +123,37 @@ export default function LobbyDetailPage() {
     );
   }
 
-  const maxRound = group.games.length > 0 ? Math.max(...group.games.map((g) => g.gameNumber)) : 0;
-  const rounds = Array.from({ length: maxRound }, (_, i) => i + 1);
+  const { maxRound, rounds, playerRows, isLive } = useMemo(() => {
+    const mr = group.games.length > 0 ? Math.max(...group.games.map((g) => g.gameNumber)) : 0;
+    const r = Array.from({ length: mr }, (_, i) => i + 1);
 
-  // Build player rows with per-round data and totals
-  const playerRows = group.players.map((gp) => {
-    let totalPoints = 0;
-    const roundData: Record<number, { placement: number; points: number }> = {};
+    const rows = group.players.map((gp) => {
+      let totalPoints = 0;
+      const roundData: Record<number, { placement: number; points: number }> = {};
 
-    for (const game of group.games) {
-      const result = game.results.find((r) => r.playerId === gp.playerId);
-      if (result) {
-        roundData[game.gameNumber] = { placement: result.placement, points: result.points };
-        totalPoints += result.points;
+      for (const game of group.games) {
+        const result = game.results.find((res) => res.playerId === gp.playerId);
+        if (result) {
+          roundData[game.gameNumber] = { placement: result.placement, points: result.points };
+          totalPoints += result.points;
+        }
       }
-    }
 
-    return {
-      playerId: gp.playerId,
-      ign: gp.player.ign,
-      isGuest: gp.player.isGuest,
-      totalPoints,
-      rounds: roundData,
-    };
-  });
+      return {
+        playerId: gp.playerId,
+        ign: gp.player.ign,
+        isGuest: gp.player.isGuest,
+        totalPoints,
+        rounds: roundData,
+      };
+    });
 
-  // Sort by total points descending
-  playerRows.sort((a, b) => b.totalPoints - a.totalPoints);
+    rows.sort((a, b) => b.totalPoints - a.totalPoints);
 
-  // Check if any game is IN_PROGRESS
-  const isLive = group.games.some((g) => g.status === "IN_PROGRESS");
+    const live = group.games.some((g) => g.status === "IN_PROGRESS");
+
+    return { maxRound: mr, rounds: r, playerRows: rows, isLive: live };
+  }, [group]);
 
   const getPlacementLabel = (p: number) => {
     if (p === 1) return "1st";
@@ -151,6 +169,7 @@ export default function LobbyDetailPage() {
         <button
           onClick={() => router.back()}
           className="text-[#888] hover:text-[#f5f5f5] transition-colors"
+          aria-label="Quay lại"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -163,10 +182,12 @@ export default function LobbyDetailPage() {
 
       {/* Round tabs */}
       {rounds.length > 0 && (
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1" role="tablist" aria-label="Chọn lượt đấu">
           {rounds.map((r) => (
             <button
               key={r}
+              role="tab"
+              aria-selected={selectedRound === r}
               onClick={() => setSelectedRound(r)}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
                 selectedRound === r
@@ -185,8 +206,8 @@ export default function LobbyDetailPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b-2 border-[#dc2626]">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider w-12">#</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider">PLAYER</th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider w-12">#</th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider">PLAYER</th>
               {rounds.map((r) => (
                 <th
                   key={r}

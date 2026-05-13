@@ -3,6 +3,13 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { scorePredictionsForStage } from "@/lib/predictions";
 import { sseManager, SSE_EVENTS } from "@/lib/sse";
+import { logger } from "@/lib/logger";
+import { auditLog } from "@/lib/audit";
+
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  SCHEDULED: ["IN_PROGRESS"],
+  IN_PROGRESS: ["COMPLETED"],
+};
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/status
@@ -27,8 +34,8 @@ export async function POST(
     return NextResponse.json({ error: "Trạng thái không hợp lệ" }, { status: 400 });
   }
 
-  const stage = await prisma.stage.findUnique({
-    where: { id: stageId },
+  const stage = await prisma.stage.findFirst({
+    where: { id: stageId, tournamentId },
     include: {
       groups: {
         include: {
@@ -45,9 +52,13 @@ export async function POST(
     return NextResponse.json({ error: "Không tìm thấy vòng đấu" }, { status: 404 });
   }
 
-  // B-12: Verify stage belongs to this tournament
-  if (stage.tournamentId !== tournamentId) {
-    return NextResponse.json({ error: "Vòng đấu không thuộc giải đấu này" }, { status: 400 });
+  // Validate status transition
+  const allowedTransitions = VALID_TRANSITIONS[stage.status] || [];
+  if (!allowedTransitions.includes(newStatus)) {
+    return NextResponse.json(
+      { error: `Không thể chuyển từ "${stage.status}" sang "${newStatus}"` },
+      { status: 400 }
+    );
   }
 
   if (newStatus === "COMPLETED") {
@@ -71,18 +82,23 @@ export async function POST(
     }
   }
 
-  const updated = await prisma.stage.update({
-    where: { id: stageId },
-    data: { status: newStatus },
-  });
-
-  // Khóa tất cả dự đoán khi stage bắt đầu
-  if (newStatus === "IN_PROGRESS") {
-    await prisma.prediction.updateMany({
-      where: { stageId, status: "OPEN" },
-      data: { status: "LOCKED" },
+  // Wrap status update + prediction locking in transaction for atomicity
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedStage = await tx.stage.update({
+      where: { id: stageId },
+      data: { status: newStatus },
     });
-  }
+
+    // Khóa tất cả dự đoán khi stage bắt đầu
+    if (newStatus === "IN_PROGRESS") {
+      await tx.prediction.updateMany({
+        where: { stageId, status: "OPEN" },
+        data: { status: "LOCKED" },
+      });
+    }
+
+    return updatedStage;
+  });
 
   // Chấm điểm dự đoán khi stage chuyển sang COMPLETED (best-effort)
   let predictionScored = 0;
@@ -91,7 +107,7 @@ export async function POST(
       const { scored } = await scorePredictionsForStage(stageId);
       predictionScored = scored;
     } catch (err) {
-      console.error("[PREDICTION SCORING ERROR]", err);
+      logger.error("[PREDICTION SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
     }
   }
 
@@ -100,6 +116,16 @@ export async function POST(
     IN_PROGRESS: "Đang diễn ra",
     COMPLETED: "Đã hoàn thành",
   };
+
+  // Audit log
+  await auditLog({
+    action: "STAGE_STATUS_CHANGE",
+    userId: session.user.id,
+    entityType: "Stage",
+    entityId: stageId,
+    before: { status: stage.status },
+    after: { status: newStatus },
+  });
 
   // Broadcast SSE event for real-time updates
   sseManager.broadcastToTournament(tournamentId, SSE_EVENTS.STAGE_UPDATE, {

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { scorePredictionsForStage } from "@/lib/predictions";
+import { logger } from "@/lib/logger";
+import { auditLog } from "@/lib/audit";
+import { TOURNAMENT_FORMAT } from "@/lib/constants";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/advance
@@ -173,13 +176,23 @@ export async function POST(
     return advancingPlayers;
   });
 
+  // Audit log
+  await auditLog({
+    action: "ADVANCE_STAGE",
+    userId: session.user.id,
+    entityType: "Stage",
+    entityId: stageId,
+    before: { status: stage.status },
+    after: { status: "COMPLETED", advancingCount: result.length },
+  });
+
   // Chấm điểm dự đoán (best-effort, không ảnh hưởng advance nếu lỗi)
   let predictionScored = 0;
   try {
     const { scored } = await scorePredictionsForStage(stageId);
     predictionScored = scored;
   } catch (err) {
-    console.error("[PREDICTION SCORING ERROR]", err);
+    logger.error("[PREDICTION SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
   }
 
   return NextResponse.json({
@@ -240,13 +253,8 @@ export async function GET(
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function getAdvancingCount(stageType: string): number {
-  switch (stageType) {
-    case "QUALIFIER": return 2;
-    case "SEMI_1":    return 4;
-    case "SEMI_2":    return 4;
-    case "FINAL":     return 0;
-    default:          return 2;
-  }
+  const format = Object.values(TOURNAMENT_FORMAT).find((f) => f.stageType === stageType);
+  return "advancingPerGroup" in (format ?? {}) ? (format as { advancingPerGroup: number }).advancingPerGroup : 0;
 }
 
 interface RankedPlayer {

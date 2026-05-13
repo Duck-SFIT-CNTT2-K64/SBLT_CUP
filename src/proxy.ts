@@ -58,10 +58,24 @@ const loginAttempts = new Map<string, LoginAttemptEntry>();
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
+function cleanupExpiredLockouts() {
+  const now = Date.now();
+  for (const [key, entry] of loginAttempts) {
+    if (entry.lockedUntil > 0 && entry.lockedUntil <= now) {
+      loginAttempts.delete(key);
+    }
+  }
+}
+
 function checkLoginBruteForce(email: string): { blocked: boolean; retryAfter?: number } {
   const now = Date.now();
   const key = `login:${email.toLowerCase()}`;
   const entry = loginAttempts.get(key);
+
+  // Periodic cleanup of expired lockouts
+  if (loginAttempts.size > 100) {
+    cleanupExpiredLockouts();
+  }
 
   if (entry) {
     // Check if lockout has expired
@@ -113,11 +127,12 @@ function validateCsrfOrigin(request: NextRequest): boolean {
     if (referer) {
       return referer.startsWith(expectedOrigin);
     }
+    // No Origin/Referer header — allow (same-origin form submissions)
+    return true;
   }
 
-  // If no expected origin configured, allow (dev mode)
-  // If no Origin/Referer header, allow (same-origin form submissions)
-  return true;
+  // Fail closed: if no expected origin configured, reject all state-changing requests
+  return false;
 }
 
 function getClientIp(request: NextRequest): string {
@@ -189,7 +204,7 @@ export function proxy(request: NextRequest) {
     request.method === "DELETE" ||
     request.method === "PATCH"
   ) {
-    if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/") && !pathname.startsWith("/api/webhooks/")) {
+    if (pathname.startsWith("/api/") && !pathname.startsWith("/api/webhooks/")) {
       if (!validateCsrfOrigin(request)) {
         return csrfForbiddenResponse();
       }

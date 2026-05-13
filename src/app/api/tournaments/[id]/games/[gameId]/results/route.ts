@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { SCORING } from "@/lib/constants";
 import { auditLog } from "@/lib/audit";
 import { sseManager, SSE_EVENTS } from "@/lib/sse";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   req: NextRequest,
@@ -52,6 +53,13 @@ export async function POST(
     }
     if (new Set(placements).size !== placements.length) {
       return NextResponse.json({ error: "Không được có placement trùng nhau" }, { status: 400 });
+    }
+    // Validate contiguous placements 1..N
+    const sortedPlacements = [...placements].sort((a, b) => a - b);
+    for (let i = 0; i < sortedPlacements.length; i++) {
+      if (sortedPlacements[i] !== i + 1) {
+        return NextResponse.json({ error: `Placement phải là dãy liên tục từ 1 đến ${sortedPlacements.length}` }, { status: 400 });
+      }
     }
 
     // Verify playerIds belong to the group
@@ -142,7 +150,7 @@ export async function POST(
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("Failed to save results:", error);
+    logger.error("Failed to save results", error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: "Đã xảy ra lỗi khi lưu kết quả" }, { status: 500 });
   }
 }

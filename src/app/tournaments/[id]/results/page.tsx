@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Trophy, ArrowLeft } from "lucide-react";
@@ -18,26 +18,34 @@ export default function ResultsPage() {
   const params = useParams();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/tournaments/${params.id}`)
-      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+    const controller = new AbortController();
+    fetch(`/api/tournaments/${params.id}`, { signal: controller.signal })
+      .then((r) => { if (!r.ok) throw new Error("Không thể tải giải đấu"); return r.json(); })
       .then((data) => { setTournament(data); if (data.stages?.length > 0) setSelectedStageId(data.stages[0].id); })
-      .catch(() => {})
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        console.error("Failed to fetch tournament results:", e);
+        setError(e instanceof Error ? e.message : "Đã xảy ra lỗi");
+      })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [params.id]);
 
   if (loading) return <div className="text-center py-20"><div className="inline-block w-8 h-8 border-2 border-[#dc2626]/30 border-t-[#dc2626] rounded-full animate-spin" /></div>;
+  if (error) return <div className="text-center py-20 text-red-400">{error}</div>;
   if (!tournament) return <div className="text-center py-20 text-[#888]">Không tìm thấy giải đấu</div>;
 
   const stage = tournament.stages.find((s) => s.id === selectedStageId);
-  const totalPlayers = stage ? stage.groups.reduce((sum, g) => sum + g.players.length, 0) : 0;
+  const totalPlayers = useMemo(() => stage ? stage.groups.reduce((sum, g) => sum + g.players.length, 0) : 0, [stage]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/tournaments/${params.id}`} className="text-[#888] hover:text-[#f5f5f5] transition-colors">
+        <Link href={`/tournaments/${params.id}`} className="text-[#888] hover:text-[#f5f5f5] transition-colors" aria-label="Quay lại">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
@@ -50,10 +58,12 @@ export default function ResultsPage() {
       </div>
 
       {/* Stage tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1" role="tablist" aria-label="Chọn vòng đấu">
         {tournament.stages.map((s) => (
           <button
             key={s.id}
+            role="tab"
+            aria-selected={selectedStageId === s.id}
             onClick={() => setSelectedStageId(s.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               selectedStageId === s.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"

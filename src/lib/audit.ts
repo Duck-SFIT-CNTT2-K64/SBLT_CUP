@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 interface AuditOptions {
   userId: string;
@@ -29,6 +30,6 @@ export async function auditLog(opts: AuditOptions) {
     });
   } catch (err) {
     // Never throw — audit failure should not break the main operation
-    console.error("[AUDIT LOG ERROR]", err);
+    logger.error("[AUDIT LOG ERROR]", err instanceof Error ? err : new Error(String(err)));
   }
 }

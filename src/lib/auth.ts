@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import type { AdapterUser } from "@auth/core/adapters";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -6,11 +7,36 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { downloadAndProcessAvatar } from "@/lib/image";
 import { saveAvatarBuffer } from "@/lib/upload";
+import { logger } from "@/lib/logger";
+
+const prismaAdapter = PrismaAdapter(prisma);
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  trustHost: true,
+  adapter: {
+    ...prismaAdapter,
+    async createUser(profile): Promise<AdapterUser> {
+      const p = profile as unknown as Record<string, unknown>;
+      const { image, emailVerified: _ev, ...rest } = p;
+      const user = await prisma.user.create({
+        data: { ...rest, avatar: image ?? null } as never,
+      });
+      return { ...user, emailVerified: null } as AdapterUser;
+    },
+    async updateUser(profile): Promise<AdapterUser> {
+      const p = profile as unknown as Record<string, unknown>;
+      const { image, emailVerified: _ev, ...rest } = p;
+      if (image !== undefined) {
+        const user = await prisma.user.update({
+          where: { id: rest.id as string },
+          data: { ...rest, avatar: image } as never,
+        });
+        return { ...user, emailVerified: null } as AdapterUser;
+      }
+      return prismaAdapter.updateUser!(profile);
+    },
+  },
+  session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
+  trustHost: process.env.NODE_ENV !== "production",
   pages: {
     signIn: "/auth/login",
   },
@@ -18,7 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
+      // allowDangerousEmailAccountLinking removed — prevents account takeover via Google OAuth
     }),
     Credentials({
       name: "credentials",
@@ -73,7 +99,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         } catch (err) {
           // Avatar download failure should not block login
-          console.error("Failed to download Google avatar:", err);
+          logger.error("Failed to download Google avatar", err instanceof Error ? err : new Error(String(err)));
         }
       }
       return true;

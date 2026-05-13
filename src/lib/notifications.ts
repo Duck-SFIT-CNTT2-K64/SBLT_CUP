@@ -2,12 +2,14 @@ import { prisma } from "@/lib/prisma";
 import { NotificationType, NotificationPreference } from "@prisma/client";
 import nodemailer from "nodemailer";
 import { sendPushNotification, sendBulkPushNotifications } from "@/lib/push";
+import { logger } from "@/lib/logger";
 
 // Email transporter
+const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
+  port: smtpPort,
+  secure: smtpPort === 465,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -84,7 +86,7 @@ export async function createNotification({
 
   // Send push notification if enabled
   if (!preference || preference.pushEnabled) {
-    sendPushNotification(userId, { title, message, link: safeLink, type }).catch(console.error);
+    sendPushNotification(userId, { title, message, link: safeLink, type }).catch((e) => logger.error("Failed to send push notification", e));
   }
 
   return notification;
@@ -134,7 +136,7 @@ async function sendEmailNotification(
       `,
     });
   } catch (error) {
-    console.error("Failed to send email notification:", error);
+    logger.error("Failed to send email notification", error instanceof Error ? error : new Error(String(error)));
   }
 }
 
@@ -195,7 +197,7 @@ export async function createBulkNotifications(
     emailEnabledUserIds.map((userId) =>
       sendEmailNotification(userId, params.title, params.message, safeLink)
     )
-  ).catch(console.error);
+  ).catch((e) => logger.error("Failed to send bulk emails", e));
 
   // Send push notifications to users with pushEnabled
   const pushEnabledUserIds = eligibleUserIds.filter((userId) => {
@@ -208,7 +210,7 @@ export async function createBulkNotifications(
     message: params.message,
     link: safeLink,
     type: params.type,
-  }).catch(console.error);
+  }).catch((e) => logger.error("Failed to send bulk push notifications", e));
 
   return eligibleUserIds;
 }

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import * as Sentry from "@sentry/nextjs";
+import { getEnv } from "@/lib/env";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: ReturnType<typeof createPrismaClient> | undefined;
@@ -10,9 +11,10 @@ const globalForPrisma = globalThis as unknown as {
 const SLOW_QUERY_MS = 100;
 
 function createPrismaClient() {
+  getEnv(); // validate required env vars on first DB access
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 20,
+    max: 30,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
   });

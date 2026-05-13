@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -22,13 +22,16 @@ export default function DashboardPredictionsPage() {
   const { data: session, status: sessionStatus } = useSession();
   const [predictions, setPredictions] = useState<PredictionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
     if (!session?.user?.id) return;
 
+    const controller = new AbortController();
+
     // Fetch all tournaments to get user's predictions
-    fetch("/api/tournaments?limit=20")
+    fetch("/api/tournaments?limit=20", { signal: controller.signal })
       .then(async (r) => {
         if (r.status === 401) {
           window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
@@ -38,15 +41,26 @@ export default function DashboardPredictionsPage() {
         const tournaments = data.tournaments || [];
         const allPredictions: PredictionItem[] = [];
 
-        for (const t of tournaments) {
+        // Fetch predictions in parallel instead of sequentially
+        const predResults = await Promise.allSettled(
+          tournaments.map((t: { id: string }) =>
+            fetch(`/api/tournaments/${t.id}/predictions`, { signal: controller.signal })
+              .then((r) => ({ ok: r.ok, status: r.status, data: r.ok ? r.json() : null, tournamentId: t.id }))
+          )
+        );
+
+        for (let i = 0; i < predResults.length; i++) {
+          const result = predResults[i];
+          if (result.status === "rejected") continue;
+          const { ok, status, data: dataPromise, tournamentId } = result.value;
+          if (status === 401) {
+            window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
+            return;
+          }
+          if (!ok || !dataPromise) continue;
           try {
-            const predRes = await fetch(`/api/tournaments/${t.id}/predictions`);
-            if (predRes.status === 401) {
-              window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
-              return;
-            }
-            if (!predRes.ok) continue;
-            const predData = await predRes.json();
+            const predData = await dataPromise;
+            const t = tournaments[i];
             if (predData.stages) {
               for (const s of predData.stages) {
                 if (s.hasSubmitted) {
@@ -54,7 +68,7 @@ export default function DashboardPredictionsPage() {
                     stageId: s.stageId,
                     stageName: s.stageName,
                     stageType: s.stageType,
-                    tournamentId: t.id,
+                    tournamentId: tournamentId,
                     tournamentName: t.name,
                     status: s.predictionStatus,
                     totalScore: s.userScore || 0,
@@ -62,13 +76,21 @@ export default function DashboardPredictionsPage() {
                 }
               }
             }
-          } catch {}
+          } catch {
+            // Skip failed tournament
+          }
         }
 
         setPredictions(allPredictions);
       })
-      .catch(() => {})
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        console.error("Failed to fetch tournaments:", e);
+        setError("Không thể tải dữ liệu. Vui lòng thử lại.");
+      })
       .finally(() => setLoading(false));
+
+    return () => controller.abort();
   }, [session?.user?.id, sessionStatus]);
 
   if (sessionStatus === "loading" || (loading && session?.user?.id)) {
@@ -92,8 +114,10 @@ export default function DashboardPredictionsPage() {
     );
   }
 
-  const totalPoints = predictions.reduce((sum, p) => sum + p.totalScore, 0);
-  const scoredCount = predictions.filter((p) => p.status === "SCORED").length;
+  const { totalPoints, scoredCount } = useMemo(() => ({
+    totalPoints: predictions.reduce((sum, p) => sum + p.totalScore, 0),
+    scoredCount: predictions.filter((p) => p.status === "SCORED").length,
+  }), [predictions]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -130,7 +154,11 @@ export default function DashboardPredictionsPage() {
       </div>
 
       {/* Predictions list */}
-      {predictions.length === 0 ? (
+      {error ? (
+        <div className="text-center py-12 text-red-400">
+          {error}
+        </div>
+      ) : predictions.length === 0 ? (
         <div className="text-center py-12 text-[#888]">
           Bạn chưa dự đoán vòng nào.
         </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export function apiError(message: string, status: number, code?: string) {
   const body: Record<string, unknown> = { error: message };
@@ -46,11 +47,11 @@ export function handleApiError(err: unknown) {
       
       // Default database error
       default:
-        console.error(`Prisma error ${prismaErr.code}:`, prismaErr.message);
+        logger.error(`Prisma error ${prismaErr.code}`, new Error(prismaErr.message));
         return apiError("Lỗi cơ sở dữ liệu", 500, "DATABASE_ERROR");
     }
   }
 
-  console.error("Unhandled API error:", err);
+  logger.error("Unhandled API error", err instanceof Error ? err : new Error(String(err)));
   return apiError("Đã xảy ra lỗi hệ thống", 500, "INTERNAL_ERROR");
 }

@@ -2,14 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { logger } from "@/lib/logger";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
+const VALID_RANKS = ["Thach Dau", "Cao Thu", "Dai Cao Thu", "Kim Cuong", "Bach Kim", "Vang", "Bac", "Dong"] as const;
+
+class ConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConflictError";
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verify webhook secret
+    // 1. Verify webhook secret (timing-safe comparison)
     const secret = req.headers.get("x-webhook-secret");
-    if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
+    if (!WEBHOOK_SECRET || !secret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const secretBuf = Buffer.from(secret);
+    const expectedBuf = Buffer.from(WEBHOOK_SECRET);
+    if (secretBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(secretBuf, expectedBuf)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,29 +39,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Check email uniqueness
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
-    });
-    if (existingUser) {
+    if (!VALID_RANKS.includes(rank)) {
       return NextResponse.json(
-        { error: "Email đã được đăng ký" },
-        { status: 409 }
+        { error: "Rank không hợp lệ" },
+        { status: 400 }
       );
     }
 
-    // 4. Check ign uniqueness
-    const existingPlayer = await prisma.player.findFirst({
-      where: { ign },
-    });
-    if (existingPlayer) {
-      return NextResponse.json(
-        { error: "Tên ingame đã được sử dụng" },
-        { status: 409 }
-      );
-    }
-
-    // 5. Get active tournament
+    // 3. Get active tournament (outside transaction — read-only)
     const tournament = await prisma.tournament.findFirst({
       where: { status: "REGISTRATION_OPEN" },
     });
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Check registration capacity
+    // 4. Check registration capacity (outside transaction — read-only)
     const registrationCount = await prisma.registration.count({
       where: { tournamentId: tournament.id, status: { in: ["PENDING", "APPROVED"] } },
     });
@@ -68,11 +68,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 7. Create User + Player + Registration in transaction
+    // 5. Create User + Player + Registration in transaction (uniqueness checks inside)
     const randomPassword = crypto.randomBytes(16).toString("hex");
     const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
     const result = await prisma.$transaction(async (tx) => {
+      // Uniqueness checks inside transaction to prevent TOCTOU race condition
+      const existingUser = await tx.user.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+      if (existingUser) {
+        throw new ConflictError("Email đã được đăng ký");
+      }
+
+      const existingPlayer = await tx.player.findFirst({
+        where: { ign },
+      });
+      if (existingPlayer) {
+        throw new ConflictError("Tên ingame đã được sử dụng");
+      }
+
       const user = await tx.user.create({
         data: {
           email: email.toLowerCase(),
@@ -147,7 +162,7 @@ export async function POST(req: NextRequest) {
           `,
         });
       } catch (err) {
-        console.error("[EMAIL ERROR]", err);
+        logger.error("[EMAIL ERROR]", err instanceof Error ? err : new Error(String(err)));
       }
     }
 
@@ -164,7 +179,10 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Google Forms webhook error:", error);
+    if (error instanceof ConflictError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    logger.error("Google Forms webhook error", error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi xử lý đăng ký" },
       { status: 500 }

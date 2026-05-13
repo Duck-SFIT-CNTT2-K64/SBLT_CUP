@@ -3,17 +3,19 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const registerSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
+  email: z.string().email("Email không hợp lệ").transform((e) => e.toLowerCase()),
   password: z
     .string()
     .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+    .max(128, "Mật khẩu không được quá 128 ký tự")
     .regex(/[A-Z]/, "Mật khẩu phải có ít nhất 1 chữ hoa")
     .regex(/[a-z]/, "Mật khẩu phải có ít nhất 1 chữ thường")
     .regex(/[0-9]/, "Mật khẩu phải có ít nhất 1 chữ số"),
-  name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
-  ign: z.string().min(2, "Tên ingame phải có ít nhất 2 ký tự"),
+  name: z.string().min(2, "Tên phải có ít nhất 2 ký tự").max(100, "Tên không được quá 100 ký tự"),
+  ign: z.string().min(2, "Tên ingame phải có ít nhất 2 ký tự").max(30, "Tên ingame không được quá 30 ký tự"),
 });
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase());
@@ -101,7 +103,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.error("Registration error:", error);
+    logger.error("Registration error", error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi đăng ký" },
       { status: 500 }
