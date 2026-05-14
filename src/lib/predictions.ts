@@ -135,7 +135,7 @@ export async function scorePredictionsForStage(
     }
   }
 
-  await invalidatePredictionLeaderboard(stageId);
+  await invalidatePredictionLeaderboard();
 
   return { scored, totalPredictions: predictions.length };
 }

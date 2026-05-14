@@ -119,7 +119,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // Invalidate session if password was changed after token was issued
-      if (token.id && typeof token.passwordChangedAt === "number" && token.passwordChangedAt > 0) {
+      if (token.id && typeof token.passwordChangedAt === "number") {
         const cacheKey = `user:pwd:${token.id}`;
         let changedAt = await cacheGet<number>(cacheKey);
 

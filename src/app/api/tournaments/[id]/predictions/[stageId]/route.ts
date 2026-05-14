@@ -311,7 +311,7 @@ export async function POST(
     );
   }
 
-  await invalidatePredictionLeaderboard(stageId);
+  await invalidatePredictionLeaderboard();
 
   return NextResponse.json({
     message: "Dự đoán đã được lưu thành công!",

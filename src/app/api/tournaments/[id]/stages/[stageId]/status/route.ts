@@ -136,7 +136,7 @@ export async function POST(
   });
 
   await invalidateTournament(tournamentId);
-  await invalidatePredictionLeaderboard(stageId);
+  await invalidatePredictionLeaderboard();
 
   return NextResponse.json({
     message: `Vòng đấu chuyển sang "${labels[newStatus]}"${predictionScored > 0 ? `. ${predictionScored} dự đoán đã được chấm điểm.` : ""}`,
