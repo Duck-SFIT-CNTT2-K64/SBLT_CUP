@@ -78,29 +78,53 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Download Google avatar on first sign-in
-      const imageUrl = profile && "image" in profile ? (profile as { image?: string }).image : undefined;
-      if (account?.provider === "google" && imageUrl && user.id) {
-        try {
-          const existingUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { avatar: true },
-          });
-          // Only download if user doesn't have an avatar yet
-          if (!existingUser?.avatar) {
-            const buffer = await downloadAndProcessAvatar(imageUrl);
-            if (buffer) {
-              const avatarUrl = await saveAvatarBuffer(buffer);
-              await prisma.user.update({
-                where: { id: user.id },
-                data: { avatar: avatarUrl },
-              });
-              user.avatar = avatarUrl;
+      if (account?.provider === "google" && user.id) {
+        // Download Google avatar on first sign-in
+        const imageUrl = profile && "image" in profile ? (profile as { image?: string }).image : undefined;
+        if (imageUrl) {
+          try {
+            const existingUser = await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { avatar: true },
+            });
+            // Only download if user doesn't have an avatar yet
+            if (!existingUser?.avatar) {
+              const buffer = await downloadAndProcessAvatar(imageUrl);
+              if (buffer) {
+                const avatarUrl = await saveAvatarBuffer(buffer);
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: { avatar: avatarUrl },
+                });
+                user.avatar = avatarUrl;
+              }
             }
+          } catch (err) {
+            // Avatar download failure should not block login
+            logger.error("Failed to download Google avatar", err instanceof Error ? err : new Error(String(err)));
+          }
+        }
+
+        // Auto-create Player record if missing (Google OAuth skips registration)
+        try {
+          const existingPlayer = await prisma.player.findUnique({
+            where: { userId: user.id },
+          });
+          if (!existingPlayer) {
+            const baseIgn = (user.name || user.email?.split("@")[0] || "user")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .slice(0, 20);
+            let ign = baseIgn;
+            let counter = 1;
+            while (await prisma.player.findFirst({ where: { ign } })) {
+              ign = `${baseIgn}${counter++}`;
+            }
+            await prisma.player.create({
+              data: { userId: user.id, ign },
+            });
           }
         } catch (err) {
-          // Avatar download failure should not block login
-          logger.error("Failed to download Google avatar", err instanceof Error ? err : new Error(String(err)));
+          logger.error("Failed to auto-create Player for Google user", err instanceof Error ? err : new Error(String(err)));
         }
       }
       return true;
