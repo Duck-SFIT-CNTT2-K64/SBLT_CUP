@@ -113,9 +113,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.passwordChangedAt = (user as unknown as { passwordChangedAt?: number }).passwordChangedAt ?? 0;
       }
 
-      // Handle session update (e.g., after avatar upload)
-      if (trigger === "update" && session?.avatar !== undefined) {
-        token.avatar = session.avatar;
+      // Handle session update (e.g., after avatar upload or name change)
+      if (trigger === "update") {
+        if (session?.avatar !== undefined) {
+          token.avatar = session.avatar;
+        }
+        if (session?.name !== undefined) {
+          token.name = session.name;
+        }
       }
 
       // Invalidate session if password was changed after token was issued

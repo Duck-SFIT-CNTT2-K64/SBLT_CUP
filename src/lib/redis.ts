@@ -1,43 +1,60 @@
 import Redis from "ioredis";
+import { logger } from "@/lib/logger";
 
 let redis: Redis | null = null;
-let redisFailed = false;
+let redisAvailable = false;
 
 export function getRedis(): Redis | null {
-  if (redisFailed) return null;
+  if (!process.env.REDIS_URL) return null;
   if (redis) return redis;
 
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    redisFailed = true;
-    return null;
-  }
-
   try {
-    redis = new Redis(url, {
+    redis = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 3,
       connectTimeout: 5000,
-      lazyConnect: true,
       retryStrategy(times) {
         if (times > 3) {
-          redisFailed = true;
+          redisAvailable = false;
+          logger.warn("[REDIS] Max retries exceeded — falling back to in-memory");
           return null;
         }
         return Math.min(times * 200, 2000);
       },
     });
 
-    redis.on("error", () => {
-      // Silently handle — fallback kicks in
+    redis.on("error", (err) => {
+      if (redisAvailable) {
+        logger.warn("[REDIS] Connection error", { error: err.message });
+        redisAvailable = false;
+      }
+    });
+
+    redis.on("ready", () => {
+      redisAvailable = true;
+      logger.info("[REDIS] Connected");
+    });
+
+    redis.on("end", () => {
+      redisAvailable = false;
     });
 
     return redis;
-  } catch {
-    redisFailed = true;
+  } catch (err) {
+    logger.warn("[REDIS] Failed to create client", { error: String(err) });
+    redis = null;
     return null;
   }
 }
 
 export function isRedisAvailable(): boolean {
-  return !redisFailed && !!redis;
+  return redisAvailable;
+}
+
+/**
+ * Force reconnect after recovery. Call this from health check or admin endpoint.
+ */
+export function resetRedisConnection(): void {
+  redis?.disconnect();
+  redis = null;
+  redisAvailable = false;
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { cacheDelete } from "@/lib/cache";
 
 const VALID_ROLES = ["ADMIN", "PLAYER"] as const;
 
@@ -53,6 +54,9 @@ export async function PUT(
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
 
+    // Invalidate JWT password cache so session re-checks with new role
+    await cacheDelete(`user:pwd:${id}`);
+
     return NextResponse.json(user);
   } catch {
     return NextResponse.json({ error: "Đã xảy ra lỗi khi cập nhật" }, { status: 500 });
@@ -83,6 +87,9 @@ export async function DELETE(
 
   try {
     await prisma.user.delete({ where: { id } });
+
+    // Invalidate JWT password cache for deleted user
+    await cacheDelete(`user:pwd:${id}`);
 
     await auditLog({
       userId: session.user.id,

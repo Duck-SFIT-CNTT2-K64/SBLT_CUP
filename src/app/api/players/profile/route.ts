@@ -45,7 +45,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { ign, rank, discord, phone } = body;
+  const { name, ign, rank, discord, phone } = body;
 
   const player = await prisma.player.findUnique({
     where: { userId: session.user.id },
@@ -53,6 +53,13 @@ export async function PUT(req: NextRequest) {
 
   if (!player) {
     return NextResponse.json({ error: "Player not found" }, { status: 404 });
+  }
+
+  // Validate name
+  if (name !== undefined) {
+    if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 50) {
+      return NextResponse.json({ error: "Tên phải từ 2 đến 50 ký tự" }, { status: 400 });
+    }
   }
 
   // S-12: Validate field lengths
@@ -95,6 +102,15 @@ export async function PUT(req: NextRequest) {
     }
   }
 
+  // Update User.name if provided
+  if (name !== undefined) {
+    const sanitizedName = name.trim();
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { name: sanitizedName },
+    });
+  }
+
   const updated = await prisma.player.update({
     where: { id: player.id },
     data: {
@@ -111,7 +127,7 @@ export async function PUT(req: NextRequest) {
       phone: true,
       isGuest: true,
       createdAt: true,
-      // Exclude userId
+      user: { select: { name: true } },
     },
   });
 

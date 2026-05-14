@@ -18,6 +18,7 @@ interface HealthResponse {
     database: CheckResult;
     schema: CheckResult;
     migrations: CheckResult;
+    redis: CheckResult;
   };
   timestamp: number;
 }
@@ -27,6 +28,7 @@ export async function GET() {
     database: { status: "ok" },
     schema: { status: "ok" },
     migrations: { status: "ok" },
+    redis: { status: "ok" },
   };
 
   // Check 1: Database connectivity
@@ -106,14 +108,39 @@ export async function GET() {
     };
   }
 
-  const overallStatus =
+  // Check 4: Redis availability (non-critical — app falls back gracefully)
+  try {
+    const { getRedis } = await import("@/lib/redis");
+    const client = getRedis();
+    if (client) {
+      const start = Date.now();
+      await client.ping();
+      checks.redis.latencyMs = Date.now() - start;
+    } else {
+      checks.redis = {
+        status: "error",
+        error: "Redis client not initialized — REDIS_URL missing",
+      };
+    }
+  } catch (err) {
+    checks.redis = {
+      status: "error",
+      error: err instanceof Error ? err.message : "Redis connection failed",
+    };
+  }
+
+  const criticalOk =
     checks.database.status === "ok" &&
     checks.schema.status === "ok" &&
-    checks.migrations.status === "ok"
-      ? "healthy"
-      : "unhealthy";
+    checks.migrations.status === "ok";
 
-  const statusCode = overallStatus === "healthy" ? 200 : 503;
+  const overallStatus = !criticalOk
+    ? "unhealthy"
+    : checks.redis.status !== "ok"
+      ? "degraded"
+      : "healthy";
+
+  const statusCode = overallStatus === "unhealthy" ? 503 : 200;
 
   const response: HealthResponse = {
     status: overallStatus,

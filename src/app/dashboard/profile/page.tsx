@@ -54,7 +54,14 @@ export default function ProfilePage() {
     setSuccess(false);
     try {
       const res = await fetch("/api/players/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
-      if (res.ok) { setSuccess(true); setTimeout(() => setSuccess(false), 3000); }
+      if (res.ok) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        // Update session with new name so navbar reflects the change
+        if (profile.name) {
+          await updateSession({ name: profile.name });
+        }
+      }
     } catch { /* empty */ } finally { setLoading(false); }
   };
 
@@ -154,6 +161,11 @@ export default function ProfilePage() {
 
       <Card hover={false} className="p-6">
         <form onSubmit={handleSubmit}>
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-[#888] mb-1.5">Tên hiển thị</label>
+            <input type="text" value={profile.name || ""} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} className={inputClass} placeholder="Tên của bạn" />
+            <p className="text-xs text-[#555] mt-1">Tên này sẽ hiển thị trên hồ sơ và bảng xếp hạng.</p>
+          </div>
           <div className="mb-5">
             <label className="block text-sm font-medium text-[#888] mb-1.5">Tên ingame (TFT) *</label>
             <input type="text" value={profile.ign} onChange={(e) => setProfile((p) => ({ ...p, ign: e.target.value }))} className={inputClass} required />

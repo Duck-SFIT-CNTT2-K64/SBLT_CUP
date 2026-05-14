@@ -71,6 +71,7 @@ model User {
   email             String    @unique
   password          String?
   name              String
+  emailVerified     DateTime?
   role              Role      @default(PLAYER)
   avatar            String?
   passwordChangedAt DateTime?
