@@ -5,7 +5,8 @@ import { SCORING } from "@/lib/constants";
 import { auditLog } from "@/lib/audit";
 import { sseManager, SSE_EVENTS } from "@/lib/sse";
 import { logger } from "@/lib/logger";
-import { invalidateTournament, invalidateLeaderboard } from "@/lib/cache-invalidate";
+import { invalidateTournament, invalidateLeaderboard, invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
+import { scorePredictionsForStage } from "@/lib/predictions";
 
 export async function GET(
   req: NextRequest,
@@ -151,6 +152,40 @@ export async function POST(
 
     await invalidateTournament(tournamentId);
     await invalidateLeaderboard();
+
+    // Auto-trigger: if all games in the stage are COMPLETED, score predictions
+    try {
+      const stage = await prisma.stage.findFirst({
+        where: { tournamentId, groups: { some: { games: { some: { id: gameId } } } } },
+        select: { id: true, status: true },
+      });
+      if (stage && stage.status !== "COMPLETED") {
+        const allGames = await prisma.game.findMany({
+          where: { group: { stageId: stage.id } },
+          select: { status: true },
+        });
+        const allCompleted = allGames.length > 0 && allGames.every((g) => g.status === "COMPLETED");
+        if (allCompleted) {
+          await prisma.stage.update({
+            where: { id: stage.id },
+            data: { status: "COMPLETED" },
+          });
+          try {
+            await scorePredictionsForStage(stage.id);
+          } catch (err) {
+            logger.error("[PREDICTION AUTO-SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
+          }
+          sseManager.broadcastToTournament(tournamentId, SSE_EVENTS.STAGE_UPDATE, {
+            stageId: stage.id,
+            status: "COMPLETED",
+            timestamp: new Date().toISOString(),
+          });
+          await invalidatePredictionLeaderboard();
+        }
+      }
+    } catch (err) {
+      logger.error("[AUTO-STAGE-COMPLETE ERROR]", err instanceof Error ? err : new Error(String(err)));
+    }
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
