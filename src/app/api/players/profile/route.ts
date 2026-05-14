@@ -26,7 +26,30 @@ export async function GET() {
   });
 
   if (!player) {
-    return NextResponse.json({ error: "Player not found" }, { status: 404 });
+    // Auto-create Player for Google OAuth users who don't have one yet
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, email: true },
+    });
+    const baseIgn = (user?.name || user?.email?.split("@")[0] || "user")
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .slice(0, 20);
+    let ign = baseIgn;
+    let counter = 1;
+    while (await prisma.player.findFirst({ where: { ign } })) {
+      ign = `${baseIgn}${counter++}`;
+    }
+    const created = await prisma.player.create({
+      data: { userId: session.user.id, ign },
+      select: {
+        id: true, ign: true, rank: true, discord: true, phone: true,
+        isGuest: true, createdAt: true,
+        user: { select: { avatar: true, name: true } },
+      },
+    });
+    return NextResponse.json(created, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   }
 
   return NextResponse.json(player, {
