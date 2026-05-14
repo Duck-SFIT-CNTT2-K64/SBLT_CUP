@@ -62,3 +62,15 @@ data/
 # logs
 logs/
 *.log
+
+# Internal planning/automation docs
+BOT_AUTONOMY_LOOP.md
+BOT_HANDOFF_GUIDE.md
+BOT_LOOP_PROMPT.md
+HANDOFF_QUICK_START.md
+DESIGN.md
+PRODUCTION_CHECKLIST.md
+PRODUCTION_TASKS.md
+VALIDATION_CHECKLIST.md
+.COMMIT_MSG.txt
+assets/UI_tham_khao/
