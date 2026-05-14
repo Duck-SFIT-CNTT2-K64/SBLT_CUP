@@ -105,6 +105,6 @@ export default withSentryConfig(nextConfig, {
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
-  disableLogger: true,
-  automaticVercelMonitors: true,
+  // disableLogger removed — deprecated in Next.js 16
+  // automaticVercelMonitors removed — use webpack.automaticVercelMonitors in next.config if needed
 });

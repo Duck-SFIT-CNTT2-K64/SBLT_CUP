@@ -21,6 +21,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const user = await prisma.user.create({
         data: { ...rest, avatar: image ?? null } as never,
       });
+      // Auto-create Player for OAuth users (Google, etc.)
+      // Runs AFTER User is committed — no foreign key violation
+      try {
+        const baseIgn = (user.name || user.email?.split("@")[0] || "user")
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .slice(0, 20);
+        let ign = baseIgn;
+        let counter = 1;
+        while (await prisma.player.findFirst({ where: { ign } })) {
+          ign = `${baseIgn}${counter++}`;
+        }
+        await prisma.player.create({
+          data: { userId: user.id, ign },
+        });
+      } catch (err) {
+        logger.error("Failed to auto-create Player in createUser", err instanceof Error ? err : new Error(String(err)));
+      }
       return { ...user, emailVerified: null } as AdapterUser;
     },
     async updateUser(profile): Promise<AdapterUser> {
@@ -105,27 +122,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         }
 
-        // Auto-create Player record if missing (Google OAuth skips registration)
-        try {
-          const existingPlayer = await prisma.player.findUnique({
-            where: { userId: user.id },
-          });
-          if (!existingPlayer) {
-            const baseIgn = (user.name || user.email?.split("@")[0] || "user")
-              .replace(/[^a-zA-Z0-9]/g, "")
-              .slice(0, 20);
-            let ign = baseIgn;
-            let counter = 1;
-            while (await prisma.player.findFirst({ where: { ign } })) {
-              ign = `${baseIgn}${counter++}`;
-            }
-            await prisma.player.create({
-              data: { userId: user.id, ign },
-            });
-          }
-        } catch (err) {
-          logger.error("Failed to auto-create Player for Google user", err instanceof Error ? err : new Error(String(err)));
-        }
       }
       return true;
     },
