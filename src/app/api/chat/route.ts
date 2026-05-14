@@ -18,17 +18,18 @@ function sanitizeHtml(str: string): string {
 }
 
 export async function GET() {
+  // Lấy 50 tin nhắn MỚI NHẤT (desc), rồi đảo lại để hiển thị cũ → mới
   const messages = await prisma.comment.findMany({
     where: { type: "GLOBAL_CHAT", entityId: "global" },
     include: {
       user: { select: { id: true, name: true, avatar: true, role: true } },
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
     take: MESSAGES_LIMIT,
   });
 
-  return NextResponse.json(messages, {
-    headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
+  return NextResponse.json(messages.reverse(), {
+    headers: { "Cache-Control": "no-store" },
   });
 }
 
