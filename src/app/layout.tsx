@@ -5,6 +5,7 @@ import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AnnouncementPopup from "@/components/layout/AnnouncementPopup";
+import { GlobalChatPanel } from "@/components/social/GlobalChatPanel";
 import JsonLd from "@/components/JsonLd";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
@@ -81,6 +82,7 @@ export default function RootLayout({
           <main id="main-content" role="main" className="flex-1">{children}</main>
           <Footer />
           <AnnouncementPopup />
+          <GlobalChatPanel />
         </Providers>
       </body>
     </html>

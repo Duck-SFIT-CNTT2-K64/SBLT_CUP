@@ -222,4 +222,5 @@ export const SSE_EVENTS = {
   STANDINGS_UPDATE: "standings-update",
   REGISTRATION_UPDATE: "registration-update",
   ANNOUNCEMENT: "announcement",
+  GLOBAL_CHAT: "GLOBAL_CHAT",
 } as const;

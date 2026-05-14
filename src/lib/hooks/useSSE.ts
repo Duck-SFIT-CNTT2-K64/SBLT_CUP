@@ -57,6 +57,7 @@ export function useSSE(options: SSEOptions = {}) {
       "standings-update",
       "registration-update",
       "announcement",
+      "GLOBAL_CHAT",
     ];
 
     eventTypes.forEach((eventType) => {

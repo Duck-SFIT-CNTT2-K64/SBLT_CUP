@@ -370,6 +370,7 @@ enum CommentType {
   TOURNAMENT
   GAME
   ANNOUNCEMENT
+  GLOBAL_CHAT
 }
 
 model Comment {
