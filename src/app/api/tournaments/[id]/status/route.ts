@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
 import { handleApiError } from "@/lib/api-error";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 /**
  * GET  — Lấy trạng thái hiện tại + gợi ý chuyển trạng thái tiếp theo
@@ -159,6 +160,8 @@ export async function POST(
     after: { status: newStatus },
     ip: req.headers.get("x-forwarded-for") || undefined,
   });
+
+  await invalidateTournament(id);
 
   return NextResponse.json({
     message: `Đã chuyển trạng thái sang "${STATUS_LABELS[newStatus]}"`,

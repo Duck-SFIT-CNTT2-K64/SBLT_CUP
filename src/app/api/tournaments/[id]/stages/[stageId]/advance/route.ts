@@ -5,6 +5,7 @@ import { scorePredictionsForStage } from "@/lib/predictions";
 import { logger } from "@/lib/logger";
 import { auditLog } from "@/lib/audit";
 import { TOURNAMENT_FORMAT } from "@/lib/constants";
+import { invalidateTournament, invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/advance
@@ -194,6 +195,9 @@ export async function POST(
   } catch (err) {
     logger.error("[PREDICTION SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
   }
+
+  await invalidateTournament(tournamentId);
+  await invalidatePredictionLeaderboard(stageId);
 
   return NextResponse.json({
     message: `Hoàn thành vòng đấu. ${result.length} tuyển thủ thăng hạng.${predictionScored > 0 ? ` ${predictionScored} dự đoán đã được chấm điểm.` : ""}`,

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PREDICTION_SCORING, PREDICTION_WINDOW } from "@/lib/constants";
 import { createNotification } from "@/lib/notifications";
+import { invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
 
 interface PredictionWindowResult {
   isOpen: boolean;
@@ -133,6 +134,8 @@ export async function scorePredictionsForStage(
       });
     }
   }
+
+  await invalidatePredictionLeaderboard(stageId);
 
   return { scored, totalPredictions: predictions.length };
 }

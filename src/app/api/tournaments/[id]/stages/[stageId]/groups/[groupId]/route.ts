@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 export async function GET(
   _req: NextRequest,
@@ -44,7 +45,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { stageId, groupId } = await params;
+  const { id, stageId, groupId } = await params;
   const body = await req.json();
 
   // S-04: Validate name
@@ -69,6 +70,7 @@ export async function PATCH(
       where: { id: groupId },
       data: { name },
     });
+    await invalidateTournament(id);
     return NextResponse.json(group);
   } catch {
     return NextResponse.json({ error: "Lỗi khi cập nhật bảng đấu" }, { status: 500 });
@@ -84,7 +86,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { stageId, groupId } = await params;
+  const { id, stageId, groupId } = await params;
 
   // B-17: Verify group belongs to this stage
   const existing = await prisma.group.findFirst({
@@ -109,6 +111,7 @@ export async function DELETE(
 
   try {
     await prisma.group.delete({ where: { id: groupId } });
+    await invalidateTournament(id);
     return NextResponse.json({ message: "Đã xóa bảng đấu" });
   } catch {
     return NextResponse.json({ error: "Lỗi khi xóa bảng đấu" }, { status: 500 });

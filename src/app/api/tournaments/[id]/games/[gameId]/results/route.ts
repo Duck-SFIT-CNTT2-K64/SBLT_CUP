@@ -5,6 +5,7 @@ import { SCORING } from "@/lib/constants";
 import { auditLog } from "@/lib/audit";
 import { sseManager, SSE_EVENTS } from "@/lib/sse";
 import { logger } from "@/lib/logger";
+import { invalidateTournament, invalidateLeaderboard } from "@/lib/cache-invalidate";
 
 export async function GET(
   req: NextRequest,
@@ -147,6 +148,9 @@ export async function POST(
       results: created,
       timestamp: new Date().toISOString(),
     });
+
+    await invalidateTournament(tournamentId);
+    await invalidateLeaderboard();
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {

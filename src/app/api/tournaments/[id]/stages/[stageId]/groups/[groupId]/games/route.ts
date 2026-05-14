@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 export async function GET(
   req: NextRequest,
@@ -31,7 +32,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { stageId, groupId } = await params;
+  const { id, stageId, groupId } = await params;
   const body = await req.json();
   const { gameNumber } = body;
 
@@ -74,6 +75,8 @@ export async function POST(
       after: { gameNumber: parsedGameNumber, groupId },
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
+
+    await invalidateTournament(id);
 
     return NextResponse.json(game, { status: 201 });
   } catch (error: unknown) {

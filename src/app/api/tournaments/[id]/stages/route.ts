@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 const VALID_STAGE_TYPES = ["QUALIFIER", "SEMI_1", "SEMI_2", "FINAL"];
 
@@ -97,6 +98,8 @@ export async function POST(
       after: { name: stage.name, stageType, stageOrder: parsedOrder },
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
+
+    await invalidateTournament(tournamentId);
 
     return NextResponse.json(stage, { status: 201 });
   } catch {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 export async function GET(
   req: NextRequest,
@@ -70,6 +71,8 @@ export async function POST(
       after: { name: group.name, groupOrder: parsedOrder, stageId },
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
+
+    await invalidateTournament(tournamentId);
 
     return NextResponse.json(group, { status: 201 });
   } catch {

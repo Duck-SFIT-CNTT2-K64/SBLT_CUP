@@ -3,6 +3,7 @@ import { NotificationType, NotificationPreference } from "@prisma/client";
 import nodemailer from "nodemailer";
 import { sendPushNotification, sendBulkPushNotifications } from "@/lib/push";
 import { logger } from "@/lib/logger";
+import { cacheGet, cacheSet, cacheDelete } from "@/lib/cache";
 
 // Email transporter
 const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
@@ -88,6 +89,9 @@ export async function createNotification({
   if (!preference || preference.pushEnabled) {
     sendPushNotification(userId, { title, message, link: safeLink, type }).catch((e) => logger.error("Failed to send push notification", e));
   }
+
+  // Invalidate unread count cache
+  await cacheDelete(`notif:unread:${userId}`);
 
   return notification;
 }
@@ -186,6 +190,9 @@ export async function createBulkNotifications(
     })),
   });
 
+  // Invalidate unread count cache for all affected users
+  await Promise.all(eligibleUserIds.map((uid) => cacheDelete(`notif:unread:${uid}`)));
+
   // Send emails to users with emailEnabled
   const emailEnabledUserIds = eligibleUserIds.filter((userId) => {
     const pref = prefMap.get(userId);
@@ -216,21 +223,31 @@ export async function createBulkNotifications(
 }
 
 export async function getUnreadCount(userId: string) {
-  return prisma.notification.count({
+  const cacheKey = `notif:unread:${userId}`;
+  const cached = await cacheGet<number>(cacheKey);
+  if (cached !== null) return cached;
+
+  const count = await prisma.notification.count({
     where: { userId, read: false },
   });
+  await cacheSet(cacheKey, count, 30);
+  return count;
 }
 
 export async function markAsRead(notificationId: string, userId: string) {
-  return prisma.notification.update({
+  const result = await prisma.notification.update({
     where: { id: notificationId, userId },
     data: { read: true },
   });
+  await cacheDelete(`notif:unread:${userId}`);
+  return result;
 }
 
 export async function markAllAsRead(userId: string) {
-  return prisma.notification.updateMany({
+  const result = await prisma.notification.updateMany({
     where: { userId, read: false },
     data: { read: true },
   });
+  await cacheDelete(`notif:unread:${userId}`);
+  return result;
 }

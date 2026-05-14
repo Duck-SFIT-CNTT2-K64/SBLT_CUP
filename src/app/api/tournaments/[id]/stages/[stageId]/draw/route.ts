@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 /**
  * GET  — Preview kết quả bốc thăm (chưa lưu)
@@ -401,6 +402,8 @@ export async function POST(
       return totalAdded;
     });
 
+    await invalidateTournament(tournamentId);
+
     return NextResponse.json({
       message: `Bốc thăm hoàn tất. Đã phân bổ ${result} tuyển thủ vào ${stage.groups.length} bảng.`,
       totalAdded: result,
@@ -501,6 +504,8 @@ export async function POST(
 
     return totalAdded;
   });
+
+  await invalidateTournament(tournamentId);
 
   return NextResponse.json({
     message: `Bốc thăm hoàn tất. Đã phân bổ ${result} tuyển thủ vào ${finalAssignments.length} bảng.`,

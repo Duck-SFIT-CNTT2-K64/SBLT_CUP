@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api-error";
+import { cacheGet, cacheSet } from "@/lib/cache";
 
 /**
  * GET /api/predictions/leaderboard
@@ -10,6 +11,14 @@ import { handleApiError } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
   try {
     const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 50, 200);
+
+    const cacheKey = `leaderboard:predictions:${top}`;
+    const cached = await cacheGet<Record<string, unknown>[]>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate", "X-Cache": "HIT" },
+      });
+    }
 
     const leaderboard = await prisma.$queryRaw<
       {
@@ -45,8 +54,10 @@ export async function GET(req: NextRequest) {
       stagesWithPoints: Number(r.stagesWithPoints),
     }));
 
+    await cacheSet(cacheKey, result, 60);
+
     return NextResponse.json(result, {
-      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate" },
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate", "X-Cache": "MISS" },
     });
   } catch (err) {
     return handleApiError(err);

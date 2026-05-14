@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api-error";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 // Player tự rút lui
 export async function POST(
@@ -43,6 +44,8 @@ export async function POST(
     where: { id: registration.id },
     data: { status: "WITHDRAWN" },
   });
+
+  await invalidateTournament(tournamentId);
 
   return NextResponse.json({ message: "Đã rút lui khỏi giải đấu thành công" });
   } catch (error) {

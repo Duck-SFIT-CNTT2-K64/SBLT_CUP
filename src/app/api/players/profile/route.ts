@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api-error";
+import { invalidateLeaderboard } from "@/lib/cache-invalidate";
 
 export async function GET() {
   try {
@@ -113,6 +114,8 @@ export async function PUT(req: NextRequest) {
       // Exclude userId
     },
   });
+
+  await invalidateLeaderboard();
 
   return NextResponse.json(updated);
   } catch (error) {

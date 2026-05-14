@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
 import { handleApiError } from "@/lib/api-error";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 // Player tự check-in
 export async function POST(
@@ -45,6 +46,8 @@ export async function POST(
     where: { id: registration.id },
     data: { checkedIn: true, checkInTime: new Date() },
   });
+
+  await invalidateTournament(tournamentId);
 
   return NextResponse.json({ message: "Check-in thành công", checkedIn: true, checkInTime: updated.checkInTime });
   } catch (error) {
@@ -144,6 +147,8 @@ export async function PUT(
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
 
+    await invalidateTournament(tournamentId);
+
     return NextResponse.json(updated);
   }
 
@@ -173,6 +178,8 @@ export async function PUT(
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
 
+    await invalidateTournament(tournamentId);
+
     return NextResponse.json(updated);
   }
 
@@ -191,6 +198,8 @@ export async function PUT(
       after: { count: result.count },
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
+
+    await invalidateTournament(tournamentId);
 
     return NextResponse.json({ message: `Đã từ chối ${result.count} người không check-in` });
   }

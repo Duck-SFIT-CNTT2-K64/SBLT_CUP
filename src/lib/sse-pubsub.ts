@@ -38,6 +38,9 @@ function createRedisClient(): Redis | null {
   }
 }
 
+// NOTE: SSE pub/sub needs 2 separate connections (pub + sub) because
+// Redis subscriptions block the connection. Cannot use shared getRedis().
+
 export function getInstanceId(): string {
   return instanceId;
 }

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { saveUploadedFile, deleteUploadedFile } from "@/lib/upload";
 import { processAvatar } from "@/lib/image";
+import { invalidateLeaderboard } from "@/lib/cache-invalidate";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
     if (currentUser?.avatar) {
       await deleteUploadedFile(currentUser.avatar);
     }
+
+    await invalidateLeaderboard();
 
     return NextResponse.json({ avatarUrl: result.url });
   } catch (error) {

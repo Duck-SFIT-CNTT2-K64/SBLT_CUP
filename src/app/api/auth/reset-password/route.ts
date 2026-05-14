@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { cacheDelete } from "@/lib/cache";
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token là bắt buộc"),
@@ -61,6 +62,9 @@ export async function POST(req: NextRequest) {
         data: { used: true },
       }),
     ]);
+
+    // Invalidate JWT password cache so all sessions are forced to re-check
+    await cacheDelete(`user:pwd:${resetToken.userId}`);
 
     return NextResponse.json({ message: "Mật khẩu đã được đặt lại thành công. Bạn có thể đăng nhập ngay." });
   } catch (error) {

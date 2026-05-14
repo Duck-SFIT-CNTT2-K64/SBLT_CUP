@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api-error";
+import { cacheGet, cacheSet } from "@/lib/cache";
 
 /**
  * GET /api/leaderboard
@@ -9,6 +10,17 @@ import { handleApiError } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
   try {
   const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 50, 200);
+
+  const cacheKey = `leaderboard:players:${top}`;
+  const cached = await cacheGet<Record<string, unknown>[]>(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached, {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
+        "X-Cache": "HIT",
+      },
+    });
+  }
 
   // Single query: PostgreSQL tự JOIN, GROUP BY, SUM, COUNT, AVG, ORDER BY
   const leaderboard = await prisma.$queryRaw<
@@ -68,10 +80,12 @@ export async function GET(req: NextRequest) {
     };
   });
 
+  await cacheSet(cacheKey, result, 60);
+
   return NextResponse.json(result, {
     headers: {
-      // CDN cache 60s, phục vụ bản cũ trong khi revalidate
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate",
+      "X-Cache": "MISS",
     },
   });
   } catch (error) {

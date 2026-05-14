@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
 import { z } from "zod";
+import { cacheGet, cacheSet } from "@/lib/cache";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 const tournamentUpdateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
@@ -23,6 +25,18 @@ export async function GET(
   const { id } = await params;
   const session = await auth();
   const isAdmin = session?.user?.role === "ADMIN";
+
+  const cacheKey = `tournament:${id}:${isAdmin ? "admin" : "public"}`;
+  const cached = await cacheGet(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached, {
+      headers: {
+        "Cache-Control": isAdmin ? "private, no-store" : "public, s-maxage=60, stale-while-revalidate",
+        "Vary": "Authorization",
+        "X-Cache": "HIT",
+      },
+    });
+  }
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -86,10 +100,13 @@ export async function GET(
     return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
   }
 
+  await cacheSet(cacheKey, tournament, 60);
+
   return NextResponse.json(tournament, {
     headers: {
       "Cache-Control": isAdmin ? "private, no-store" : "public, s-maxage=60, stale-while-revalidate",
       "Vary": "Authorization",
+      "X-Cache": "MISS",
     },
   });
 }
@@ -152,6 +169,8 @@ export async function PUT(
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
 
+    await invalidateTournament(id);
+
     return NextResponse.json(tournament);
   } catch {
     return NextResponse.json({ error: "Đã xảy ra lỗi khi cập nhật" }, { status: 500 });
@@ -181,6 +200,8 @@ export async function DELETE(
       );
     }
     await prisma.tournament.delete({ where: { id } });
+
+    await invalidateTournament(id);
 
     await auditLog({
       userId: session.user.id,

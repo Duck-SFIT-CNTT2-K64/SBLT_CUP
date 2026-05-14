@@ -5,6 +5,7 @@ import { scorePredictionsForStage } from "@/lib/predictions";
 import { sseManager, SSE_EVENTS } from "@/lib/sse";
 import { logger } from "@/lib/logger";
 import { auditLog } from "@/lib/audit";
+import { invalidateTournament, invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   SCHEDULED: ["IN_PROGRESS"],
@@ -133,6 +134,9 @@ export async function POST(
     status: newStatus,
     timestamp: new Date().toISOString(),
   });
+
+  await invalidateTournament(tournamentId);
+  await invalidatePredictionLeaderboard(stageId);
 
   return NextResponse.json({
     message: `Vòng đấu chuyển sang "${labels[newStatus]}"${predictionScored > 0 ? `. ${predictionScored} dự đoán đã được chấm điểm.` : ""}`,

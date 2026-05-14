@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PREDICTABLE_STAGES } from "@/lib/constants";
 import { getPredictionWindow } from "@/lib/predictions";
+import { invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
 
 /**
  * GET /api/tournaments/[id]/predictions/[stageId]
@@ -309,6 +310,8 @@ export async function POST(
       { status: 403 }
     );
   }
+
+  await invalidatePredictionLeaderboard(stageId);
 
   return NextResponse.json({
     message: "Dự đoán đã được lưu thành công!",

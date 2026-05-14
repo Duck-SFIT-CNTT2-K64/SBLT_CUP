@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { downloadAndProcessAvatar } from "@/lib/image";
 import { saveAvatarBuffer } from "@/lib/upload";
 import { logger } from "@/lib/logger";
+import { cacheGet, cacheSet } from "@/lib/cache";
 
 const prismaAdapter = PrismaAdapter(prisma);
 
@@ -119,15 +120,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       // Invalidate session if password was changed after token was issued
       if (token.id && typeof token.passwordChangedAt === "number" && token.passwordChangedAt > 0) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { passwordChangedAt: true },
-        });
-        if (dbUser?.passwordChangedAt) {
-          const changedAt = dbUser.passwordChangedAt.getTime();
-          if (changedAt > (token.passwordChangedAt as number)) {
-            return null; // Force re-login
-          }
+        const cacheKey = `user:pwd:${token.id}`;
+        let changedAt = await cacheGet<number>(cacheKey);
+
+        if (changedAt === null) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { passwordChangedAt: true },
+          });
+          changedAt = dbUser?.passwordChangedAt?.getTime() ?? 0;
+          await cacheSet(cacheKey, changedAt, 60);
+        }
+
+        if (changedAt > (token.passwordChangedAt as number)) {
+          return null; // Force re-login
         }
       }
 

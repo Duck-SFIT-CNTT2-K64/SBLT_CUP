@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import { getRedis } from "@/lib/redis";
 
 interface RateLimitResult {
   allowed: boolean;
@@ -10,48 +10,6 @@ interface RateLimitOptions {
   key: string;
   limit: number;
   windowSeconds: number;
-}
-
-// Redis client — lazy init, falls back to in-memory if unavailable
-let redis: Redis | null = null;
-let redisFailed = false;
-
-function getRedis(): Redis | null {
-  if (redisFailed) return null;
-  if (redis) return redis;
-
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    redisFailed = true;
-    console.warn("[RATE_LIMIT] REDIS_URL not set — using in-memory fallback");
-    return null;
-  }
-
-  try {
-    redis = new Redis(url, {
-      maxRetriesPerRequest: 3,
-      connectTimeout: 5000,
-      lazyConnect: true,
-      retryStrategy(times) {
-        if (times > 3) {
-          redisFailed = true;
-          console.warn("[RATE_LIMIT] Redis connection failed — falling back to in-memory");
-          return null; // stop retrying
-        }
-        return Math.min(times * 200, 2000);
-      },
-    });
-
-    redis.on("error", () => {
-      // Silently handle — fallback kicks in
-    });
-
-    return redis;
-  } catch {
-    redisFailed = true;
-    console.warn("[RATE_LIMIT] Redis init failed — using in-memory fallback");
-    return null;
-  }
 }
 
 // In-memory fallback store

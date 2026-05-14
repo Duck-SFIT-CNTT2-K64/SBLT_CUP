@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 export async function GET(
   req: NextRequest,
@@ -26,7 +27,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { stageId, groupId } = await params;
+  const { id, stageId, groupId } = await params;
   const body = await req.json();
   const { playerId } = body;
 
@@ -101,6 +102,8 @@ export async function POST(
       include: { player: { select: { id: true, ign: true, rank: true, isGuest: true } } },
     });
 
+    await invalidateTournament(id);
+
     return NextResponse.json(groupPlayer, { status: 201 });
   } catch {
     return NextResponse.json(
@@ -129,7 +132,7 @@ export async function DELETE(
     );
   }
 
-  const { stageId, groupId } = await params;
+  const { id, stageId, groupId } = await params;
 
   // H-02: Verify group belongs to stage
   const group = await prisma.group.findFirst({ where: { id: groupId, stageId } });
@@ -146,6 +149,8 @@ export async function DELETE(
         },
       },
     });
+
+    await invalidateTournament(id);
 
     return NextResponse.json({ message: "Đã xóa tuyển thủ khỏi bảng" });
   } catch {

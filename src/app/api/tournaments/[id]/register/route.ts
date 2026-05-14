@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
 import { handleApiError } from "@/lib/api-error";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 export async function POST(
   req: NextRequest,
@@ -91,6 +92,8 @@ export async function POST(
     message: `Bạn đã đăng ký thành công giải đấu "${tournament.name}". Vui lòng chờ ban tổ chức duyệt.`,
     link: `/tournaments/${tournamentId}`,
   });
+
+  await invalidateTournament(tournamentId);
 
   return NextResponse.json(registration, { status: 201 });
   } catch (error) {

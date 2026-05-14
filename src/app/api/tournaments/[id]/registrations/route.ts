@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { invalidateTournament } from "@/lib/cache-invalidate";
 
 export async function GET(
   req: NextRequest,
@@ -63,6 +64,8 @@ export async function PUT(
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
 
+    await invalidateTournament(tournamentId);
+
     return NextResponse.json({ message: `Đã duyệt ${result.count} đăng ký` });
   }
 
@@ -80,6 +83,8 @@ export async function PUT(
       after: { count: result.count, registrationIds },
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
+
+    await invalidateTournament(tournamentId);
 
     return NextResponse.json({ message: `Đã từ chối ${result.count} đăng ký` });
   }
@@ -123,6 +128,8 @@ export async function PUT(
       after: { status },
       ip: req.headers.get("x-forwarded-for") || undefined,
     });
+
+    await invalidateTournament(tournamentId);
 
     return NextResponse.json(registration);
   } catch {
