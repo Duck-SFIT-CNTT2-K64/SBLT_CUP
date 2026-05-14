@@ -52,3 +52,13 @@ next-env.d.ts
 
 # database dumps
 *.dump
+*.db
+*.sqlite
+*.sqlite3
+
+# agent memory/data
+data/
+
+# logs
+logs/
+*.log
