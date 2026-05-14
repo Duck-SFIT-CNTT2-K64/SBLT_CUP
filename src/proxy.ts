@@ -276,6 +276,7 @@ export function proxy(request: NextRequest) {
     /^\/api\/tournaments\/[^/]+\/predictions(\/[^/]+)?$/.test(pathname) ||
     pathname === "/api/announcements" ||
     /^\/api\/announcements\/[^/]+$/.test(pathname) ||
+    pathname === "/api/chat" ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/webhooks/")
   ) {
