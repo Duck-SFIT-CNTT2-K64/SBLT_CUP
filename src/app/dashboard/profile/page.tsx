@@ -55,12 +55,17 @@ export default function ProfilePage() {
     try {
       const res = await fetch("/api/players/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
       if (res.ok) {
+        const data = await res.json();
         setSuccess(true);
+        setError(null);
         setTimeout(() => setSuccess(false), 3000);
-        // Update session with new name so navbar reflects the change
-        if (profile.name) {
-          await updateSession({ name: profile.name });
+        // Update session with confirmed name from DB
+        if (data.user?.name) {
+          await updateSession({ name: data.user.name });
         }
+      } else {
+        const data = await res.json();
+        setError(data.error || "Không thể cập nhật hồ sơ");
       }
     } catch { /* empty */ } finally { setLoading(false); }
   };
