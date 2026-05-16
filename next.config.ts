@@ -40,6 +40,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true, // Local uploads are already small webp — skip optimization to fix PM2 cluster null errors
     localPatterns: [
       { pathname: "/uploads/**" },
       { pathname: "/guests/**" },
