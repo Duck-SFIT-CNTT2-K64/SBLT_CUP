@@ -88,17 +88,25 @@ export default function Footer() {
               community
             </p>
             <span className="text-[#333]">|</span>
-            <p>
-              Phát triển bởi{" "}
-              <a
-                href="https://duckcy.me/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#3b82f6] hover:text-white transition-colors duration-300"
-              >
-                Duckcy
-              </a>
-            </p>
+            <a
+              href="https://duckcy.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 group"
+            >
+              <Image
+                src="/developer-avatar.png"
+                alt="Duckcy"
+                width={32}
+                height={32}
+                unoptimized
+                className="rounded-full border border-[#333] group-hover:border-[#3b82f6]/50 transition-all duration-300"
+              />
+              <span className="text-[#555] group-hover:text-[#888] transition-colors duration-300">
+                Phát triển bởi{" "}
+                <span className="text-[#3b82f6] group-hover:text-white font-medium">Duckcy</span>
+              </span>
+            </a>
           </div>
         </div>
       </div>
