@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#0a0a0a] border-t border-[#222] mt-auto">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -75,39 +75,42 @@ export default function Footer() {
               </p>
             </div>
           </div>
+
+          {/* Developer */}
+          <div className="flex flex-col items-center text-center">
+            <a
+              href="https://duckcy.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col items-center"
+            >
+              <Image
+                src="/developer-avatar.png"
+                alt="Duckcy"
+                width={56}
+                height={56}
+                unoptimized
+                className="rounded-full border border-[#333] group-hover:border-[#3b82f6]/50 transition-all duration-300 mb-3"
+              />
+              <p className="text-[#555] text-sm group-hover:text-[#888] transition-colors duration-300">
+                Phát triển bởi
+              </p>
+              <p className="text-[#3b82f6] font-medium text-sm group-hover:text-white transition-colors duration-300">
+                Duckcy
+              </p>
+            </a>
+          </div>
         </div>
 
         {/* Bottom bar */}
         <div className="sblt-divider mt-10 mb-6" />
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-[#555] text-sm">
           <p>&copy; {new Date().getFullYear()} SBLT CUP. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <p>
-              Designed for{" "}
-              <span className="text-[#dc2626] font-medium">Đấu Trường Chân Lý</span>{" "}
-              community
-            </p>
-            <span className="text-[#333]">|</span>
-            <a
-              href="https://duckcy.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2.5 group"
-            >
-              <Image
-                src="/developer-avatar.png"
-                alt="Duckcy"
-                width={32}
-                height={32}
-                unoptimized
-                className="rounded-full border border-[#333] group-hover:border-[#3b82f6]/50 transition-all duration-300"
-              />
-              <span className="text-[#555] group-hover:text-[#888] transition-colors duration-300">
-                Phát triển bởi{" "}
-                <span className="text-[#3b82f6] group-hover:text-white font-medium">Duckcy</span>
-              </span>
-            </a>
-          </div>
+          <p>
+            Designed for{" "}
+            <span className="text-[#dc2626] font-medium">Đấu Trường Chân Lý</span>{" "}
+            community
+          </p>
         </div>
       </div>
     </footer>
