@@ -298,10 +298,10 @@ async function main() {
       season: 1,
       description: "Giải đấu Đấu Trường Chân Lý SBLT CUP Mùa 1 — Team 5van & Koi tổ chức",
       status: "COMPLETED",
-      regStart: new Date("2025-05-01"),
-      regEnd: new Date("2025-05-18"),
-      startDate: new Date("2025-05-19"),
-      endDate: new Date("2025-05-22"),
+      regStart: new Date("2026-05-01"),
+      regEnd: new Date("2026-05-18"),
+      startDate: new Date("2026-05-19"),
+      endDate: new Date("2026-05-22"),
       maxPlayers: 64,
       prizePool: 10_000_000,
     },
@@ -310,10 +310,10 @@ async function main() {
 
   // Stages
   const stageConfigs = [
-    { name: "Vòng Loại", type: "QUALIFIER" as const, order: 1, date: "2025-05-19" },
-    { name: "Vòng 2", type: "SEMI_1" as const, order: 2, date: "2025-05-20" },
-    { name: "Vòng 3", type: "SEMI_2" as const, order: 3, date: "2025-05-21" },
-    { name: "Chung Kết", type: "FINAL" as const, order: 4, date: "2025-05-22" },
+    { name: "Vòng Loại", type: "QUALIFIER" as const, order: 1, date: "2026-05-19" },
+    { name: "Vòng 2", type: "SEMI_1" as const, order: 2, date: "2026-05-20" },
+    { name: "Vòng 3", type: "SEMI_2" as const, order: 3, date: "2026-05-21" },
+    { name: "Chung Kết", type: "FINAL" as const, order: 4, date: "2026-05-22" },
   ];
   const stages: Record<string, { id: string; date: string }> = {};
   for (const s of stageConfigs) {
@@ -360,7 +360,7 @@ async function main() {
         playerId: p.id,
         status: "APPROVED",
         checkedIn: true,
-        checkInTime: new Date("2025-05-19T17:30:00"),
+        checkInTime: new Date("2026-05-19T17:30:00"),
       },
     });
   }
@@ -372,7 +372,7 @@ async function main() {
         playerId: admin.player.id,
         status: "APPROVED",
         checkedIn: true,
-        checkInTime: new Date("2025-05-19T17:30:00"),
+        checkInTime: new Date("2026-05-19T17:30:00"),
       },
     });
   }
@@ -486,7 +486,7 @@ async function main() {
     if (player) {
       await prisma.prize.update({
         where: { id: prize.id },
-        data: { playerId: player.id, paid: prize.rank <= 4, paidAt: prize.rank <= 4 ? new Date("2025-05-23") : null },
+        data: { playerId: player.id, paid: prize.rank <= 4, paidAt: prize.rank <= 4 ? new Date("2026-05-23") : null },
       });
     }
   }
@@ -499,35 +499,35 @@ async function main() {
         title: "Chào mừng đến với SBLT CUP Mùa 1!",
         content: "Giải đấu SBLT CUP Mùa 1 chính thức mở đăng ký từ 01/05 đến 18/05. Hãy đăng ký tài khoản và tham gia ngay! Thể thức: 64 tuyển thủ, 4 vòng đấu, tổng giải thưởng 10.000.000 VNĐ.",
         type: "GENERAL",
-        createdAt: new Date("2025-05-01T09:00:00"),
+        createdAt: new Date("2026-05-01T09:00:00"),
       },
       {
         tournamentId: t1.id,
         title: "Thay đổi lịch thi đấu Vòng Loại",
         content: "Lịch thi đấu Vòng Loại ngày 19/05 được dời từ 19:00 xuống 18:00 để thuận tiện cho thí thi. Vui lòng check-in trước 17:45. Xin lỗi vì sự bất tiện này!",
         type: "SCHEDULE_CHANGE",
-        createdAt: new Date("2025-05-17T14:00:00"),
+        createdAt: new Date("2026-05-17T14:00:00"),
       },
       {
         tournamentId: t1.id,
         title: "Cập nhật quy tắc cấm streamer mode",
         content: "Quy tắc mới: Tất cả tuyển thủ BẮT BUỘC tắt streamer mode trong suốt quá trình thi đấu. Vi phạm sẽ bị cảnh cáo lần 1, lần 2 sẽ bị xử thua. BTC sẽ kiểm tra ngẫu nhiên qua replay.",
         type: "RULE_UPDATE",
-        createdAt: new Date("2025-05-15T10:00:00"),
+        createdAt: new Date("2026-05-15T10:00:00"),
       },
       {
         tournamentId: t1.id,
         title: "Kết quả Vòng Loại — Danh sách vào Vòng 2",
         content: `Kết quả Vòng Loại ngày 19/05: 32 tuyển thủ xuất sắc nhất đã giành vé vào Vòng 2. Xem chi tiết tại mục Brackets/Standing. Chúc mừng các thí sinh đi tiếp!`,
         type: "RESULT",
-        createdAt: new Date("2025-05-19T22:00:00"),
+        createdAt: new Date("2026-05-19T22:00:00"),
       },
       {
         tournamentId: t1.id,
         title: "Kết quả Chung Kết — SBLT CUP Mùa 1",
         content: `Chúc mừng ${finalRanking[0].ign} đã trở thành Quán quân SBLT CUP Mùa 1 với tổng ${finalTotals.get(finalRanking[0].id) ?? 0} điểm! Cảm ơn tất cả 65 tuyển thủ đã tham gia. Hẹn gặp lại ở Mùa 2!`,
         type: "RESULT",
-        createdAt: new Date("2025-05-22T23:00:00"),
+        createdAt: new Date("2026-05-22T23:00:00"),
       },
     ],
   });
@@ -552,7 +552,7 @@ async function main() {
         status: "RESOLVED",
         adminNote: "Đã kiểm tra replay. Kết quả ban đầu là chính xác. Tuyển thủ về Top 6.",
         resolvedBy: admin.id,
-        resolvedAt: new Date("2025-05-20T10:00:00"),
+        resolvedAt: new Date("2026-05-20T10:00:00"),
       },
     });
   }
@@ -572,10 +572,10 @@ async function main() {
   // ── Audit logs ──────────────────────────────────────────────────────────
   await prisma.auditLog.createMany({
     data: [
-      { userId: admin.id, action: "TOURNAMENT_CREATE", entityType: "Tournament", entityId: t1.id, ip: "192.168.1.1", createdAt: new Date("2025-05-01T08:00:00") },
-      { userId: admin.id, action: "STAGE_DRAW", entityType: "Stage", entityId: stages.QUALIFIER.id, after: { groups: 8, players: 49 }, ip: "192.168.1.1", createdAt: new Date("2025-05-19T17:00:00") },
-      { userId: admin.id, action: "PLAYER_ADVANCE", entityType: "Stage", entityId: stages.SEMI_1.id, after: { advanced: 32, guests: 16 }, ip: "192.168.1.1", createdAt: new Date("2025-05-19T22:30:00") },
-      { userId: admin.id, action: "TOURNAMENT_COMPLETE", entityType: "Tournament", entityId: t1.id, after: { champion: finalRanking[0].ign }, ip: "192.168.1.1", createdAt: new Date("2025-05-22T23:30:00") },
+      { userId: admin.id, action: "TOURNAMENT_CREATE", entityType: "Tournament", entityId: t1.id, ip: "192.168.1.1", createdAt: new Date("2026-05-01T08:00:00") },
+      { userId: admin.id, action: "STAGE_DRAW", entityType: "Stage", entityId: stages.QUALIFIER.id, after: { groups: 8, players: 49 }, ip: "192.168.1.1", createdAt: new Date("2026-05-19T17:00:00") },
+      { userId: admin.id, action: "PLAYER_ADVANCE", entityType: "Stage", entityId: stages.SEMI_1.id, after: { advanced: 32, guests: 16 }, ip: "192.168.1.1", createdAt: new Date("2026-05-19T22:30:00") },
+      { userId: admin.id, action: "TOURNAMENT_COMPLETE", entityType: "Tournament", entityId: t1.id, after: { champion: finalRanking[0].ign }, ip: "192.168.1.1", createdAt: new Date("2026-05-22T23:30:00") },
     ],
   });
 
@@ -588,10 +588,10 @@ async function main() {
       season: 2,
       description: "Giải đấu Đấu Trường Chân Lý SBLT CUP Mùa 2 — Lần này gay cấn hơn! Đăng ký ngay!",
       status: "REGISTRATION_OPEN",
-      regStart: new Date("2025-06-01"),
-      regEnd: new Date("2025-06-20"),
-      startDate: new Date("2025-06-23"),
-      endDate: new Date("2025-06-26"),
+      regStart: new Date("2026-06-01"),
+      regEnd: new Date("2026-06-20"),
+      startDate: new Date("2026-06-23"),
+      endDate: new Date("2026-06-26"),
       maxPlayers: 64,
       prizePool: 15_000_000,
     },
@@ -603,7 +603,7 @@ async function main() {
       title: "SBLT CUP Mùa 2 chính thức mở đăng ký!",
       content: "Giải đấu Mùa 2 đã quay trở lại với tổng giải thưởng 15.000.000 VNĐ! Đăng ký từ 01/06 đến 20/06. Nhanh tay kẻo hết slot!",
       type: "GENERAL",
-      createdAt: new Date("2025-06-01T09:00:00"),
+      createdAt: new Date("2026-06-01T09:00:00"),
     },
   });
 
@@ -626,7 +626,7 @@ async function main() {
       playerId: p.id,
       status: "APPROVED" as const,
       checkedIn: true,
-      checkInTime: new Date("2025-06-23T17:30:00"),
+      checkInTime: new Date("2026-06-23T17:30:00"),
     })),
   ];
   await prisma.registration.createMany({ data: t2Regs });

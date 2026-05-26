@@ -7,6 +7,7 @@ import { sseManager, SSE_EVENTS } from "@/lib/sse";
 import { logger } from "@/lib/logger";
 import { invalidateTournament, invalidateLeaderboard, invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
 import { scorePredictionsForStage } from "@/lib/predictions";
+import { rankGroupPlayers } from "@/lib/stage-ranking";
 
 export async function GET(
   req: NextRequest,
@@ -153,7 +154,7 @@ export async function POST(
     await invalidateTournament(tournamentId);
     await invalidateLeaderboard();
 
-    // Auto-trigger: if all games in the stage are COMPLETED, score predictions
+    // Auto-trigger: if all games in the stage are COMPLETED, set finalRank and score predictions
     try {
       const stage = await prisma.stage.findFirst({
         where: { tournamentId, groups: { some: { games: { some: { id: gameId } } } } },
@@ -166,12 +167,57 @@ export async function POST(
         });
         const allCompleted = allGames.length > 0 && allGames.every((g) => g.status === "COMPLETED");
         if (allCompleted) {
-          await prisma.stage.update({
+          // Compute finalRank before marking COMPLETED
+          const stageWithGroups = await prisma.stage.findUnique({
             where: { id: stage.id },
-            data: { status: "COMPLETED" },
+            include: {
+              groups: {
+                include: {
+                  players: {
+                    include: {
+                      player: true,
+                      group: { include: { games: { include: { results: true } } } },
+                    },
+                  },
+                  games: { include: { results: true } },
+                },
+              },
+            },
           });
+
+          if (stageWithGroups) {
+            await prisma.$transaction(async (tx) => {
+              for (const group of stageWithGroups.groups) {
+                const ranked = rankGroupPlayers(group);
+                await Promise.all(
+                  ranked.map((rp, i) =>
+                    tx.groupPlayer.update({
+                      where: { id: rp.groupPlayerId },
+                      data: { finalRank: i + 1 },
+                    })
+                  )
+                );
+              }
+              await tx.stage.update({
+                where: { id: stage.id },
+                data: { status: "COMPLETED" },
+              });
+            });
+          } else {
+            await prisma.stage.update({
+              where: { id: stage.id },
+              data: { status: "COMPLETED" },
+            });
+          }
+
           try {
-            await scorePredictionsForStage(stage.id);
+            const { scored, skippedGroups } = await scorePredictionsForStage(stage.id);
+            if (skippedGroups > 0) {
+              logger.error(`[PREDICTION AUTO-SCORING] ${skippedGroups} groups were skipped due to missing finalRank.`);
+            }
+            if (scored > 0) {
+              logger.info(`[PREDICTION AUTO-SCORING] ${scored} predictions scored for stage ${stage.id}.`);
+            }
           } catch (err) {
             logger.error("[PREDICTION AUTO-SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
           }

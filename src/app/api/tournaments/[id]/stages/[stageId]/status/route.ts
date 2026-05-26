@@ -1,3 +1,4 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -27,7 +28,9 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId, stageId } = await params;
+  const { id: slugOrId, stageId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
   const { status: newStatus } = body;
 
@@ -81,6 +84,20 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    // Check finalRank is set — admin must use "Xác nhận & Chuyển sang vòng sau" first
+    const groupsWithoutRank = stage.groups.filter(
+      (g) => g.players.length > 0 && g.players.every((p) => p.finalRank === null)
+    );
+    if (groupsWithoutRank.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Chưa xếp hạng cho ${groupsWithoutRank.length} bảng đấu. Vui lòng dùng "Xác nhận & Chuyển sang vòng sau" trước khi kết thúc.`,
+          hint: "advance_first",
+        },
+        { status: 400 }
+      );
+    }
   }
 
   // Wrap status update + prediction locking in transaction for atomicity
@@ -105,8 +122,11 @@ export async function POST(
   let predictionScored = 0;
   if (newStatus === "COMPLETED") {
     try {
-      const { scored } = await scorePredictionsForStage(stageId);
+      const { scored, skippedGroups } = await scorePredictionsForStage(stageId);
       predictionScored = scored;
+      if (skippedGroups > 0) {
+        logger.error(`[PREDICTION SCORING] ${skippedGroups} groups were skipped due to missing finalRank. Predictions may be incomplete.`);
+      }
     } catch (err) {
       logger.error("[PREDICTION SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
     }

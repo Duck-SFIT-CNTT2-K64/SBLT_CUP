@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { generateSlug } from "@/lib/tournament-resolve";
 
 export async function GET(req: NextRequest) {
   // Phân trang: mặc định 20 bản ghi
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest) {
       // select thay vì include — chỉ lấy trường cần thiết cho list view
       select: {
         id: true,
+        slug: true,
         name: true,
         season: true,
         description: true,
@@ -108,8 +110,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    let slug = generateSlug(name);
+    const existing = await prisma.tournament.findUnique({ where: { slug } });
+    if (existing) {
+      slug = `${slug}-${season}`;
+    }
+
     const tournament = await prisma.tournament.create({
       data: {
+        slug,
         name,
         season: parseInt(season),
         description,

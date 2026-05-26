@@ -15,6 +15,22 @@ const eslintConfig = defineConfig([
     "coverage/**",
     ".next-old/**",
   ]),
+  // Allow Math.random in visual-only components (sparkle/ball animations)
+  {
+    files: ["src/components/BallDraw.tsx"],
+    rules: {
+      "react-hooks/purity": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
+  // Allow ref access during render for animation state display
+  {
+    files: ["src/components/tft/DuckRace.tsx"],
+    rules: {
+      "react-hooks/refs": "off",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

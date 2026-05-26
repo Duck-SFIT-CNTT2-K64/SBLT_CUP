@@ -1,3 +1,4 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { auditLog } from "@/lib/audit";
 import { TOURNAMENT_FORMAT } from "@/lib/constants";
 import { invalidateTournament, invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
+import { rankGroupPlayers, type RankedPlayer } from "@/lib/stage-ranking";
 
 /**
  * POST /api/tournaments/[id]/stages/[stageId]/advance
@@ -26,7 +28,9 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId, stageId } = await params;
+  const { id: slugOrId, stageId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // Load stage with all data
   const stage = await prisma.stage.findUnique({
@@ -70,9 +74,14 @@ export async function POST(
     return NextResponse.json({ error: "Vòng đấu không thuộc giải đấu này" }, { status: 400 });
   }
 
-  // B-13: Check if stage is already COMPLETED
+  // B-13: Check if stage is already COMPLETED — allow recovery if finalRank was never set
   if (stage.status === "COMPLETED") {
-    return NextResponse.json({ error: "Vòng đấu đã hoàn thành trước đó" }, { status: 400 });
+    const hasFinalRank = stage.groups.some((g) => g.players.some((p) => p.finalRank !== null));
+    if (hasFinalRank) {
+      return NextResponse.json({ error: "Vòng đấu đã hoàn thành trước đó" }, { status: 400 });
+    }
+    // Recovery mode: stage was marked COMPLETED without advance — proceed to set finalRank and score
+    logger.warn(`[ADVANCE RECOVERY] Stage ${stageId} is COMPLETED but has no finalRank. Running recovery.`);
   }
 
   // B-05: Check all games are completed — must have results for every group player
@@ -190,8 +199,11 @@ export async function POST(
   // Chấm điểm dự đoán (best-effort, không ảnh hưởng advance nếu lỗi)
   let predictionScored = 0;
   try {
-    const { scored } = await scorePredictionsForStage(stageId);
+    const { scored, skippedGroups } = await scorePredictionsForStage(stageId);
     predictionScored = scored;
+    if (skippedGroups > 0) {
+      logger.error(`[PREDICTION SCORING] ${skippedGroups} groups were skipped due to missing finalRank.`);
+    }
   } catch (err) {
     logger.error("[PREDICTION SCORING ERROR]", err instanceof Error ? err : new Error(String(err)));
   }
@@ -259,52 +271,6 @@ export async function GET(
 function getAdvancingCount(stageType: string): number {
   const format = Object.values(TOURNAMENT_FORMAT).find((f) => f.stageType === stageType);
   return "advancingPerGroup" in (format ?? {}) ? (format as { advancingPerGroup: number }).advancingPerGroup : 0;
-}
-
-interface RankedPlayer {
-  groupPlayerId: string;
-  playerId: string;
-  ign: string;
-  totalPoints: number;
-  top1Count: number;
-  top4Count: number;
-  bestPlacement: number;
-}
-
-function rankGroupPlayers(group: {
-  players: { id: string; playerId: string; totalPoints: number; player: { ign: string } }[];
-  games: { results: { playerId: string; placement: number; points: number }[] }[];
-}): RankedPlayer[] {
-  const players: RankedPlayer[] = group.players.map((gp) => {
-    const allResults = group.games.flatMap((g) =>
-      g.results.filter((r) => r.playerId === gp.playerId)
-    );
-
-    const top1Count = allResults.filter((r) => r.placement === 1).length;
-    const top4Count = allResults.filter((r) => r.placement <= 4).length;
-    const bestPlacement = allResults.length > 0
-      ? Math.min(...allResults.map((r) => r.placement))
-      : 99;
-
-    return {
-      groupPlayerId: gp.id,
-      playerId: gp.playerId,
-      ign: gp.player.ign,
-      totalPoints: gp.totalPoints,
-      top1Count,
-      top4Count,
-      bestPlacement,
-    };
-  });
-
-  // Sort: totalPoints DESC → top1Count DESC → top4Count DESC → bestPlacement ASC → playerId (deterministic)
-  return players.sort((a, b) => {
-    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-    if (b.top1Count !== a.top1Count) return b.top1Count - a.top1Count;
-    if (b.top4Count !== a.top4Count) return b.top4Count - a.top4Count;
-    if (a.bestPlacement !== b.bestPlacement) return a.bestPlacement - b.bestPlacement;
-    return a.playerId.localeCompare(b.playerId);
-  });
 }
 
 // Snake draft: distribute players across groups to balance strength

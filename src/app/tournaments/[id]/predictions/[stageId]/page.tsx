@@ -7,12 +7,17 @@ import Link from "next/link";
 import PredictionGroupForm from "@/components/predictions/PredictionGroupForm";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Target, ArrowLeft, Loader2, AlertTriangle, Send, CheckCircle } from "lucide-react";
+import { Target, ArrowLeft, Loader2, AlertTriangle, Send, CheckCircle, Info, ChevronDown } from "lucide-react";
 
 interface Player {
   id: string;
   ign: string;
   isGuest: boolean;
+  rank: string | null;
+  avatar: string | null;
+  rating: number | null;
+  totalGames: number;
+  top4Rate: number | null;
 }
 
 interface GroupData {
@@ -192,6 +197,71 @@ export default function PredictionFormPage() {
           <div className="sblt-divider mt-4" />
         </div>
       </div>
+
+      {/* Rating explanation */}
+      <details className="mb-6 group rounded-xl border border-[#222] bg-[#111] overflow-hidden">
+        <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none hover:bg-[#161616] transition-colors">
+          <Info className="h-4 w-4 text-[#dc2626] shrink-0" />
+          <span className="text-sm font-medium text-[#f5f5f5] flex-1">Chỉ số Rating tuyển thủ (0–1000)</span>
+          <ChevronDown className="h-4 w-4 text-[#666] transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="px-4 pb-4 border-t border-[#222]">
+          <p className="text-xs text-[#888] mt-3 mb-3">
+            Rating tổng hợp năng lực thi đấu của tuyển thủ qua lịch sử các trận đấu. Tối thiểu 3 trận mới có rating.
+          </p>
+          <div className="overflow-x-auto mb-3">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#222]">
+                  <th className="text-left py-1.5 pr-3 text-[#888] font-medium">Thành phần</th>
+                  <th className="text-center py-1.5 px-3 text-[#888] font-medium">Trọng số</th>
+                  <th className="text-left py-1.5 pl-3 text-[#888] font-medium">Cách tính</th>
+                </tr>
+              </thead>
+              <tbody className="text-[#b7b7b7]">
+                <tr className="border-b border-[#222]/50">
+                  <td className="py-1.5 pr-3 font-medium text-[#f5f5f5]">Tổng điểm</td>
+                  <td className="text-center py-1.5 px-3">30%</td>
+                  <td className="py-1.5 pl-3">Điểm tích lũy / cao nhất</td>
+                </tr>
+                <tr className="border-b border-[#222]/50">
+                  <td className="py-1.5 pr-3 font-medium text-[#f5f5f5]">Thứ hạng TB</td>
+                  <td className="text-center py-1.5 px-3">25%</td>
+                  <td className="py-1.5 pl-3">Hạng trung bình (càng thấp càng tốt)</td>
+                </tr>
+                <tr className="border-b border-[#222]/50">
+                  <td className="py-1.5 pr-3 font-medium text-[#f5f5f5]">Top 4%</td>
+                  <td className="text-center py-1.5 px-3">25%</td>
+                  <td className="py-1.5 pl-3">Tỷ lệ vào top 4 / tổng trận</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 pr-3 font-medium text-[#f5f5f5]">Tỷ lệ thắng</td>
+                  <td className="text-center py-1.5 px-3">20%</td>
+                  <td className="py-1.5 pl-3">Tỷ lệ hạng 1 / tổng trận</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400" />
+              <span className="text-[#888]">700+ Mạnh</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400" />
+              <span className="text-[#888]">400–699 Trung bình</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-400" />
+              <span className="text-[#888]">&lt;400 Yếu</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#666]" />
+              <span className="text-[#888]">&lt;3 trận = Mới</span>
+            </span>
+          </div>
+        </div>
+      </details>
 
       {/* Locked warning */}
       {isLocked && (

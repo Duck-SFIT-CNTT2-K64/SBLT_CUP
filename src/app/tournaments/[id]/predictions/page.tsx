@@ -112,7 +112,7 @@ export default function PredictionsPage() {
           </div>
         </div>
 
-        <PredictionRulesAndRewardsPanel />
+        <PredictionRulesAndRewardsPanel variant={stages.some(s => s.stageType === "WARMUP") ? "warmup" : "default"} />
       </div>
     );
   }
@@ -138,7 +138,7 @@ export default function PredictionsPage() {
         </div>
       </div>
 
-      <PredictionRulesAndRewardsPanel />
+      <PredictionRulesAndRewardsPanel variant={stages.some(s => s.stageType === "WARMUP") ? "warmup" : "default"} />
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 

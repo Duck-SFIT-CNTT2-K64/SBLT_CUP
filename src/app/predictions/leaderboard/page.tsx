@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import TopWinners from "@/components/leaderboard/TopWinners";
-import { Trophy, Target, Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
+import { Trophy, Target, Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 import { cn } from "@/lib/utils";
@@ -45,9 +45,36 @@ export default function GlobalPredictionLeaderboardPage() {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [userDetails, setUserDetails] = useState<Record<string, StageDetail[]>>({});
   const [loadingDetail, setLoadingDetail] = useState<string | null>(null);
+  const [tournaments, setTournaments] = useState<{ id: string; name: string; season: number }[]>([]);
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
 
+  // Fetch tournaments list
   useEffect(() => {
-    fetch("/api/predictions/leaderboard")
+    fetch("/api/tournaments")
+      .then(async (r) => {
+        const data = await r.json();
+        if (r.ok && data.data) {
+          setTournaments(data.data.map((t: { id: string; name: string; season: number }) => ({
+            id: t.id,
+            name: t.name,
+            season: t.season,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch leaderboard when tournament selection changes
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    const params = new URLSearchParams();
+    if (selectedTournamentId !== "all") params.set("tournamentId", selectedTournamentId);
+    const qs = params.toString();
+    fetch(`/api/predictions/leaderboard${qs ? `?${qs}` : ""}`)
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok) {
@@ -58,7 +85,7 @@ export default function GlobalPredictionLeaderboardPage() {
       })
       .catch(() => setError("Lỗi kết nối. Vui lòng thử lại."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedTournamentId]);
 
   const toggleExpand = async (userId: string) => {
     if (expandedUserId === userId) {
@@ -71,7 +98,8 @@ export default function GlobalPredictionLeaderboardPage() {
 
     setLoadingDetail(userId);
     try {
-      const r = await fetch(`/api/predictions/leaderboard/${userId}`);
+      const qs = selectedTournamentId !== "all" ? `?tournamentId=${selectedTournamentId}` : "";
+      const r = await fetch(`/api/predictions/leaderboard/${userId}${qs}`);
       const data = await r.json();
       if (r.ok) {
         setUserDetails((prev) => ({ ...prev, [userId]: data.stages || [] }));
@@ -90,6 +118,24 @@ export default function GlobalPredictionLeaderboardPage() {
     return <span className="text-[#888] text-sm w-16 text-center">#{rank}</span>;
   };
 
+  const filtered = searchQuery.trim()
+    ? leaderboard.filter((e) =>
+        e.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : leaderboard;
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedEntries = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  function getPageNumbers(current: number, total: number): (number | "...")[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 3) return [1, 2, 3, 4, "...", total];
+    if (current >= total - 2) return [1, "...", total - 3, total - 2, total - 1, total];
+    return [1, "...", current - 1, current, current + 1, "...", total];
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <RevealOnScroll>
@@ -97,12 +143,48 @@ export default function GlobalPredictionLeaderboardPage() {
           <Target className="h-14 w-14 text-[#dc2626] mx-auto mb-4" />
           <h1 className="sblt-heading text-3xl text-[#f5f5f5] mb-3 tracking-tight">Bảng xếp hạng Dự đoán</h1>
           <p className="text-[#888] max-w-xl mx-auto text-sm">
-            Xếp hạng tổng hợp điểm dự đoán qua tất cả các vòng đấu.
-            Người có nhiều điểm dự đoán nhất sẽ nhận phần thưởng từ BTC!
+            {selectedTournamentId === "all"
+              ? "Xếp hạng tổng hợp điểm dự đoán qua tất cả các vòng đấu. Người có nhiều điểm dự đoán nhất sẽ nhận phần thưởng từ BTC!"
+              : `Xếp hạng điểm dự đoán ${tournaments.find((t) => t.id === selectedTournamentId)?.name || ""}. Cộng dồn điểm qua tất cả các vòng đấu.`}
           </p>
           <div className="w-16 h-0.5 bg-[#dc2626] mx-auto mt-4" />
         </div>
       </RevealOnScroll>
+
+      {/* Tournament Selector */}
+      {tournaments.length > 0 && (
+        <div className="mb-6">
+          <select
+            value={selectedTournamentId}
+            onChange={(e) => {
+              setSelectedTournamentId(e.target.value);
+              setExpandedUserId(null);
+              setUserDetails({});
+              setSearchQuery("");
+              setCurrentPage(1);
+            }}
+            className="bg-[#111] border border-[#222] rounded-xl text-[#f5f5f5] text-sm px-4 py-2.5 focus:border-[#dc2626]/50 focus:outline-none transition-colors"
+          >
+            <option value="all">Tất cả giải đấu</option>
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>{t.name} — Mùa {t.season}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {leaderboard.length > PAGE_SIZE && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#888]" />
+          <input
+            type="text"
+            placeholder="Tìm theo tên..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            className="w-full pl-10 pr-4 py-2.5 bg-[#111] border border-[#222] rounded-xl text-[#f5f5f5] text-sm placeholder-[#555] focus:border-[#dc2626]/50 focus:outline-none transition-colors"
+          />
+        </div>
+      )}
 
       {error && <Alert variant="error" message={error} className="mb-4" />}
 
@@ -149,8 +231,8 @@ export default function GlobalPredictionLeaderboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {leaderboard.map((entry, idx) => {
-                      const rank = idx + 1;
+                    {paginatedEntries.map((entry, idx) => {
+                      const rank = (currentPage - 1) * PAGE_SIZE + idx + 1;
                       const isCurrentUser = session?.user?.id === entry.id;
                       const isExpanded = expandedUserId === entry.id;
 
@@ -206,8 +288,8 @@ export default function GlobalPredictionLeaderboardPage() {
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-3">
-                {leaderboard.map((entry, idx) => {
-                  const rank = idx + 1;
+                {paginatedEntries.map((entry, idx) => {
+                  const rank = (currentPage - 1) * PAGE_SIZE + idx + 1;
                   const isCurrentUser = session?.user?.id === entry.id;
                   const isExpanded = expandedUserId === entry.id;
 
@@ -419,6 +501,49 @@ export default function GlobalPredictionLeaderboardPage() {
                       Không thể tải chi tiết.
                     </p>
                   )}
+                </div>
+              )}
+
+              {searchQuery.trim() && (
+                <p className="text-center text-xs text-[#555] mt-3">
+                  {filtered.length} kết quả cho &quot;{searchQuery.trim()}&quot;
+                </p>
+              )}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1.5 mt-6">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-[#222] text-[#888] hover:text-[#f5f5f5] hover:border-[#dc2626]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {getPageNumbers(currentPage, totalPages).map((page, i) =>
+                    page === "..." ? (
+                      <span key={`ellipsis-${i}`} className="px-2 text-[#555] text-sm">...</span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page as number)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                          currentPage === page
+                            ? "bg-[#dc2626] text-white"
+                            : "border border-[#222] text-[#888] hover:text-[#f5f5f5] hover:border-[#dc2626]/50"
+                        )}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-[#222] text-[#888] hover:text-[#f5f5f5] hover:border-[#dc2626]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
               )}
             </CardContent>

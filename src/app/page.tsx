@@ -163,6 +163,34 @@ export default async function Home() {
                 ))}
               </div>
             </RevealOnScroll>
+
+            {/* Developer credit */}
+            <RevealOnScroll delay={0.6}>
+              <div className="mt-20 flex flex-col items-center">
+                <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#dc2626]/40 to-transparent mb-6" />
+                <a
+                  href="https://duckcy.me/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center"
+                >
+                  <Image
+                    src="/developer-avatar.png"
+                    alt="Duckcy"
+                    width={48}
+                    height={48}
+                    unoptimized
+                    className="rounded-full border border-[#333] group-hover:border-[#dc2626]/50 group-hover:shadow-[0_0_20px_rgba(220,38,38,0.2)] transition-all duration-300 mb-3"
+                  />
+                  <p className="text-[#555] text-xs uppercase tracking-wider group-hover:text-[#888] transition-colors duration-300">
+                    Phát triển bởi
+                  </p>
+                  <p className="text-[#3b82f6] font-semibold text-sm group-hover:text-white transition-colors duration-300">
+                    Duckcy
+                  </p>
+                </a>
+              </div>
+            </RevealOnScroll>
           </div>
         </div>
       </section>

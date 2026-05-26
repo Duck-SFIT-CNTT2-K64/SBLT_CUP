@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { PREDICTION_SCORING, PREDICTION_WINDOW } from "@/lib/constants";
 import { createNotification } from "@/lib/notifications";
 import { invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
+import { logger } from "@/lib/logger";
 
 interface PredictionWindowResult {
   isOpen: boolean;
@@ -33,6 +34,64 @@ export function getPredictionWindow(stageDate: Date): PredictionWindowResult {
 }
 
 /**
+ * Cửa sổ dự đoán cho Warm-up match.
+ * Mở: startTime - 60 phút. Đóng: startTime (20:30).
+ * @param stageDate - ngày thi đấu
+ * @param startTime - giờ bắt đầu, format "HH:MM" (e.g. "20:30")
+ */
+export function getWarmupPredictionWindow(stageDate: Date, startTime: string): PredictionWindowResult {
+  const vnDateStr = stageDate.toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
+  const [year, month, day] = vnDateStr.split("-").map(Number);
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+  const TIMEZONE_OFFSET_HOURS = 7;
+
+  const closesAt = new Date(Date.UTC(year, month - 1, day, startHour - TIMEZONE_OFFSET_HOURS, startMinute, 0, 0));
+  const opensAt = new Date(closesAt.getTime() - 60 * 60 * 1000); // 60 phút trước
+
+  const now = new Date();
+  const isOpen = now >= opensAt && now < closesAt;
+
+  return {
+    isOpen,
+    windowOpensAt: opensAt.toISOString(),
+    windowClosesAt: closesAt.toISOString(),
+  };
+}
+
+/**
+ * Tính prediction status cho một stage.
+ * Dùng chung cho cả list và detail endpoints.
+ */
+export function computePredictionStatus(
+  stage: { status: string; date: Date; startTime: string | null; stageType: string },
+  hasPlayers: boolean
+): { predictionStatus: string; lockedReason: string | null; windowOpensAt: string; windowClosesAt: string } {
+  const window = stage.stageType === "WARMUP"
+    ? getWarmupPredictionWindow(stage.date, stage.startTime || "20:30")
+    : getPredictionWindow(stage.date);
+
+  let predictionStatus: string;
+  let lockedReason: string | null = null;
+
+  if (stage.status === "COMPLETED") {
+    predictionStatus = "SCORED";
+  } else if (stage.status === "IN_PROGRESS") {
+    predictionStatus = "LOCKED";
+    lockedReason = "stage_started";
+  } else if (!window.isOpen) {
+    const now = new Date();
+    lockedReason = now < new Date(window.windowOpensAt) ? "window_not_open" : "window_closed";
+    predictionStatus = "LOCKED";
+  } else if (hasPlayers) {
+    predictionStatus = "OPEN";
+  } else {
+    predictionStatus = "NOT_READY";
+  }
+
+  return { predictionStatus, lockedReason, ...window };
+}
+
+/**
  * Chấm điểm dự đoán cho một stage đã hoàn thành.
  * So sánh predicted rank1-4 với actual finalRank trong mỗi group.
  * Điểm: đúng top 1-4 = 10đ/rank. Chung kết (FINAL) x2 = 20đ/rank.
@@ -41,13 +100,13 @@ export function getPredictionWindow(stageDate: Date): PredictionWindowResult {
  */
 export async function scorePredictionsForStage(
   stageId: string
-): Promise<{ scored: number; totalPredictions: number }> {
+): Promise<{ scored: number; totalPredictions: number; skippedGroups: number }> {
   const predictions = await prisma.prediction.findMany({
     where: { stageId },
     include: { entries: true },
   });
 
-  if (predictions.length === 0) return { scored: 0, totalPredictions: 0 };
+  if (predictions.length === 0) return { scored: 0, totalPredictions: 0, skippedGroups: 0 };
 
   // Lấy stageType để xác định multiplier
   const stage = await prisma.stage.findUnique({
@@ -70,12 +129,19 @@ export async function scorePredictionsForStage(
 
   // Logic mới: top 4 = 4 người có finalRank 1-4 (không cần đúng vị trí)
   const actualTop4Map = new Map<string, Set<string>>();
+  let skippedGroups = 0;
   for (const group of groups) {
     const top4 = new Set<string>();
     for (const gp of group.players) {
       if (gp.finalRank !== null && gp.finalRank >= 1 && gp.finalRank <= 4) {
         top4.add(gp.playerId);
       }
+    }
+    // Validate: must have exactly 4 players with finalRank 1-4
+    if (top4.size !== 4) {
+      logger.error(`[SCORING] Group ${group.id} has ${top4.size} players with finalRank 1-4, expected 4. finalRank may not have been set. Skipping.`);
+      skippedGroups++;
+      continue;
     }
     actualTop4Map.set(group.id, top4);
   }
@@ -124,18 +190,18 @@ export async function scorePredictionsForStage(
   for (const prediction of predictions) {
     const totalScore = scoreMap.get(prediction.id) ?? 0;
 
-    if (totalScore > 0) {
-      await createNotification({
-        userId: prediction.userId,
-        type: "PREDICTION_SCORED",
-        title: "Dự đoán đã được chấm điểm!",
-        message: `Bạn đã nhận được ${totalScore} điểm dự đoán. Xem bảng xếp hạng để biết chi tiết.`,
-        link: `/predictions/leaderboard`,
-      });
-    }
+    await createNotification({
+      userId: prediction.userId,
+      type: "PREDICTION_SCORED",
+      title: "Dự đoán đã được chấm điểm!",
+      message: totalScore > 0
+        ? `Bạn đã nhận được ${totalScore} điểm dự đoán. Xem bảng xếp hạng để biết chi tiết.`
+        : "Dự đoán của bạn đã được chấm điểm. Lần sau may mắn hơn! Xem bảng xếp hạng.",
+      link: `/predictions/leaderboard`,
+    });
   }
 
   await invalidatePredictionLeaderboard();
 
-  return { scored, totalPredictions: predictions.length };
+  return { scored, totalPredictions: predictions.length, skippedGroups };
 }

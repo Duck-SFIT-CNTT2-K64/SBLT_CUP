@@ -1,16 +1,19 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
 import { invalidateTournament } from "@/lib/cache-invalidate";
 
-const VALID_STAGE_TYPES = ["QUALIFIER", "SEMI_1", "SEMI_2", "FINAL"];
+const VALID_STAGE_TYPES = ["QUALIFIER", "SEMI_1", "SEMI_2", "FINAL", "WARMUP"];
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: tournamentId } = await params;
+  const { id: slugOrId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const stages = await prisma.stage.findMany({
     where: { tournamentId },
@@ -45,7 +48,9 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId } = await params;
+  const { id: slugOrId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
   const { name, stageType, stageOrder, date, startTime, totalGames } = body;
 

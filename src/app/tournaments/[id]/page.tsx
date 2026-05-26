@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { GuestCard } from "@/components/tft";
+import { Avatar } from "@/components/ui/Avatar";
 import { formatCurrency } from "@/lib/utils";
+import { CELEBRITY_GUESTS } from "@/lib/constants";
 import { useSSE } from "@/lib/hooks/useSSE";
 import { CommentSection } from "@/components/social/CommentSection";
 import { ReactionBar } from "@/components/social/ReactionBar";
@@ -18,6 +20,7 @@ import { ShareButton } from "@/components/social/ShareButton";
 
 interface Tournament {
   id: string;
+  slug: string;
   name: string;
   season: number;
   description: string | null;
@@ -31,7 +34,7 @@ interface Tournament {
   registrations: {
     id: string;
     status: string;
-    player: { id: string; userId: string; ign: string; isGuest: boolean };
+    player: { id: string; userId: string; ign: string; isGuest: boolean; user?: { avatar: string | null } };
   }[];
   stages: { id: string; name: string; stageOrder: number; date: string; status: string }[];
   prizes: { id: string; rank: number; amount: number; description: string }[];
@@ -72,7 +75,8 @@ export default function TournamentDetailPage() {
         setTournament(data);
         if (userId) {
           setIsRegistered(data.registrations.some(
-            (r: { player: { userId: string } }) => r.player.userId === userId
+            (r: { player: { userId: string }; status: string }) =>
+              r.player.userId === userId && r.status !== "WITHDRAWN"
           ));
         }
       }
@@ -156,6 +160,7 @@ export default function TournamentDetailPage() {
   const approvedPlayers = tournament.registrations.filter((r) => r.status === "APPROVED");
   const guestPlayers = approvedPlayers.filter((r) => r.player.isGuest);
   const regularPlayers = approvedPlayers.filter((r) => !r.player.isGuest);
+  const guestImageMap = Object.fromEntries(CELEBRITY_GUESTS.map((g) => [g.name, g.image]));
   const statusCfg = STATUS_LABELS[tournament.status] || { label: tournament.status, variant: "default" as const };
 
   return (
@@ -249,7 +254,7 @@ export default function TournamentDetailPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
-              href: `/tournaments/${tournament.id}/brackets`,
+              href: `/tournaments/${tournament.slug}/brackets`,
               label: "Bảng đấu",
               desc: "Xem sơ đồ bảng đấu và kết quả bốc thăm",
               icon: Swords,
@@ -257,7 +262,7 @@ export default function TournamentDetailPage() {
               iconColor: "text-[#dc2626]",
             },
             {
-              href: `/tournaments/${tournament.id}/results`,
+              href: `/tournaments/${tournament.slug}/results`,
               label: "Kết quả chi tiết",
               desc: "Xem kết quả từng trận đấu và điểm số",
               icon: BarChart3,
@@ -265,7 +270,7 @@ export default function TournamentDetailPage() {
               iconColor: "text-sky-400",
             },
             {
-              href: `/tournaments/${tournament.id}/standings`,
+              href: `/tournaments/${tournament.slug}/standings`,
               label: "Bảng xếp hạng",
               desc: "Xem thứ hạng tổng của tất cả tuyển thủ",
               icon: Medal,
@@ -273,7 +278,7 @@ export default function TournamentDetailPage() {
               iconColor: "text-amber-400",
             },
             {
-              href: `/api/tournaments/${tournament.id}/calendar`,
+              href: `/api/tournaments/${tournament.slug}/calendar`,
               label: "Thêm vào lịch",
               desc: "Tải file iCal để theo dõi lịch thi đấu",
               icon: Download,
@@ -282,7 +287,7 @@ export default function TournamentDetailPage() {
               download: true,
             },
             {
-              href: `/tournaments/${tournament.id}/predictions`,
+              href: `/tournaments/${tournament.slug}/predictions`,
               label: "Dự đoán",
               desc: "Dự đoán top 4 mỗi bảng để nhận giải thưởng từ Riot",
               icon: Target,
@@ -372,7 +377,7 @@ export default function TournamentDetailPage() {
                       name={r.player.ign}
                       role="Khách mời"
                       confirmed={true}
-                      image={null}
+                      image={guestImageMap[r.player.ign] ?? r.player.user?.avatar ?? null}
                       index={i}
                     />
                   ))}
@@ -391,9 +396,10 @@ export default function TournamentDetailPage() {
                   {regularPlayers.map((r) => (
                     <div
                       key={r.id}
-                      className="bg-[#111] rounded-lg px-3 py-2.5 border border-[#222] hover:border-[#dc2626]/30 transition-colors"
+                      className="bg-[#111] rounded-lg px-3 py-2.5 border border-[#222] hover:border-[#dc2626]/30 transition-colors flex items-center gap-2.5"
                     >
-                      <span className="text-[#f5f5f5] text-sm font-medium truncate block">{r.player.ign}</span>
+                      <Avatar name={r.player.ign} src={r.player.user?.avatar ?? undefined} size="sm" />
+                      <span className="text-[#f5f5f5] text-sm font-medium truncate">{r.player.ign}</span>
                     </div>
                   ))}
                 </div>

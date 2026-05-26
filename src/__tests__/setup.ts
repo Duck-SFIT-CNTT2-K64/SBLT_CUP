@@ -27,6 +27,6 @@ global.console = {
 };
 
 // Default process.env for tests
-process.env.NODE_ENV = "test";
+Object.defineProperty(process.env, "NODE_ENV", { value: "test", writable: true });
 process.env.NEXTAUTH_URL = "http://localhost:3000";
 process.env.ADMIN_EMAILS = "admin@test.com";

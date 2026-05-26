@@ -1,3 +1,4 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,9 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId, prizeId } = await params;
+  const { id: slugOrId, prizeId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
 
   // B-17: Verify prize belongs to this tournament
@@ -102,7 +105,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId, prizeId } = await params;
+  const { id: slugOrId, prizeId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // B-17: Verify prize belongs to this tournament
   const existing = await prisma.prize.findFirst({

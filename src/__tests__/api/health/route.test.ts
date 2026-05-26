@@ -27,6 +27,8 @@ jest.mock("@/lib/env", () => ({}));
 import { GET } from "@/app/api/health/route";
 import { prisma } from "@/lib/prisma";
 
+const mockPrisma = prisma as unknown as { $queryRaw: jest.Mock };
+
 describe("GET /api/health", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -35,7 +37,7 @@ describe("GET /api/health", () => {
   it("returns healthy status when DB is accessible", async () => {
     // First call: SELECT 1 (db check)
     // Second call: table verification
-    prisma.$queryRaw
+    mockPrisma.$queryRaw
       .mockResolvedValueOnce([{ "?column?": 1 }])
       .mockResolvedValueOnce([{ table_name: "Prediction" }, { table_name: "PredictionEntry" }]);
 
@@ -49,7 +51,7 @@ describe("GET /api/health", () => {
   });
 
   it("returns unhealthy status when DB is down", async () => {
-    prisma.$queryRaw.mockRejectedValue(new Error("Connection refused"));
+    mockPrisma.$queryRaw.mockRejectedValue(new Error("Connection refused"));
 
     const response = await GET();
     const data = await response.json();

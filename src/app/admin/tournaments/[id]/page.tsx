@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Save, Trash2, ArrowLeft, Users, X, Trophy, Pencil, Check, Shuffle, ChevronRight, UserCheck, Activity, Target } from "lucide-react";
+import { Plus, Save, Trash2, ArrowLeft, Users, X, Trophy, Pencil, Check, Shuffle, ChevronRight, UserCheck, Activity, Target, Eye, EyeOff } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import WheelSpinner from "@/components/WheelSpinner";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 interface Player { id: string; ign: string; isGuest: boolean; }
@@ -67,7 +66,7 @@ export default function AdminTournamentDetailPage() {
   const [checkinData, setCheckinData] = useState<CheckinSummary | null>(null);
   const [drawPreview, setDrawPreview] = useState<DrawPreview[] | null>(null);
   const [semi1DrawData, setSemi1DrawData] = useState<Semi1DrawData | null>(null);
-  const [drawMode, setDrawMode] = useState<"random" | "wheel" | null>(null);
+  const [drawMode, setDrawMode] = useState<"random" | null>(null);
   const [advancePreview, setAdvancePreview] = useState<AdvancePreview[] | null>(null);
   const [panelLoading, setPanelLoading] = useState(false);
   const [panelMsg, setPanelMsg] = useState<string | null>(null);
@@ -75,6 +74,21 @@ export default function AdminTournamentDetailPage() {
   const [playerSearch, setPlayerSearch] = useState("");
   const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  const [lockdownEnabled, setLockdownEnabled] = useState(false);
+  const [lockdownIps, setLockdownIps] = useState("1.55.219.72");
+  const [lockdownMsg, setLockdownMsg] = useState("Giải đấu đang diễn ra, vui lòng quay lại sau!");
+  const [lockdownSaving, setLockdownSaving] = useState(false);
+  const [showIps, setShowIps] = useState(false);
+
+  const maskIps = (ips: string) => {
+    return ips.split(",").map((s) => {
+      const ip = s.trim();
+      if (!ip) return "";
+      if (ip.includes(":")) return ip.replace(/[^:]/g, "•");
+      return ip.replace(/\d/g, "•");
+    }).join(", ");
+  };
 
   const fetchTournament = useCallback(async () => {
     try {
@@ -84,6 +98,29 @@ export default function AdminTournamentDetailPage() {
   }, [params.id, selectedStage]);
 
   useEffect(() => { fetchTournament(); }, [fetchTournament]);
+
+  useEffect(() => {
+    fetch("/api/admin/lockdown").then((r) => r.json()).then((d) => {
+      setLockdownEnabled(d.enabled);
+      if (d.ips.length > 0) setLockdownIps(d.ips.join(", "));
+      if (d.message) setLockdownMsg(d.message);
+    }).catch(() => {});
+  }, []);
+
+  const saveLockdown = async () => {
+    setLockdownSaving(true);
+    try {
+      const ips = lockdownIps.split(",").map((s) => s.trim()).filter(Boolean);
+      const res = await fetch("/api/admin/lockdown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: lockdownEnabled, ips, message: lockdownMsg }),
+      });
+      if (res.ok) setPanelMsg("Đã lưu cấu hình lockdown");
+      else setPanelMsg("Lỗi khi lưu");
+    } catch { setPanelMsg("Lỗi khi lưu"); }
+    finally { setLockdownSaving(false); }
+  };
 
   const openPanel = async (panel: typeof activePanel) => {
     setActivePanel(panel); setPanelMsg(null); setPanelLoading(true); setDrawMode(null); setSemi1DrawData(null); setDrawPreview(null);
@@ -148,21 +185,6 @@ export default function AdminTournamentDetailPage() {
       const data = await res.json();
       setPanelMsg(data.message || data.error);
       if (res.ok) { fetchTournament(); openPanel("draw"); }
-    } finally { setPanelLoading(false); }
-  };
-
-  const handleWheelSpinComplete = async (assignments: { groupId: string; playerIds: string[] }[]) => {
-    if (!selectedStage) return;
-    setPanelLoading(true);
-    try {
-      const res = await fetch(`/api/tournaments/${params.id}/stages/${selectedStage}/draw`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ drawType: "wheel_spin", assignments }),
-      });
-      const data = await res.json();
-      setPanelMsg(data.message || data.error);
-      if (res.ok) { fetchTournament(); setSemi1DrawData(null); setDrawMode(null); }
     } finally { setPanelLoading(false); }
   };
 
@@ -316,6 +338,55 @@ export default function AdminTournamentDetailPage() {
           </div>
         </RevealOnScroll>
 
+        {/* Site Lockdown */}
+        <RevealOnScroll>
+          <Card hover={false} className={`p-4 mb-6 ${lockdownEnabled ? "border-red-600/60 bg-red-950/20" : ""}`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className={`w-2.5 h-2.5 rounded-full ${lockdownEnabled ? "bg-red-500 animate-pulse" : "bg-zinc-600"}`} />
+                <span className="text-sm font-medium text-[#f5f5f5]">Site Lockdown</span>
+                <span className="text-xs text-[#888]">{lockdownEnabled ? "Đang khóa — chỉ IP whitelist truy cập được" : "Tắt — ai cũng truy cập được"}</span>
+              </div>
+              <button onClick={() => { setLockdownEnabled(!lockdownEnabled); }}
+                className={`relative w-11 h-6 rounded-full transition-colors ${lockdownEnabled ? "bg-red-600" : "bg-[#333]"}`}>
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${lockdownEnabled ? "translate-x-5" : ""}`} />
+              </button>
+            </div>
+            {lockdownEnabled && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-[#888] block mb-1">IP whitelist (phân cách bằng dấu phẩy)</label>
+                  <div className="relative">
+                    <input
+                      value={showIps ? lockdownIps : maskIps(lockdownIps)}
+                      onChange={(e) => setLockdownIps(e.target.value)}
+                      readOnly={!showIps}
+                      placeholder="1.55.219.72"
+                      className="w-full bg-[#0d0d0d] border border-[#222] rounded-lg px-3 py-2 pr-9 text-sm text-[#f5f5f5] focus:border-[#dc2626] focus:outline-none"
+                    />
+                    <button type="button" onClick={() => setShowIps(!showIps)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] hover:text-[#999]">
+                      {showIps ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-[#888] block mb-1">Thông báo khi bị chặn</label>
+                  <input value={lockdownMsg} onChange={(e) => setLockdownMsg(e.target.value)}
+                    className="w-full bg-[#0d0d0d] border border-[#222] rounded-lg px-3 py-2 text-sm text-[#f5f5f5] focus:border-[#dc2626] focus:outline-none" />
+                </div>
+              </div>
+            )}
+            <div className="mt-3 flex items-center gap-2">
+              <button onClick={saveLockdown} disabled={lockdownSaving}
+                className="bg-[#dc2626] hover:bg-[#b91c1c] disabled:opacity-50 text-white text-xs px-4 py-1.5 rounded-lg transition-colors">
+                {lockdownSaving ? "Đang lưu..." : "Lưu cấu hình"}
+              </button>
+              {panelMsg && <span className="text-xs text-[#888]">{panelMsg}</span>}
+            </div>
+          </Card>
+        </RevealOnScroll>
+
         {/* Tool buttons */}
         <div className="flex flex-wrap gap-2 mb-4">
           {(["status", "checkin", "draw", "advance", "predictions"] as const).map((panel) => {
@@ -467,12 +538,12 @@ export default function AdminTournamentDetailPage() {
                                 <Shuffle className="h-4 w-4 inline mr-2" />
                                 Bốc thăm nhanh (chỉ khách mời)
                               </button>
-                              <button
-                                onClick={() => setDrawMode("wheel")}
-                                className="flex-1 bg-[#0d0d0d] hover:bg-[#dc2626]/20 border border-[#222] hover:border-[#dc2626] text-[#f5f5f5] text-sm py-3 rounded-xl transition-colors"
+                              <Link
+                                href={`/admin/tournaments/${params.id}/draw`}
+                                className="flex-1 bg-[#0d0d0d] hover:bg-[#dc2626]/20 border border-[#222] hover:border-[#dc2626] text-[#f5f5f5] text-sm py-3 rounded-xl transition-colors text-center"
                               >
-                                🎡 Quay vòng quay (tất cả)
-                              </button>
+                                🎯 Bốc thăm (tất cả)
+                              </Link>
                             </div>
                           </div>
                         )}
@@ -495,20 +566,6 @@ export default function AdminTournamentDetailPage() {
                           </div>
                         )}
 
-                        {/* Wheel spinner */}
-                        {drawMode === "wheel" && (
-                          <div>
-                            <WheelSpinner
-                              items={semi1DrawData.allWheelItems}
-                              groups={semi1DrawData.groups}
-                              onAssignmentsComplete={handleWheelSpinComplete}
-                              onCancel={() => setDrawMode(null)}
-                              addableItems={approvedPlayers
-                                .filter((p) => !semi1DrawData.allWheelItems.find((w) => w.id === p.id))
-                                .map((p) => ({ id: p.id, label: p.ign }))}
-                            />
-                          </div>
-                        )}
                       </>
                     ) : drawPreview ? (
                       /* QUALIFIER: Bốc thăm regular players */

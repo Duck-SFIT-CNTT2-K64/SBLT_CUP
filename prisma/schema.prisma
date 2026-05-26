@@ -32,6 +32,7 @@ enum StageType {
   SEMI_1
   SEMI_2
   FINAL
+  WARMUP
 }
 
 enum StageStatus {
@@ -89,6 +90,8 @@ model User {
   comments               Comment[]
   reactions              Reaction[]
   pushSubscriptions      PushSubscription[]
+
+  @@index([role])
 }
 
 model Account {
@@ -135,6 +138,7 @@ model Player {
 
 model Tournament {
   id          String           @id @default(cuid())
+  slug        String           @unique
   name        String
   season      Int              @unique
   description String?
@@ -153,6 +157,9 @@ model Tournament {
   prizes        Prize[]
   announcements Announcement[]
   disputes      Dispute[]
+
+  @@index([status])
+  @@index([startDate])
 }
 
 model Registration {
@@ -169,6 +176,7 @@ model Registration {
 
   @@unique([tournamentId, playerId])
   @@index([tournamentId, status])
+  @@index([playerId])
 }
 
 model Stage {
@@ -231,6 +239,7 @@ model Game {
 
   @@unique([groupId, gameNumber])
   @@index([groupId])
+  @@index([status])
 }
 
 model GameResult {

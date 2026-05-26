@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { sseManager } from "@/lib/sse";
 import { randomUUID } from "crypto";
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +13,11 @@ export async function GET(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { id: tournamentId } = await params;
+  const { id: slugOrId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) {
+    return new Response("Not found", { status: 404 });
+  }
   const clientId = randomUUID();
 
   const stream = new ReadableStream({

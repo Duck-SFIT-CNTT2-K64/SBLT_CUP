@@ -19,12 +19,12 @@ describe("logger", () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, "NODE_ENV", { value: originalEnv, writable: true });
   });
 
   describe("in test/development mode", () => {
     beforeEach(() => {
-      process.env.NODE_ENV = "test";
+      Object.defineProperty(process.env, "NODE_ENV", { value: "test", writable: true });
     });
 
     test("error logs to console and captures exception in Sentry", () => {
@@ -60,7 +60,7 @@ describe("logger", () => {
 
   describe("in production mode", () => {
     beforeEach(() => {
-      process.env.NODE_ENV = "production";
+      Object.defineProperty(process.env, "NODE_ENV", { value: "production", writable: true });
     });
 
     test("error still logs", () => {

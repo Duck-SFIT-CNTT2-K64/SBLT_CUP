@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { addLog } from "@/lib/logging";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 // =============================================================
 // IN-MEMORY RATE LIMITER — Edge-compatible, không cần Redis
@@ -183,6 +185,82 @@ function csrfForbiddenResponse(): NextResponse {
 }
 
 // =============================================================
+// SITE LOCKDOWN — Chỉ cho phép IP whitelist truy cập khi livestream
+// =============================================================
+
+interface LockdownConfig {
+  enabled: boolean;
+  ips: string[];
+  message: string;
+}
+
+let lockdownCache: { config: LockdownConfig; ts: number } | null = null;
+const LOCKDOWN_CACHE_TTL = 5_000; // re-read file every 5s
+
+function readLockdownConfig(): LockdownConfig {
+  const now = Date.now();
+  if (lockdownCache && now - lockdownCache.ts < LOCKDOWN_CACHE_TTL) {
+    return lockdownCache.config;
+  }
+
+  const defaultConfig: LockdownConfig = { enabled: false, ips: [], message: "Giải đấu đang diễn ra, vui lòng quay lại sau!" };
+
+  try {
+    const filePath = join(process.cwd(), ".lockdown");
+    if (!existsSync(filePath)) {
+      lockdownCache = { config: defaultConfig, ts: now };
+      return defaultConfig;
+    }
+    const raw = readFileSync(filePath, "utf-8");
+    const enabled = /^ENABLED=true/m.test(raw);
+    const ipsMatch = raw.match(/^IPS=(.+)$/m);
+    const msgMatch = raw.match(/^MESSAGE=(.+)$/m);
+    const ips = ipsMatch ? ipsMatch[1].split(",").map((s) => s.trim()).filter(Boolean) : [];
+    const message = msgMatch ? msgMatch[1].trim() : defaultConfig.message;
+    const config: LockdownConfig = { enabled, ips, message };
+    lockdownCache = { config, ts: now };
+    return config;
+  } catch {
+    lockdownCache = { config: defaultConfig, ts: now };
+    return defaultConfig;
+  }
+}
+
+function maintenancePage(message: string): NextResponse {
+  const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SBLT CUP — Bảo trì</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#f5f5f5;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.c{text-align:center;max-width:480px;padding:2rem}
+h1{font-size:2rem;font-weight:700;margin-bottom:1rem}
+p{color:#888;font-size:1rem;line-height:1.6}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-right:8px;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="c">
+<h1><span class="dot"></span>SBLT CUP</h1>
+<p>${message}</p>
+</div>
+</body>
+</html>`;
+  return new NextResponse(html, {
+    status: 503,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Retry-After": "300",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+// =============================================================
 // PROXY CHÍNH (Next.js 16 — renamed from middleware)
 // =============================================================
 
@@ -190,6 +268,40 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIp = getClientIp(request);
   const requestStart = Date.now();
+
+  // --- SITE LOCKDOWN: Chặn IP không được phép ---
+  const lockdown = readLockdownConfig();
+  if (lockdown.enabled) {
+    // Cho phép static assets
+    if (
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/favicon") ||
+      pathname.includes(".")
+    ) {
+      return NextResponse.next();
+    }
+    // Cho phép auth routes (admin cần đăng nhập)
+    if (pathname.startsWith("/api/auth") || pathname.startsWith("/auth")) {
+      return NextResponse.next();
+    }
+    // Cho phép lockdown API (admin cần bật/tắt)
+    if (pathname.startsWith("/api/admin/lockdown")) {
+      return NextResponse.next();
+    }
+    // Kiểm tra IP whitelist
+    if (lockdown.ips.length > 0 && !lockdown.ips.includes(clientIp)) {
+      // API requests → JSON 503
+      if (pathname.startsWith("/api/")) {
+        return new NextResponse(
+          JSON.stringify({ error: "Service Unavailable", message: lockdown.message }),
+          { status: 503, headers: { "Content-Type": "application/json", "Retry-After": "300" } }
+        );
+      }
+      // Page requests → maintenance HTML
+      return maintenancePage(lockdown.message);
+    }
+    // IP whitelist → cho qua tiếp
+  }
 
   // Extract userId from session cookie if available
   const userId = request.headers.get("X-User-ID");
@@ -239,18 +351,26 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // --- RATE LIMIT: General API routes — 200 per minute per instance ---
-  if (pathname.startsWith("/api")) {
-    const apiKey = `api:${clientIp}`;
-    if (!checkRateLimit(apiKey, 200, 60_000)) {
+  // --- RATE LIMIT: SSE endpoints — 20 per minute per IP ---
+  if (pathname.startsWith("/api/sse")) {
+    const sseKey = `sse:${clientIp}`;
+    if (!checkRateLimit(sseKey, 20, 60_000)) {
       return rateLimitResponse(60);
     }
   }
 
-  // --- RATE LIMIT: Public page routes — 300 per minute per instance ---
+  // --- RATE LIMIT: General API routes — 100 per minute per instance ---
+  if (pathname.startsWith("/api")) {
+    const apiKey = `api:${clientIp}`;
+    if (!checkRateLimit(apiKey, 100, 60_000)) {
+      return rateLimitResponse(60);
+    }
+  }
+
+  // --- RATE LIMIT: Public page routes — 150 per minute per instance ---
   if (!pathname.startsWith("/api")) {
     const publicKey = `page:${clientIp}`;
-    if (!checkRateLimit(publicKey, 300, 60_000)) {
+    if (!checkRateLimit(publicKey, 150, 60_000)) {
       return rateLimitResponse(60);
     }
   }

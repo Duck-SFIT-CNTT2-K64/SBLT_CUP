@@ -9,6 +9,7 @@ import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
 
 interface Tournament {
   id: string;
+  slug: string;
   name: string;
   season: number;
   description: string | null;
@@ -66,6 +67,7 @@ export default function TournamentsPage() {
           <RevealOnScroll key={t.id} delay={i * 0.08}>
             <TournamentCard
               id={t.id}
+              slug={t.slug}
               name={t.name}
               season={t.season}
               status={t.status}

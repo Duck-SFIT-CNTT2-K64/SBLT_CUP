@@ -3,11 +3,18 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CheckCircle, Users } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { getRatingColor, getRatingBgColor } from "@/lib/rating";
 
 interface Player {
   id: string;
   ign: string;
   isGuest: boolean;
+  rank: string | null;
+  avatar: string | null;
+  rating: number | null;
+  totalGames: number;
+  top4Rate: number | null;
 }
 
 interface RankSlots {
@@ -147,9 +154,16 @@ export default function PredictionGroupForm({
                   {i + 1}
                 </span>
                 {player ? (
-                  <span className="text-xs text-[#f5f5f5] font-semibold text-center truncate max-w-full mt-1">
-                    {player.ign}
-                  </span>
+                  <div className="flex flex-col items-center mt-1">
+                    <span className="text-xs text-[#f5f5f5] font-semibold text-center truncate max-w-full">
+                      {player.ign}
+                    </span>
+                    {player.rating !== null && (
+                      <span className={cn("text-[10px] font-bold tabular-nums", getRatingColor(player.rating))}>
+                        {player.rating}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <Users className="h-4 w-4 text-[#333]" />
                 )}
@@ -202,7 +216,33 @@ export default function PredictionGroupForm({
                   {idx + 1}
                 </span>
 
-                <span className="flex-1 pl-1">{player.ign}</span>
+                <Avatar name={player.ign} src={player.avatar ?? undefined} size="sm" />
+
+                <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                  <span className="truncate text-sm">{player.ign}</span>
+                  {player.rank && (
+                    <span className="text-[10px] text-[#888] shrink-0 hidden sm:inline">{player.rank}</span>
+                  )}
+                </div>
+
+                {player.rating !== null ? (
+                  <span className={cn(
+                    "text-xs font-bold tabular-nums px-1.5 py-0.5 rounded shrink-0",
+                    getRatingBgColor(player.rating)
+                  )}>
+                    {player.rating}
+                  </span>
+                ) : (
+                  <span className="text-[10px] bg-[#222] text-[#666] px-1.5 py-0.5 rounded shrink-0">
+                    Mới
+                  </span>
+                )}
+
+                {player.top4Rate !== null && (
+                  <span className="text-[10px] text-[#888] tabular-nums shrink-0 hidden sm:inline">
+                    {player.top4Rate}%
+                  </span>
+                )}
 
                 {player.isGuest && (
                   <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-medium">

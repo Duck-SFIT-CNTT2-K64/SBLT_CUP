@@ -1,6 +1,8 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/api-error";
+import { cacheGetOrSet, CACHE_TTL } from "@/lib/cache";
 
 /**
  * GET /api/tournaments/[id]/predictions/[stageId]/leaderboard
@@ -11,7 +13,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string; stageId: string }> }
 ) {
   try {
-    const { id: tournamentId, stageId } = await params;
+    const { id: slugOrId, stageId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const stage = await prisma.stage.findUnique({
       where: { id: stageId },
@@ -25,38 +29,50 @@ export async function GET(
       );
     }
 
-    const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 50, 200);
+    const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 200, 200);
 
-    const predictions = await prisma.prediction.findMany({
-      where: { stageId, status: "SCORED" },
-      orderBy: { totalScore: "desc" },
-      take: top,
-      include: {
-        user: { select: { id: true, name: true, avatar: true } },
-        entries: {
-          include: {
-            group: {
-              select: {
-                name: true,
-                groupOrder: true,
-                players: {
-                  include: { player: { select: { ign: true } } },
-                  orderBy: { finalRank: "asc" },
+    const predictions = await cacheGetOrSet(
+      `prediction:leaderboard:${stageId}:${top}`,
+      CACHE_TTL.LONG,
+      () => prisma.prediction.findMany({
+        where: { stageId, status: "SCORED" },
+        orderBy: { totalScore: "desc" },
+        take: top,
+        include: {
+          user: { select: { id: true, name: true, avatar: true } },
+          entries: {
+            include: {
+              group: {
+                select: {
+                  name: true,
+                  groupOrder: true,
+                  players: {
+                    where: { finalRank: { not: null, lte: 4 } },
+                    include: { player: { select: { ign: true } } },
+                    orderBy: { finalRank: "asc" },
+                  },
                 },
               },
+              rank1Player: { select: { ign: true } },
+              rank2Player: { select: { ign: true } },
+              rank3Player: { select: { ign: true } },
+              rank4Player: { select: { ign: true } },
             },
-            rank1Player: { select: { ign: true } },
-            rank2Player: { select: { ign: true } },
-            rank3Player: { select: { ign: true } },
-            rank4Player: { select: { ign: true } },
+            orderBy: { group: { groupOrder: "asc" } },
           },
-          orderBy: { group: { groupOrder: "asc" } },
         },
-      },
-    });
+      })
+    );
 
-    const leaderboard = predictions.map((pred, idx) => ({
-      rank: idx + 1,
+    let currentRank = 0;
+    let lastScore = -1;
+    const leaderboard = predictions.map((pred, idx) => {
+      if (pred.totalScore !== lastScore) {
+        currentRank = idx + 1;
+        lastScore = pred.totalScore;
+      }
+      return {
+      rank: currentRank,
       userId: pred.user.id,
       userName: pred.user.name || "Ẩn danh",
       userAvatar: pred.user.avatar,
@@ -83,7 +99,7 @@ export async function GET(
             finalRank: gp.finalRank,
           })),
       })),
-    }));
+    }});
 
     return NextResponse.json(
       { stageId, stageName: stage.name, leaderboard },

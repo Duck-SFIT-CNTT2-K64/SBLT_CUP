@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { handleApiError } from "@/lib/api-error";
 import { cacheGet, cacheSet } from "@/lib/cache";
 
@@ -10,15 +11,20 @@ import { cacheGet, cacheSet } from "@/lib/cache";
  */
 export async function GET(req: NextRequest) {
   try {
-    const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 50, 200);
+    const top = Math.min(Number(req.nextUrl.searchParams.get("top")) || 200, 200);
+    const tournamentId = req.nextUrl.searchParams.get("tournamentId");
 
-    const cacheKey = `leaderboard:predictions:${top}`;
+    const cacheKey = `leaderboard:predictions:${tournamentId || "all"}:${top}`;
     const cached = await cacheGet<Record<string, unknown>[]>(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
         headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate", "X-Cache": "HIT" },
       });
     }
+
+    const tournamentFilter = tournamentId
+      ? Prisma.sql`AND s."tournamentId" = ${tournamentId}`
+      : Prisma.empty;
 
     const leaderboard = await prisma.$queryRaw<
       {
@@ -39,7 +45,9 @@ export async function GET(req: NextRequest) {
         COUNT(p.id) FILTER (WHERE p."totalScore" > 0)  AS "stagesWithPoints"
       FROM "User" u
       JOIN "Prediction" p ON p."userId" = u.id
+      JOIN "Stage" s ON s.id = p."stageId"
       WHERE p.status = 'SCORED'
+      ${tournamentFilter}
       GROUP BY u.id, u.name, u.avatar
       ORDER BY "totalPredictionPoints" DESC
       LIMIT ${top}

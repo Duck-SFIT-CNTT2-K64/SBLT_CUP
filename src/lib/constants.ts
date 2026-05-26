@@ -59,7 +59,7 @@ export const PREDICTION_SCORING: Record<number, number> = {
 };
 
 // Các vòng được phép dự đoán (vòng 2 trở đi)
-export const PREDICTABLE_STAGES: string[] = ["SEMI_1", "SEMI_2", "FINAL"];
+export const PREDICTABLE_STAGES: string[] = ["SEMI_1", "SEMI_2", "FINAL", "WARMUP"];
 
 export const TOURNAMENT_FORMAT = {
   qualifier: {
@@ -103,13 +103,23 @@ export const TOURNAMENT_FORMAT = {
     playersPerGroup: 8,
     gamesPerGroup: 3,
   },
+  warmup: {
+    name: "Giao lưu",
+    stageType: "WARMUP",
+    totalPlayers: 0,
+    groups: 1,
+    playersPerGroup: 0,
+    gamesPerGroup: 3,
+    advancingPerGroup: 0,
+    totalAdvancing: 0,
+  },
 };
 
 /** Cửa sổ dự đoán (giờ Việt Nam, UTC+7) */
 export const PREDICTION_WINDOW = {
   OPEN_HOUR: 9,
   OPEN_MINUTE: 0,
-  CLOSE_HOUR: 19,
+  CLOSE_HOUR: 21,
   CLOSE_MINUTE: 30,
   TIMEZONE_OFFSET_HOURS: 7,
 } as const;

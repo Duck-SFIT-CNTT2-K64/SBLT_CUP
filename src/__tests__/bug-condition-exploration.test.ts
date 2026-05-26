@@ -268,23 +268,23 @@ describe("Bug 7: Missing client-side date validation in tournament creation", ()
   /**
    * Counterexample:
    *   Admin submits form with:
-   *     regStart  = "2025-12-01"
-   *     regEnd    = "2025-11-01"  (before regStart — invalid)
+   *     regStart  = "2026-12-01"
+   *     regEnd    = "2026-11-01"  (before regStart — invalid)
    *   No client-side validation fires.
    *   Form submits to POST /api/tournaments with invalid dates.
    */
 
   it("date string comparison correctly identifies invalid date ranges", () => {
     // ISO date strings can be compared lexicographically
-    const regStart = "2025-12-01";
-    const regEnd = "2025-11-01"; // before regStart — invalid
+    const regStart = "2026-12-01";
+    const regEnd = "2026-11-01"; // before regStart — invalid
 
     // The validation logic that SHOULD exist (but doesn't in unfixed code)
     const isInvalid = regEnd < regStart;
     expect(isInvalid).toBe(true); // confirms the validation logic is sound
 
     // Valid case
-    const validRegEnd = "2025-12-15";
+    const validRegEnd = "2026-12-15";
     expect(validRegEnd < regStart).toBe(false);
   });
 

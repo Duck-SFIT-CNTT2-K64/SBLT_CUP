@@ -1,3 +1,4 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,9 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId } = await params;
+  const { id: slugOrId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const registrations = await prisma.registration.findMany({
     where: { tournamentId },
@@ -38,7 +41,9 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId } = await params;
+  const { id: slugOrId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
   const { registrationId, status, action, registrationIds } = body;
 

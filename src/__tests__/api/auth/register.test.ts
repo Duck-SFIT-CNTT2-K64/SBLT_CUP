@@ -45,6 +45,11 @@ import { POST } from "@/app/api/auth/register/route";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const mockPrisma = prisma as unknown as {
+  user: { findUnique: jest.Mock; create: jest.Mock };
+  player: { findFirst: jest.Mock };
+};
+
 function createRequest(body: Record<string, unknown>) {
   return new NextRequest("http://localhost:3000/api/auth/register", {
     method: "POST",
@@ -59,9 +64,9 @@ describe("POST /api/auth/register", () => {
   });
 
   it("registers a new user successfully", async () => {
-    prisma.user.findUnique.mockResolvedValue(null);
-    prisma.player.findFirst.mockResolvedValue(null);
-    prisma.user.create.mockResolvedValue({
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.player.findFirst.mockResolvedValue(null);
+    mockPrisma.user.create.mockResolvedValue({
       id: "user-1",
       email: "test@example.com",
       name: "Test User",
@@ -85,7 +90,7 @@ describe("POST /api/auth/register", () => {
   });
 
   it("rejects duplicate email", async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: "existing" });
+    mockPrisma.user.findUnique.mockResolvedValue({ id: "existing" });
 
     const req = createRequest({
       email: "existing@example.com",
@@ -102,8 +107,8 @@ describe("POST /api/auth/register", () => {
   });
 
   it("rejects duplicate IGN", async () => {
-    prisma.user.findUnique.mockResolvedValue(null);
-    prisma.player.findFirst.mockResolvedValue({ id: "existing-player" });
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.player.findFirst.mockResolvedValue({ id: "existing-player" });
 
     const req = createRequest({
       email: "new@example.com",

@@ -52,7 +52,28 @@ const REWARD_TIERS = [
   },
 ] as const;
 
-export default function PredictionRulesAndRewardsPanel() {
+const WARMUP_REWARD = [
+  {
+    rank: 1,
+    label: "Top 1",
+    reward: "100,000 VND",
+    accent: "yellow-500",
+    borderColor: "border-yellow-500/30",
+    bgColor: "bg-gradient-to-br from-yellow-500/15 via-yellow-500/5 to-transparent",
+    barColor: "bg-yellow-500",
+    badgeBg: "bg-yellow-500/10",
+    badgeText: "text-yellow-400",
+  },
+] as const;
+
+interface Props {
+  variant?: "default" | "warmup";
+}
+
+export default function PredictionRulesAndRewardsPanel({ variant = "default" }: Props) {
+  const tiers = variant === "warmup" ? WARMUP_REWARD : REWARD_TIERS;
+  const showMerch = variant !== "warmup";
+  const isWarmup = variant === "warmup";
   return (
     <div className="grid gap-6 xl:grid-cols-2 mb-10">
       {/* Rules Card */}
@@ -124,14 +145,14 @@ export default function PredictionRulesAndRewardsPanel() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] uppercase tracking-[0.25em] text-yellow-400 font-semibold">Phần thưởng</p>
-              <h3 className="sblt-heading mt-1 text-2xl text-[#f5f5f5]">Top 4 nhận quà theo thứ hạng</h3>
+              <h3 className="sblt-heading mt-1 text-2xl text-[#f5f5f5]">{isWarmup ? "Quán quân nhận giải thưởng" : "Top 4 nhận quà theo thứ hạng"}</h3>
               <p className="mt-3 text-sm leading-relaxed text-[#b7b7b7]">
-                Mỗi hạng được tách rõ, tập trung vào sản phẩm merch thật của giải đấu.
+                {isWarmup ? "Người dự đoán xuất sắc nhất nhận toàn bộ giải thưởng." : "Mỗi hạng được tách rõ, tập trung vào sản phẩm merch thật của giải đấu."}
               </p>
             </div>
             <span className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-[#dc2626]/10 text-[#ef4444] border border-[#dc2626]/25 px-3 py-1.5 text-xs font-semibold">
               <Trophy className="h-3.5 w-3.5" />
-              4 hạng đầu
+              {isWarmup ? "Top 1" : "4 hạng đầu"}
             </span>
           </div>
         </div>
@@ -139,8 +160,8 @@ export default function PredictionRulesAndRewardsPanel() {
         <div className="sblt-divider mx-6" />
 
         <div className="relative p-6 pt-5">
-          {/* Product showcase */}
-          <div className="grid gap-4 sm:grid-cols-2 mb-5">
+          {/* Product showcase — hidden for warmup */}
+          {showMerch && <div className="grid gap-4 sm:grid-cols-2 mb-5">
             <div className="relative min-h-[220px] overflow-hidden rounded-2xl border border-[#222] bg-[#0a0a0a]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.15),transparent_60%)]" />
               <Image
@@ -175,11 +196,11 @@ export default function PredictionRulesAndRewardsPanel() {
                 </span>
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Reward tiers */}
           <div className="grid gap-3 sm:grid-cols-2">
-            {REWARD_TIERS.map((tier) => {
+            {tiers.map((tier) => {
               const rewardParts = tier.reward.split("+").map((p) => p.trim());
               const cashPart = rewardParts.find((p) => p.includes("k"));
 

@@ -1,3 +1,4 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -15,7 +16,9 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId } = await params;
+  const { id: slugOrId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const player = await prisma.player.findUnique({
     where: { userId: session.user.id },
@@ -55,11 +58,31 @@ export async function POST(
     },
   });
 
-  if (existing) {
+  if (existing && existing.status !== "WITHDRAWN" && existing.status !== "REJECTED") {
     return NextResponse.json(
       { error: "Bạn đã đăng ký giải đấu này rồi" },
       { status: 400 }
     );
+  }
+
+  // Allow re-registration for WITHDRAWN/REJECTED users
+  if (existing && (existing.status === "WITHDRAWN" || existing.status === "REJECTED")) {
+    const updated = await prisma.registration.update({
+      where: { id: existing.id },
+      data: { status: "PENDING" },
+    });
+
+    await createNotification({
+      userId: session.user.id,
+      type: "REGISTRATION_STATUS",
+      title: "Đăng ký lại thành công!",
+      message: `Bạn đã đăng ký lại giải đấu "${tournament.name}". Vui lòng chờ ban tổ chức duyệt.`,
+      link: `/tournaments/${tournamentId}`,
+    });
+
+    await invalidateTournament(tournamentId);
+
+    return NextResponse.json(updated, { status: 200 });
   }
 
   // B-01: Use transaction to prevent race condition on maxPlayers

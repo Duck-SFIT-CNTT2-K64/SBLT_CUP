@@ -14,7 +14,7 @@ function createPrismaClient() {
   getEnv(); // validate required env vars on first DB access
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 30,
+    max: 15,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
   });

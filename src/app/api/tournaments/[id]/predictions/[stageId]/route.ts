@@ -1,9 +1,13 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { PREDICTABLE_STAGES } from "@/lib/constants";
-import { getPredictionWindow } from "@/lib/predictions";
+import { computePredictionStatus, getPredictionWindow, getWarmupPredictionWindow } from "@/lib/predictions";
 import { invalidatePredictionLeaderboard } from "@/lib/cache-invalidate";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { computeRating } from "@/lib/rating";
 
 /**
  * GET /api/tournaments/[id]/predictions/[stageId]
@@ -18,7 +22,9 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId, stageId } = await params;
+  const { id: slugOrId, stageId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const stage = await prisma.stage.findUnique({
     where: { id: stageId },
@@ -42,25 +48,7 @@ export async function GET(
   }
 
   const hasPlayers = stage.groups.some((g) => g.players.length > 0);
-  const window = getPredictionWindow(stage.date);
-
-  let predictionStatus: string;
-  let lockedReason: string | null = null;
-
-  if (stage.status === "COMPLETED") {
-    predictionStatus = "SCORED";
-  } else if (stage.status === "IN_PROGRESS") {
-    predictionStatus = "LOCKED";
-    lockedReason = "stage_started";
-  } else if (!window.isOpen) {
-    predictionStatus = "LOCKED";
-    const now = new Date();
-    lockedReason = now < new Date(window.windowOpensAt) ? "window_not_open" : "window_closed";
-  } else if (hasPlayers) {
-    predictionStatus = "OPEN";
-  } else {
-    predictionStatus = "NOT_READY";
-  }
+  const { predictionStatus, lockedReason, windowOpensAt, windowClosesAt } = computePredictionStatus(stage, hasPlayers);
 
   // Tìm prediction hiện có
   const existingPrediction = await prisma.prediction.findUnique({
@@ -78,22 +66,80 @@ export async function GET(
     },
   });
 
+  // Fetch player stats for rating
+  const playerIds = stage.groups.flatMap((g) => g.players.map((gp) => gp.player.id));
+  const playerStats = playerIds.length > 0
+    ? await prisma.$queryRaw<
+        {
+          id: string;
+          rank: string | null;
+          avatar: string | null;
+          totalPoints: bigint;
+          totalGames: bigint;
+          top1Count: bigint;
+          top4Count: bigint;
+          avgPlacement: number | null;
+        }[]
+      >`
+        SELECT
+          p.id,
+          p.rank,
+          u.avatar,
+          COALESCE(SUM(gr.points), 0)              AS "totalPoints",
+          COUNT(gr.id)                               AS "totalGames",
+          COUNT(*) FILTER (WHERE gr.placement = 1)   AS "top1Count",
+          COUNT(*) FILTER (WHERE gr.placement <= 4)  AS "top4Count",
+          ROUND(AVG(gr.placement)::numeric, 1)       AS "avgPlacement"
+        FROM "Player" p
+        JOIN "User" u ON u.id = p."userId"
+        LEFT JOIN "GameResult" gr ON gr."playerId" = p.id
+        WHERE p.id IN (${Prisma.join(playerIds)})
+        GROUP BY p.id, p.rank, u.avatar
+      `
+    : [];
+
+  const statsMap = new Map(
+    playerStats.map((s) => [
+      s.id,
+      {
+        rank: s.rank,
+        avatar: s.avatar,
+        totalPoints: Number(s.totalPoints),
+        totalGames: Number(s.totalGames),
+        top1Count: Number(s.top1Count),
+        top4Count: Number(s.top4Count),
+        avgPlacement: s.avgPlacement ?? 8,
+      },
+    ])
+  );
+  const maxTotalPoints = Math.max(0, ...[...statsMap.values()].map((s) => s.totalPoints));
+
   return NextResponse.json({
     stageId: stage.id,
     stageName: stage.name,
     stageType: stage.stageType,
     predictionStatus,
     lockedReason,
-    windowOpensAt: window.windowOpensAt,
-    windowClosesAt: window.windowClosesAt,
+    windowOpensAt,
+    windowClosesAt,
     groups: stage.groups.map((g) => ({
       groupId: g.id,
       groupName: g.name,
-      players: g.players.map((gp) => ({
-        id: gp.player.id,
-        ign: gp.player.ign,
-        isGuest: gp.player.isGuest,
-      })),
+      players: g.players.map((gp) => {
+        const stats = statsMap.get(gp.player.id);
+        return {
+          id: gp.player.id,
+          ign: gp.player.ign,
+          isGuest: gp.player.isGuest,
+          rank: stats?.rank ?? null,
+          avatar: stats?.avatar ?? null,
+          rating: stats ? computeRating({ ...stats, maxTotalPoints }) : null,
+          totalGames: stats?.totalGames ?? 0,
+          top4Rate: stats && stats.totalGames > 0
+            ? Math.round((stats.top4Count / stats.totalGames) * 100)
+            : null,
+        };
+      }),
     })),
     existingPrediction: existingPrediction
       ? {
@@ -119,7 +165,36 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: tournamentId, stageId } = await params;
+  const { id: slugOrId, stageId } = await params;
+  const tournamentId = await resolveTournamentId(slugOrId);
+  if (!tournamentId) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Rate limit: 10 submissions per minute per user per stage
+  const rateLimitResult = await checkRateLimit({
+    key: `predict:${session.user.id}:${stageId}`,
+    limit: 10,
+    windowSeconds: 60,
+  });
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: "Quá nhiều yêu cầu. Vui lòng thử lại sau." },
+      { status: 429 }
+    );
+  }
+
+  // Global rate limit: 300 requests/minute across all users per stage
+  const globalLimit = await checkRateLimit({
+    key: `predict:global:${stageId}`,
+    limit: 300,
+    windowSeconds: 60,
+  });
+  if (!globalLimit.allowed) {
+    return NextResponse.json(
+      { error: "Hệ thống đang quá tải. Vui lòng thử lại sau vài giây." },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json();
   const { entries } = body;
 
@@ -156,12 +231,14 @@ export async function POST(
   }
 
   // Kiểm tra cửa sổ thời gian dự đoán
-  const window = getPredictionWindow(stage.date);
+  const window = stage.stageType === "WARMUP"
+    ? getWarmupPredictionWindow(stage.date, stage.startTime || "20:30")
+    : getPredictionWindow(stage.date);
   if (!window.isOpen) {
     const now = new Date();
     const msg = now < new Date(window.windowOpensAt)
-      ? "Cửa sổ dự đoán chưa mở. Dự đoán sẽ mở lúc 9h sáng ngày thi đấu."
-      : "Cửa sổ dự đoán đã đóng. Hạn cuối dự đoán là 19h30.";
+      ? `Cửa sổ dự đoán chưa mở. Dự đoán sẽ mở lúc ${new Date(window.windowOpensAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" })}.`
+      : "Cửa sổ dự đoán đã đóng.";
     return NextResponse.json({ error: msg }, { status: 403 });
   }
 
@@ -284,31 +361,45 @@ export async function POST(
     }
     // P2002 = unique constraint violation (race condition: 2 request cùng user+stage)
     if (err?.code === "P2002") {
-      const existing = await prisma.prediction.findUnique({
-        where: { userId_stageId: { userId: session.user.id, stageId } },
+      return await prisma.$transaction(async (tx) => {
+        const existing = await tx.prediction.findUnique({
+          where: { userId_stageId: { userId: session.user.id, stageId } },
+        });
+        if (!existing || existing.status !== "OPEN") return null;
+        await tx.predictionEntry.deleteMany({ where: { predictionId: existing.id } });
+        await tx.predictionEntry.createMany({
+          data: entries.map((e: { groupId: string; rank1PlayerId: string; rank2PlayerId: string; rank3PlayerId: string; rank4PlayerId: string }) => ({
+            predictionId: existing.id,
+            groupId: e.groupId,
+            rank1PlayerId: e.rank1PlayerId,
+            rank2PlayerId: e.rank2PlayerId,
+            rank3PlayerId: e.rank3PlayerId,
+            rank4PlayerId: e.rank4PlayerId,
+          })),
+        });
+        return existing;
       });
-      if (!existing || existing.status !== "OPEN") return null;
-      await prisma.predictionEntry.deleteMany({ where: { predictionId: existing.id } });
-      await prisma.predictionEntry.createMany({
-        data: entries.map((e: { groupId: string; rank1PlayerId: string; rank2PlayerId: string; rank3PlayerId: string; rank4PlayerId: string }) => ({
-          predictionId: existing.id,
-          groupId: e.groupId,
-          rank1PlayerId: e.rank1PlayerId,
-          rank2PlayerId: e.rank2PlayerId,
-          rank3PlayerId: e.rank3PlayerId,
-          rank4PlayerId: e.rank4PlayerId,
-        })),
-      });
-      return existing;
     }
     throw err;
   });
 
   if (!prediction) {
-    return NextResponse.json(
-      { error: "Dự đoán đã bị khóa. Không thể chỉnh sửa." },
-      { status: 403 }
-    );
+    const existing = await prisma.prediction.findUnique({
+      where: { userId_stageId: { userId: session.user.id, stageId } },
+      select: { status: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Không tìm thấy dự đoán" }, { status: 404 });
+    }
+
+    const reason = existing.status === "LOCKED"
+      ? "Vòng đấu đã bắt đầu, dự đoán đã bị khóa."
+      : existing.status === "SCORED"
+        ? "Dự đoán đã được chấm điểm, không thể chỉnh sửa."
+        : "Dự đoán đã bị khóa. Không thể chỉnh sửa.";
+
+    return NextResponse.json({ error: reason }, { status: 403 });
   }
 
   await invalidatePredictionLeaderboard();

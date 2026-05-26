@@ -93,6 +93,34 @@ export default function BracketsPage() {
     return "";
   };
 
+  const getPlacementLabel = (p: number) => {
+    if (p === 1) return "1st";
+    if (p === 2) return "2nd";
+    if (p === 3) return "3rd";
+    return `${p}th`;
+  };
+
+  // Single-group scoreboard: all rounds on one screen
+  const isSingleGroup = stage && stage.groups.length === 1;
+  const singleGroup = isSingleGroup ? stage!.groups[0] : null;
+  const singleGroupRounds = singleGroup
+    ? Array.from({ length: Math.max(...singleGroup.games.map((g) => g.gameNumber), 0) }, (_, i) => i + 1)
+    : [];
+  const singleGroupRows = singleGroup
+    ? [...singleGroup.players].map((gp) => {
+        let totalPoints = 0;
+        const roundData: Record<number, { placement: number; points: number }> = {};
+        for (const game of singleGroup.games) {
+          const result = game.results.find((res) => res.playerId === gp.player.id);
+          if (result) {
+            roundData[game.gameNumber] = { placement: result.placement, points: result.points };
+            totalPoints += result.points;
+          }
+        }
+        return { playerId: gp.player.id, ign: gp.player.ign, totalPoints, rounds: roundData };
+      }).sort((a, b) => b.totalPoints - a.totalPoints)
+    : [];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -131,101 +159,207 @@ export default function BracketsPage() {
         </div>
       </div>
 
-      {/* Stage + Game selector */}
-      <Card hover={false} className="p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div>
-            <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Vòng đấu</p>
-            <div className="flex gap-2 flex-wrap">
-              {tournament.stages.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => { setSelectedStageId(s.id); setSelectedGameNumber(1); }}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    selectedStageId === s.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
-                  }`}
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-          </div>
-          {stage && maxGames > 0 && (
-            <div>
-              <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Game</p>
-              <div className="flex gap-2">
-                {gameNumbers.map((n) => (
+      {/* Single-group scoreboard: all rounds on one screen */}
+      {isSingleGroup && singleGroup && singleGroupRows.length > 0 ? (
+        <div>
+          {tournament.stages.length > 1 && (
+            <Card hover={false} className="p-4 mb-6">
+              <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Vòng đấu</p>
+              <div className="flex gap-2 flex-wrap">
+                {tournament.stages.map((s) => (
                   <button
-                    key={n}
-                    onClick={() => setSelectedGameNumber(n)}
-                    className={`w-10 h-8 rounded-lg text-sm font-bold transition-colors ${
-                      selectedGameNumber === n ? "bg-white text-black" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
+                    key={s.id}
+                    onClick={() => { setSelectedStageId(s.id); setSelectedGameNumber(1); }}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      selectedStageId === s.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
                     }`}
                   >
-                    R{n}
+                    {s.name}
                   </button>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
+          <div className="flex items-center gap-4 mb-4 text-sm text-[#888]">
+            <span className="flex items-center gap-1"><Users className="h-4 w-4" />{singleGroup.players.length} người</span>
+            <span>{singleGroup.name}</span>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-[#222] bg-[#111]">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-[#dc2626]">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider w-12">#</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-[#888] uppercase tracking-wider">PLAYER</th>
+                  {singleGroupRounds.map((r) => (
+                    <th key={r} className="px-4 py-3 text-center text-xs font-semibold text-[#888] uppercase tracking-wider">
+                      R{r}
+                    </th>
+                  ))}
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-[#888] uppercase tracking-wider">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {singleGroupRows.map((row, idx) => {
+                  const rank = idx + 1;
+                  return (
+                    <tr
+                      key={row.playerId}
+                      className={`border-b border-[#222] transition-colors hover:bg-[#dc2626]/[0.04] ${
+                        rank <= 3 ? "bg-[#111]/50" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <span className={`text-sm font-bold ${
+                          rank === 1 ? "text-[#dc2626]" :
+                          rank === 2 ? "text-amber-400" :
+                          rank === 3 ? "text-orange-400" :
+                          "text-[#888]"
+                        }`}>
+                          {rank}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-sm font-medium ${
+                          rank === 1 ? "text-[#dc2626] font-bold" : "text-[#f5f5f5]"
+                        }`}>
+                          {row.ign}
+                        </span>
+                      </td>
+                      {singleGroupRounds.map((r) => {
+                        const rd = row.rounds[r];
+                        return (
+                          <td key={r} className="px-4 py-3 text-center">
+                            {rd ? (
+                              <div>
+                                <div className={`text-xs ${
+                                  rd.placement === 1 ? "text-[#dc2626] font-bold" :
+                                  rd.placement <= 3 ? "text-amber-400 font-semibold" :
+                                  "text-[#888]"
+                                }`}>
+                                  {getPlacementLabel(rd.placement)}
+                                </div>
+                                <div className={`text-xs mt-0.5 ${
+                                  rd.points >= 8 ? "text-[#f5f5f5] font-bold" :
+                                  rd.points >= 5 ? "text-[#f5f5f5]" :
+                                  "text-[#888]"
+                                }`}>
+                                  {rd.points}pts
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-[#555] text-xs">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="px-4 py-3 text-center">
+                        <span className={`text-sm font-bold ${
+                          row.totalPoints > 0 ? "text-[#f5f5f5]" : "text-[#555]"
+                        }`}>
+                          {row.totalPoints > 0 ? row.totalPoints : "—"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </Card>
-
-      {/* Stage info */}
-      {stage && (
-        <div className="flex items-center gap-4 mb-4 text-sm text-[#888]">
-          <span className="flex items-center gap-1"><Users className="h-4 w-4" />{stage.groups.reduce((sum, g) => sum + g.players.length, 0)} người</span>
-          <span>{stage.groups.length} bảng</span>
-          <span className="ml-auto text-[#dc2626] font-medium">Round {selectedGameNumber} / {maxGames}</span>
-        </div>
-      )}
-
-      {/* Lobbies grid */}
-      {stage && stage.groups.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...stage.groups].sort((a, b) => a.groupOrder - b.groupOrder).map((group, idx) => {
-            const results = getGameResults(group, selectedGameNumber);
-            const sortedPlayers = [...group.players].sort((a, b) => b.totalPoints - a.totalPoints);
-
-            return (
-              <Link
-                key={group.id}
-                href={`/tournaments/${params.id}/brackets/${group.id}`}
-                className="block group"
-              >
-                <Card hover={false} className="overflow-hidden group-hover:border-[#dc2626]/50 group-hover:shadow-lg group-hover:shadow-[#dc2626]/10 transition-all duration-200">
-                  <div className="flex items-center justify-between px-4 py-2.5 bg-[#111] border-b border-[#222]">
-                    <span className="text-sm font-semibold text-[#f5f5f5]">Bảng {idx + 1}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#888]">{group.name}</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-[#888] group-hover:text-[#dc2626] transition-colors" />
-                    </div>
-                  </div>
-                <div className="p-2 space-y-0.5">
-                  {results ? results.map((r) => (
-                    <div key={r.id} className={`flex items-center justify-between px-3 py-1.5 rounded text-sm ${getPlacementBg(r.placement)}`}>
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[#888] w-4 text-xs shrink-0">{r.placement}</span>
-                        <span className="text-[#f5f5f5] truncate">{r.player.ign}</span>
-                      </div>
-                      <span className={`shrink-0 ml-2 ${getPointColor(r.points)}`}>{r.points}pts</span>
-                    </div>
-                  )) : sortedPlayers.length > 0 ? sortedPlayers.map((gp, i) => (
-                    <div key={gp.id} className="flex items-center justify-between px-3 py-1.5 rounded text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[#555] w-4 text-xs shrink-0">{i + 1}</span>
-                        <span className="text-[#888] truncate">{gp.player.ign}</span>
-                      </div>
-                      <span className="text-[#555] shrink-0 ml-2 text-xs">{gp.totalPoints > 0 ? `${gp.totalPoints}pts` : "—"}</span>
-                    </div>
-                  )) : (
-                    <div className="text-center py-4 text-[#555] text-xs">Chưa phân bổ</div>
-                  )}
+      ) : stage && stage.groups.length > 0 ? (
+        <div>
+          {/* Game selector for multi-group */}
+          <Card hover={false} className="p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div>
+                <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Vòng đấu</p>
+                <div className="flex gap-2 flex-wrap">
+                  {tournament.stages.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => { setSelectedStageId(s.id); setSelectedGameNumber(1); }}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        selectedStageId === s.id ? "bg-[#dc2626] text-[#f5f5f5]" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
+                      }`}
+                    >
+                      {s.name}
+                    </button>
+                  ))}
                 </div>
-                </Card>
-              </Link>
-            );
-          })}
+              </div>
+              {maxGames > 0 && (
+                <div>
+                  <p className="text-xs text-[#888] mb-2 uppercase tracking-wider">Game</p>
+                  <div className="flex gap-2">
+                    {gameNumbers.map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setSelectedGameNumber(n)}
+                        className={`w-10 h-8 rounded-lg text-sm font-bold transition-colors ${
+                          selectedGameNumber === n ? "bg-white text-black" : "bg-[#111] text-[#888] hover:text-[#f5f5f5] border border-[#222]"
+                        }`}
+                      >
+                        R{n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <div className="flex items-center gap-4 mb-4 text-sm text-[#888]">
+            <span className="flex items-center gap-1"><Users className="h-4 w-4" />{stage.groups.reduce((sum, g) => sum + g.players.length, 0)} người</span>
+            <span>{stage.groups.length} bảng</span>
+            <span className="ml-auto text-[#dc2626] font-medium">Round {selectedGameNumber} / {maxGames}</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...stage.groups].sort((a, b) => a.groupOrder - b.groupOrder).map((group, idx) => {
+              const results = getGameResults(group, selectedGameNumber);
+              const sortedPlayers = [...group.players].sort((a, b) => b.totalPoints - a.totalPoints);
+
+              return (
+                <Link
+                  key={group.id}
+                  href={`/tournaments/${params.id}/brackets/${group.id}`}
+                  className="block group"
+                >
+                  <Card hover={false} className="overflow-hidden group-hover:border-[#dc2626]/50 group-hover:shadow-lg group-hover:shadow-[#dc2626]/10 transition-all duration-200">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-[#111] border-b border-[#222]">
+                      <span className="text-sm font-semibold text-[#f5f5f5]">Bảng {idx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[#888]">{group.name}</span>
+                        <ChevronRight className="h-3.5 w-3.5 text-[#888] group-hover:text-[#dc2626] transition-colors" />
+                      </div>
+                    </div>
+                  <div className="p-2 space-y-0.5">
+                    {results ? results.map((r) => (
+                      <div key={r.id} className={`flex items-center justify-between px-3 py-1.5 rounded text-sm ${getPlacementBg(r.placement)}`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-[#888] w-4 text-xs shrink-0">{r.placement}</span>
+                          <span className="text-[#f5f5f5] truncate">{r.player.ign}</span>
+                        </div>
+                        <span className={`shrink-0 ml-2 ${getPointColor(r.points)}`}>{r.points}pts</span>
+                      </div>
+                    )) : sortedPlayers.length > 0 ? sortedPlayers.map((gp, i) => (
+                      <div key={gp.id} className="flex items-center justify-between px-3 py-1.5 rounded text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-[#555] w-4 text-xs shrink-0">{i + 1}</span>
+                          <span className="text-[#888] truncate">{gp.player.ign}</span>
+                        </div>
+                        <span className="text-[#555] shrink-0 ml-2 text-xs">{gp.totalPoints > 0 ? `${gp.totalPoints}pts` : "—"}</span>
+                      </div>
+                    )) : (
+                      <div className="text-center py-4 text-[#555] text-xs">Chưa phân bổ</div>
+                    )}
+                  </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="text-center py-20 text-[#888]">

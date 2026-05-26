@@ -46,6 +46,10 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { markAsRead, markAllAsRead } from "@/lib/notifications";
 
+const mockPrisma = prisma as unknown as {
+  notification: { findMany: jest.Mock; count: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
+};
+
 describe("GET /api/notifications", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -64,10 +68,10 @@ describe("GET /api/notifications", () => {
 
   it("returns paginated notifications for authenticated users", async () => {
     (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
-    prisma.notification.findMany.mockResolvedValue([
+    mockPrisma.notification.findMany.mockResolvedValue([
       { id: "n1", title: "Test", message: "Hello", read: false },
     ]);
-    prisma.notification.count.mockResolvedValue(1);
+    mockPrisma.notification.count.mockResolvedValue(1);
 
     const req = new NextRequest("http://localhost:3000/api/notifications");
     const response = await GET(req);

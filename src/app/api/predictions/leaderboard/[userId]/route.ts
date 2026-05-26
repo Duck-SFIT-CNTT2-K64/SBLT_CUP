@@ -12,9 +12,14 @@ export async function GET(
 ) {
   try {
     const { userId } = await params;
+    const tournamentId = req.nextUrl.searchParams.get("tournamentId");
 
     const predictions = await prisma.prediction.findMany({
-      where: { userId, status: "SCORED" },
+      where: {
+        userId,
+        status: "SCORED",
+        ...(tournamentId ? { stage: { tournamentId } } : {}),
+      },
       orderBy: { stage: { stageOrder: "asc" } },
       include: {
         stage: { select: { id: true, name: true, stageType: true } },

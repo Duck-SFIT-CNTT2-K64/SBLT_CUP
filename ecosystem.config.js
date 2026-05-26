@@ -5,7 +5,7 @@ module.exports = {
       script: "node_modules/.bin/next",
       args: "start",
       cwd: __dirname,
-      instances: 2,
+      instances: 3,
       exec_mode: "cluster",
       autorestart: true,
       max_memory_restart: "512M",

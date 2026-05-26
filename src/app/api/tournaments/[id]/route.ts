@@ -1,9 +1,10 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
 import { z } from "zod";
-import { cacheGet, cacheSet } from "@/lib/cache";
+import { cacheGetOrSet, CACHE_TTL } from "@/lib/cache";
 import { invalidateTournament } from "@/lib/cache-invalidate";
 
 const tournamentUpdateSchema = z.object({
@@ -22,91 +23,82 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id: slugOrId } = await params;
+  const id = await resolveTournamentId(slugOrId);
+  if (!id) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const session = await auth();
   const isAdmin = session?.user?.role === "ADMIN";
 
-  const cacheKey = `tournament:${id}:${isAdmin ? "admin" : "public"}`;
-  const cached = await cacheGet(cacheKey);
-  if (cached) {
-    return NextResponse.json(cached, {
-      headers: {
-        "Cache-Control": isAdmin ? "private, no-store" : "public, s-maxage=60, stale-while-revalidate",
-        "Vary": "Authorization",
-        "X-Cache": "HIT",
+  // Admin data is not cached (always fresh)
+  if (isAdmin) {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id },
+      include: {
+        registrations: {
+          include: {
+            player: {
+              select: { id: true, userId: true, ign: true, isGuest: true, rank: true, phone: true, discord: true, user: { select: { avatar: true } } },
+            },
+          },
+        },
+        stages: {
+          include: { groups: { include: { players: { include: { player: { select: { id: true, ign: true, isGuest: true } } } }, games: { include: { results: { include: { player: { select: { id: true, ign: true } } } } } } } } },
+          orderBy: { stageOrder: "asc" },
+        },
+        prizes: { include: { player: { select: { id: true, ign: true } } }, orderBy: { rank: "asc" } },
+        announcements: { orderBy: { createdAt: "desc" } },
+        _count: { select: { registrations: true, stages: true } },
       },
     });
+    if (!tournament) return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+    return NextResponse.json(tournament, { headers: { "Cache-Control": "private, no-store", "Vary": "Authorization" } });
   }
 
-  const tournament = await prisma.tournament.findUnique({
-    where: { id },
-    include: {
-      registrations: {
-        include: {
-          player: {
-            select: {
-              id: true,
-              userId: true,
-              ign: true,
-              isGuest: true,
-              rank: true,
-              // S-03: Only expose phone/discord to admin
-              ...(isAdmin ? { phone: true, discord: true } : {}),
+  const cacheKey = `tournament:${id}:public`;
+
+  const tournament = await cacheGetOrSet(cacheKey, CACHE_TTL.MEDIUM, async () => {
+    return prisma.tournament.findUnique({
+      where: { id },
+      include: {
+        registrations: {
+          where: { status: { not: "WITHDRAWN" } },
+          include: {
+            player: {
+              select: { id: true, userId: true, ign: true, isGuest: true, rank: true, user: { select: { avatar: true } } },
             },
           },
         },
-      },
-      stages: {
-        include: {
-          groups: {
-            include: {
-              players: {
-                include: {
-                  player: {
-                    select: { id: true, ign: true, isGuest: true },
-                  },
-                },
-              },
-              games: {
-                include: {
-                  results: {
-                    include: {
-                      player: { select: { id: true, ign: true } },
-                    },
-                  },
-                },
+        stages: {
+          include: {
+            groups: {
+              include: {
+                players: { include: { player: { select: { id: true, ign: true, isGuest: true } } } },
+                games: { include: { results: { include: { player: { select: { id: true, ign: true } } } } } },
               },
             },
           },
+          orderBy: { stageOrder: "asc" },
         },
-        orderBy: { stageOrder: "asc" },
-      },
-      prizes: {
-        include: {
-          player: { select: { id: true, ign: true } },
+        prizes: { include: { player: { select: { id: true, ign: true } } }, orderBy: { rank: "asc" } },
+        announcements: { orderBy: { createdAt: "desc" } },
+        _count: {
+          select: {
+            registrations: { where: { status: { not: "WITHDRAWN" } } },
+            stages: true,
+          },
         },
-        orderBy: { rank: "asc" },
       },
-      announcements: {
-        orderBy: { createdAt: "desc" },
-      },
-      _count: {
-        select: { registrations: true, stages: true },
-      },
-    },
+    });
   });
 
   if (!tournament) {
     return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
   }
 
-  await cacheSet(cacheKey, tournament, 60);
-
   return NextResponse.json(tournament, {
     headers: {
-      "Cache-Control": isAdmin ? "private, no-store" : "public, s-maxage=60, stale-while-revalidate",
+      "Cache-Control": `public, s-maxage=${CACHE_TTL.MEDIUM}, stale-while-revalidate`,
       "Vary": "Authorization",
-      "X-Cache": "MISS",
     },
   });
 }
@@ -120,7 +112,9 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
+  const { id: slugOrId } = await params;
+  const id = await resolveTournamentId(slugOrId);
+  if (!id) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
 
   // S-04: Validate and whitelist fields
@@ -186,7 +180,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
+  const { id: slugOrId } = await params;
+  const id = await resolveTournamentId(slugOrId);
+  if (!id) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   try {
     const tournament = await prisma.tournament.findUnique({ where: { id }, select: { name: true, status: true } });

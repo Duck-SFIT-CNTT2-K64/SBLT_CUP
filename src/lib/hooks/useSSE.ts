@@ -58,6 +58,7 @@ export function useSSE(options: SSEOptions = {}) {
       "registration-update",
       "announcement",
       "GLOBAL_CHAT",
+      "duck-race-start",
     ];
 
     eventTypes.forEach((eventType) => {

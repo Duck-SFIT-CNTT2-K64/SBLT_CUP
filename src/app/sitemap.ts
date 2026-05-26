@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXTAUTH_URL || "https://sbltcup.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tournaments = await prisma.tournament.findMany({
-    select: { id: true, createdAt: true },
+    select: { slug: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -19,10 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const tournamentRoutes: MetadataRoute.Sitemap = tournaments.flatMap((t) => [
-    { url: `${BASE_URL}/tournaments/${t.id}`, lastModified: t.createdAt, changeFrequency: "daily" as const, priority: 0.8 },
-    { url: `${BASE_URL}/tournaments/${t.id}/standings`, lastModified: t.createdAt, changeFrequency: "hourly" as const, priority: 0.7 },
-    { url: `${BASE_URL}/tournaments/${t.id}/brackets`, lastModified: t.createdAt, changeFrequency: "hourly" as const, priority: 0.7 },
-    { url: `${BASE_URL}/tournaments/${t.id}/results`, lastModified: t.createdAt, changeFrequency: "hourly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/tournaments/${t.slug}`, lastModified: t.createdAt, changeFrequency: "daily" as const, priority: 0.8 },
+    { url: `${BASE_URL}/tournaments/${t.slug}/standings`, lastModified: t.createdAt, changeFrequency: "hourly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/tournaments/${t.slug}/brackets`, lastModified: t.createdAt, changeFrequency: "hourly" as const, priority: 0.7 },
+    { url: `${BASE_URL}/tournaments/${t.slug}/results`, lastModified: t.createdAt, changeFrequency: "hourly" as const, priority: 0.7 },
   ]);
 
   return [...staticRoutes, ...tournamentRoutes];

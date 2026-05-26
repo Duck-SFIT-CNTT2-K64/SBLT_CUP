@@ -7,6 +7,7 @@ import { Trophy, Users, Calendar, Zap, ArrowRight } from "lucide-react";
 
 interface TournamentCardProps {
   id: string;
+  slug: string;
   name: string;
   season: number;
   status: "UPCOMING" | "REGISTRATION_OPEN" | "IN_PROGRESS" | "COMPLETED" | "REGISTRATION_CLOSED" | "CANCELLED";
@@ -56,7 +57,8 @@ const ACCENT_CONFIG = {
 };
 
 export default function TournamentCard({
-  id,
+  id: _id,
+  slug,
   name,
   season,
   status,
@@ -82,7 +84,7 @@ export default function TournamentCard({
       whileHover={{ y: -6 }}
       className="character-card"
     >
-      <Link href={`/tournaments/${id}`} className="block">
+      <Link href={`/tournaments/${slug}`} className="block">
         {/* ── Outer wrapper — overflow:visible để mascot break out ── */}
         <div className={`
           relative rounded-2xl

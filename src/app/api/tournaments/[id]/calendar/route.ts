@@ -1,3 +1,4 @@
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -9,7 +10,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id: slugOrId } = await params;
+  const id = await resolveTournamentId(slugOrId);
+  if (!id) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -55,7 +58,7 @@ export async function GET(
   ical += `\r\nDTEND;VALUE=DATE:${formatDate(tournament.regEnd).slice(0, 8)}`;
   ical += `\r\nSUMMARY:${escapeIcal(tournament.name)} - Đăng ký`;
   ical += `\r\nDESCRIPTION:Thời gian đăng ký ${escapeIcal(tournament.name)}`;
-  ical += `\r\nURL:${BASE_URL}/tournaments/${tournament.id}`;
+  ical += `\r\nURL:${BASE_URL}/tournaments/${tournament.slug}`;
   ical += "\r\nEND:VEVENT";
 
   // Add each stage
@@ -72,7 +75,7 @@ export async function GET(
     ical += `\r\nDTEND:${endDt}`;
     ical += `\r\nSUMMARY:${escapeIcal(tournament.name)} - ${escapeIcal(stage.name)}`;
     ical += `\r\nDESCRIPTION:${escapeIcal(stage.name)} - Bắt đầu lúc ${stage.startTime}`;
-    ical += `\r\nURL:${BASE_URL}/tournaments/${tournament.id}/brackets`;
+    ical += `\r\nURL:${BASE_URL}/tournaments/${tournament.slug}/brackets`;
     ical += "\r\nEND:VEVENT";
   }
 

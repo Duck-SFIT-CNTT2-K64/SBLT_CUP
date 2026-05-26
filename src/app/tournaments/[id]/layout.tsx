@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { resolveTournamentId } from "@/lib/tournament-resolve";
 
 const BASE_URL = process.env.NEXTAUTH_URL || "https://sbltcup.com";
 
@@ -9,11 +10,16 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
+  const { id: slugOrId } = await params;
+  const id = await resolveTournamentId(slugOrId);
+
+  if (!id) {
+    return { title: "Giải đấu không tồn tại" };
+  }
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { name: true, season: true, description: true, startDate: true, endDate: true, prizePool: true },
+    select: { slug: true, name: true, season: true, description: true, startDate: true, endDate: true, prizePool: true },
   });
 
   if (!tournament) {
@@ -30,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `${BASE_URL}/tournaments/${id}`,
+      url: `${BASE_URL}/tournaments/${tournament.slug}`,
       type: "website",
       images: [{ url: "/og-image.png", width: 1200, height: 630, alt: title }],
     },
